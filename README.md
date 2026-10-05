@@ -65,9 +65,34 @@ git clone <URL_DEL_REPOSITORIO>
 cd Proyecto_Hospital
 ```
 
-### 2. Crear la base de datos
+### 2. Crear la base de datos en PostgreSQL
 
-Crear una base de datos vacía en PostgreSQL (por ejemplo `Proyecto_Hospital`). Las tablas se generan automáticamente al iniciar el backend.
+Solo hay que crear la base de datos vacía. Las tablas se generan automáticamente al iniciar el backend.
+
+**Opción A: desde la terminal con `psql`**
+
+Conectarse a PostgreSQL con el usuario `postgres` (pedirá la contraseña que definiste al instalarlo):
+
+```bash
+psql -U postgres
+```
+
+Dentro de `psql`, crear la base de datos y salir:
+
+```sql
+CREATE DATABASE "Proyecto_Hospital";
+\q
+```
+
+Las comillas dobles son necesarias para respetar las mayúsculas. Sin ellas, PostgreSQL crea la base como `proyecto_hospital`, y el valor de `DB_NAME` en el `.env` tendría que coincidir con ese nombre en minúsculas.
+
+**Opción B: desde pgAdmin**
+
+1. Abrir pgAdmin y conectarse al servidor.
+2. Clic derecho sobre **Databases** → **Create** → **Database...**
+3. En **Database** escribir `Proyecto_Hospital` y guardar.
+
+Para comprobar que se creó, ejecutar `\l` dentro de `psql`: debería aparecer en la lista.
 
 ### 3. Configurar y levantar el backend
 
@@ -76,6 +101,8 @@ cd backend
 npm install
 copy .env.example .env
 ```
+
+> En Linux o Mac el comando equivalente es `cp .env.example .env`.
 
 Completar el archivo `.env` con los datos de tu base de datos:
 

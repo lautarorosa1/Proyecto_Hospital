@@ -74,7 +74,7 @@ Crear una base de datos vacía en PostgreSQL (por ejemplo `Proyecto_Hospital`). 
 ```bash
 cd backend
 npm install
-cp .env.example .env
+copy .env.example .env
 ```
 
 Completar el archivo `.env` con los datos de tu base de datos:

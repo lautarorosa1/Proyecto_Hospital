@@ -50,6 +50,40 @@ Proyecto_Hospital/
 
 El backend sigue una arquitectura por capas (dominio, aplicación, infraestructura y adaptadores), con un módulo por entidad.
 
+## Flujo de trabajo con Git
+
+> **Regla fundamental:** NUNCA se programa directamente sobre `main` ni `development`. Todo desarrollo se realiza en una rama propia y se integra a `development` mediante un Pull Request (PR).
+
+Cada vez que comiences una nueva tarea o funcionalidad:
+
+1. **Actualizar la rama base (`development`):**
+   ```bash
+   git checkout development
+   git pull origin development
+   ```
+
+2. **Crear la rama de funcionalidad:**
+   ```bash
+   git checkout -b feat/mi-modulo/tarea
+   ```
+   *(Ejemplo: `git checkout -b feat/admision/agenda-turnos`)*
+
+3. **Desarrollar y guardar cambios (commits atómicos e imperativos):**
+   ```bash
+   git add .
+   git commit -m "feat(modulo): breve descripcion de lo que hiciste"
+   ```
+
+4. **Subir la rama a GitHub:**
+   ```bash
+   git push -u origin feat/mi-modulo/tarea
+   ```
+
+5. **Abrir el Pull Request (PR) apuntando como rama destino a `development` (no a `main`):**
+   - En GitHub aparecerá el botón verde **"Compare & pull request"**.
+   - Asegurate de que la rama base apunte a **`development`**.
+   - Hacé clic en **"Create pull request"** y avisá al equipo para su revisión y merge.
+
 ## Requisitos previos
 
 - [Node.js](https://nodejs.org/) `^22.18.0` o `>=24.12.0` (requerido por el frontend)
@@ -156,58 +190,21 @@ Vite indicará la URL en la terminal (por defecto `http://localhost:5173`).
 | `npm run lint` | Ejecuta oxlint y ESLint |
 | `npm run format` | Formatea el código con Prettier |
 
-## API
+## Documentación de la API
 
 URL base: `http://localhost:3000`
 
-| Método | Ruta | Descripción | Respuesta |
-|---|---|---|---|
-| GET | `/health` | Estado del servidor | `200` |
-| GET | `/pacientes` | Listar pacientes | `200` |
-| GET | `/pacientes/:id` | Obtener un paciente | `200` / `404` |
-| POST | `/pacientes` | Crear un paciente | `201` / `400` / `409` |
-| PUT | `/pacientes/:id` | Actualizar un paciente | `200` / `400` / `404` / `409` |
-| DELETE | `/pacientes/:id` | Eliminar un paciente | `204` / `404` |
+> **Política documental:** Para evitar conflictos de fusión (*merge conflicts*) en el README, cada integrante debe registrar los nuevos endpoints, modelos y contratos de su módulo en su archivo correspondiente dentro de `docs/api/` como parte del mismo Pull Request en el que se implementa la funcionalidad.
 
-### Modelo de paciente
+### Módulos del Sistema:
 
-| Campo | Tipo | Obligatorio | Notas |
-|---|---|---|---|
-| `id` | número | — | Generado automáticamente |
-| `nombre` | string | Sí | |
-| `apellido` | string | Sí | |
-| `dni` | string | Sí | De 7 a 9 dígitos, único |
-| `email` | string | Sí | Formato válido, único (se guarda en minúsculas) |
-| `fechaNacimiento` | string | Sí | Formato `YYYY-MM-DD`, fecha real y no futura |
-| `telefono` | string | No | |
-| `direccion` | string | No | |
-
-### Ejemplo
-
-```bash
-curl -X POST http://localhost:3000/pacientes \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "dni": "30123456",
-    "email": "juan.perez@mail.com",
-    "fechaNacimiento": "1990-05-20",
-    "telefono": "1155551234",
-    "direccion": "Av. Siempre Viva 742"
-  }'
-```
-
-### Errores
-
-Los errores devuelven un JSON con el formato `{ "error": "mensaje" }`.
-
-| Código | Cuándo ocurre |
-|---|---|
-| `400` | Datos faltantes o inválidos, id no válido o JSON mal formado |
-| `404` | El paciente o la ruta no existe |
-| `409` | Ya existe un paciente con ese DNI o email |
-| `500` | Error interno del servidor |
+- [Módulo IAM (Identidad y Accesos)](docs/api/iam.md)
+- [Módulo Admisión y Turnos](docs/api/admision.md)
+- [Módulo Pacientes](docs/api/pacientes.md)
+- [Módulo Historia Clínica Electrónica](docs/api/historia-clinica.md)
+- [Módulo Atención y Enfermería](docs/api/enfermeria.md)
+- [Módulo Gestión de Recursos y Camas](docs/api/camas.md)
+- [Módulo Facturación y Administración](docs/api/facturacion.md)
 
 ## Rutas del frontend
 

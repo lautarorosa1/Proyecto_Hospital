@@ -20,31 +20,41 @@ Aplicación web full stack para la gestión de pacientes de un hospital. Permite
 
 ## Estructura del proyecto
 
-```
+```text
 Proyecto_Hospital/
+├── docs/
+│   └── api/                           # Contratos y endpoints por módulo
+│       ├── iam.md
+│       ├── admision.md
+│       ├── pacientes.md
+│       ├── historia-clinica.md
+│       ├── enfermeria.md
+│       ├── camas.md
+│       └── facturacion.md
 ├── backend/
 │   ├── src/
-│   │   ├── modules/
-│   │   │   └── pacientes/
-│   │   │       ├── adapters/          # Controlador y rutas HTTP
-│   │   │       ├── application/       # Servicio, interfaces y DTOs
-│   │   │       ├── domain/            # Modelo e interfaz del repositorio
-│   │   │       ├── infrastructure/    # Entidad TypeORM y repositorio
-│   │   │       └── paciente.module.ts
-│   │   ├── shared/                    # Errores y manejador de errores
+│   │   ├── modules/                   # Arquitectura Hexagonal / DDD por módulo
+│   │   │   ├── iam/                   # Identidad y accesos (RBAC, JWT)
+│   │   │   ├── admision/              # Turnos, agenda, triaje
+│   │   │   ├── pacientes/             # Gestión y registro de pacientes
+│   │   │   ├── historia-clinica/      # HCE, evoluciones, antecedentes
+│   │   │   ├── atencion-enfermeria/   # Internaciones, signos vitales, protocolos
+│   │   │   ├── recursos-camas/        # Camas, habitaciones, stock de insumos
+│   │   │   └── facturacion/           # Obras sociales, liquidación, cargos
+│   │   ├── shared/                    # Bus de eventos y manejadores comunes
 │   │   ├── app.ts                     # Configuración de Express
 │   │   ├── container.ts               # Inyección de dependencias
-│   │   ├── data-source.ts             # Conexión a PostgreSQL
+│   │   ├── data-source.ts             # Conexión dinámica a PostgreSQL
 │   │   └── server.ts                  # Punto de entrada
 │   ├── .env.example
 │   └── package.json
 └── frontend/
     ├── src/
-    │   ├── components/                # Componentes reutilizables
-    │   ├── router/                    # Rutas del frontend
-    │   ├── services/                  # Cliente HTTP (Axios)
-    │   ├── utils/
-    │   └── views/                     # Vistas de pacientes
+    │   ├── components/                # Componentes UI reutilizables
+    │   ├── router/                    # Rutas de la aplicación
+    │   ├── services/                  # Servicios de integración HTTP
+    │   ├── views/                     # Vistas de la aplicación
+    │   └── utils/
     └── package.json
 ```
 
@@ -206,14 +216,6 @@ URL base: `http://localhost:3000`
 - [Módulo Gestión de Recursos y Camas](docs/api/camas.md)
 - [Módulo Facturación y Administración](docs/api/facturacion.md)
 
-## Rutas del frontend
-
-| Ruta | Vista |
-|---|---|
-| `/pacientes` | Listado de pacientes |
-| `/pacientes/create` | Formulario de alta |
-| `/pacientes/:id` | Detalle del paciente |
-| `/pacientes/edit/:id` | Formulario de edición |
 
 ## Notas de desarrollo
 

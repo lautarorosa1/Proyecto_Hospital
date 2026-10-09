@@ -1,7 +1,7 @@
 # API - Módulo Gestión de Recursos y Camas
 
 **Módulo:** Recursos y Camas  
-**Responsable Asignado:** Desarrollador Asignado  
+**Responsable Asignado:** Agus
 **URL Base:** `http://localhost:3000/api/v1/camas`  
 
 ---

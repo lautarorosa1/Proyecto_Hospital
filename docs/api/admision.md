@@ -1,7 +1,7 @@
 # API - Módulo Admisión y Turnos
 
 **Módulo:** Admisión, Agenda y Turnos  
-**Responsable Asignado:** Desarrollador Asignado  
+**Responsable Asignado:** Lautaro  
 **URL Base:** `http://localhost:3000/api/v1/admision`  
 
 ---

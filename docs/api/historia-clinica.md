@@ -1,7 +1,7 @@
 # API - Módulo Historia Clínica Electrónica
 
 **Módulo:** Historia Clínica Electrónica (HCE)  
-**Responsable Asignado:** Desarrollador Asignado  
+**Responsable Asignado:** Enzo  
 **URL Base:** `http://localhost:3000/api/v1/historia-clinica`  
 
 ---

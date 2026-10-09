@@ -2,6 +2,7 @@
 import 'reflect-metadata';
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
+import path from 'path';
 import { PacienteEntity } from './modules/pacientes/infrastructure/PacienteEntity';
 
 export const AppDataSource = new DataSource({
@@ -13,7 +14,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   synchronize: true,
   logging: true,
-  entities: [PacienteEntity],
-  migrations: [__dirname + '/migrations/**/*{.js,.ts}'],
-  migrationsTableName: 'migrations',
+  entities: [path.join(__dirname, 'modules/**/infrastructure/*Entity.{ts,js}')],
+  migrations: [],
+  subscribers: [],
 });

@@ -1,7 +1,7 @@
 # API - Módulo IAM (Identidad y Accesos)
 
 **Módulo:** Identidad y Accesos (IAM)  
-**Responsable Asignado:** Líder Técnico / Especialista en Seguridad  
+**Responsable Asignado:** Nacho
 **URL Base:** `http://localhost:3000/api/v1/iam`  
 
 ---

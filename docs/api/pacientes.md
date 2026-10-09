@@ -1,7 +1,7 @@
 # API - Módulo Pacientes
 
 **Módulo:** Pacientes  
-**Responsable Asignado:** Equipo Base  
+**Responsable Asignado:** Lautaro
 **URL Base:** `http://localhost:3000`  
 
 ---

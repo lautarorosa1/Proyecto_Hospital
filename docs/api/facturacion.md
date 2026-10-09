@@ -1,7 +1,7 @@
 # API - Módulo Facturación y Administración
 
 **Módulo:** Facturación y Administración  
-**Responsable Asignado:** Desarrollador Asignado  
+**Responsable Asignado:** Matias
 **URL Base:** `http://localhost:3000/api/v1/facturacion`  
 
 ---

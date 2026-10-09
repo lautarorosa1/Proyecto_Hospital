@@ -1,7 +1,7 @@
 # API - Módulo Atención y Enfermería
 
 **Módulo:** Atención y Enfermería  
-**Responsable Asignado:** Desarrollador Asignado  
+**Responsable Asignado:** Roman  
 **URL Base:** `http://localhost:3000/api/v1/enfermeria`  
 
 ---

@@ -1,31 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import PacienteListView from '../views/PacienteListView.vue'
-import PacienteCreateView from '../views/PacienteCreateView.vue'
-import PacienteEditView from '../views/PacienteEditView.vue'
-import PacienteDetailView from '../views/PacienteDetailView.vue'
+import admisionRoutes from '@/modules/admision/routes'
+// Cada módulo suma su archivo de rutas con una línea:
+// import otroModuloRoutes from '@/modules/otro-modulo/routes'
 
 const routes = [
   {
     path: '/',
-    redirect: '/pacientes'
+    component: () => import('@/shared/views/HomeView.vue')
   },
-  {
-    path: '/pacientes',
-    component: PacienteListView
-  },
-  {
-    path: '/pacientes/create',
-    component: PacienteCreateView
-  },
-  {
-    path: '/pacientes/:id',
-    component: PacienteDetailView
-  },
-  {
-    path: '/pacientes/edit/:id',
-    component: PacienteEditView
-  }
+  ...admisionRoutes
+  // ...otroModuloRoutes
 ]
 
 const router = createRouter({

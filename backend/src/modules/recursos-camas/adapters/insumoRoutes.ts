@@ -9,6 +9,7 @@ export function createInsumoRoutes(insumoController: InsumoController): Router {
   router.get('/:id/stock', insumoController.consultarStockPorId);
   router.get('/:id', insumoController.getById);
   router.post('/', insumoController.create);
+  router.post('/:id/ingresos', insumoController.ingresar);
   router.put('/:id', insumoController.update);
   router.delete('/:id', insumoController.remove);
 

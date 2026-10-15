@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { IInsumoService } from '../application/IInsumoService';
 import { CreateInsumoDto } from '../application/dtos/CreateInsumoDto';
 import { UpdateInsumoDto } from '../application/dtos/UpdateInsumoDto';
+import { IngresarStockDto } from '../application/dtos/IngresarStockDto';
 import { BadRequestError } from '../../../shared/errors';
 
 type IdParams = { id: string };
@@ -74,6 +75,19 @@ export class InsumoController {
     try {
       const insumo = await this.insumoService.update(this.parseId(req.params.id), req.body);
       res.json(insumo);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  ingresar = async (
+    req: Request<IdParams, unknown, IngresarStockDto>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const resultado = await this.insumoService.ingresar(this.parseId(req.params.id), req.body);
+      res.status(201).json(resultado);
     } catch (err) {
       next(err);
     }

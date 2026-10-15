@@ -1,6 +1,7 @@
 import { ICamaService } from './ICamaService';
 import { ICamaRepository, FalloCama } from '../domain/ICamaRepository';
 import { IHabitacionRepository } from '../domain/IHabitacionRepository';
+import { IPublicadorEstadoCama } from '../domain/IEventosRecursosCamas';
 import { AsignacionCama } from '../domain/AsignacionCama';
 import { Cama, CamaMapa } from '../domain/Cama';
 import { esEstadoCama } from '../domain/EstadoCama';
@@ -22,6 +23,7 @@ export class CamaService implements ICamaService {
   constructor(
     private readonly camaRepository: ICamaRepository,
     private readonly habitacionRepository: IHabitacionRepository,
+    private readonly publicadorEstadoCama: IPublicadorEstadoCama,
   ) {}
 
   private toCamaDto(cama: Cama): ResponseCamaDto {
@@ -86,6 +88,17 @@ export class CamaService implements ICamaService {
     throw new ConflictError('Transición de estado no permitida');
   }
 
+  private async publicar(cama: Cama, historial: HistorialEstadoCama): Promise<void> {
+    await this.publicadorEstadoCama.publicarCambioEstado({
+      cama_id: cama.id,
+      estado_anterior: historial.estado_anterior,
+      estado_nuevo: historial.estado_nuevo,
+      usuario_id: historial.usuario_id,
+      fecha_cambio: historial.fecha_cambio,
+      version: cama.version,
+    });
+  }
+
   async crear(dto: CreateCamaDto): Promise<ResponseCamaDto> {
     const numero = this.exigirTexto(dto?.numero, 'número');
     const habitacionId = this.exigirEntero(dto?.habitacion_id, 'habitacion_id', 1);
@@ -141,6 +154,7 @@ export class CamaService implements ICamaService {
       throw new ConflictError('La cama ya tiene una asignación abierta');
     }
 
+    await this.publicar(resultado.cama, resultado.historial);
     return {
       cama: this.toCamaDto(resultado.cama),
       historial: this.toHistorialDto(resultado.historial),
@@ -171,6 +185,7 @@ export class CamaService implements ICamaService {
     });
     if (!resultado.ok) this.fallar(resultado.fallo);
 
+    await this.publicar(resultado.cama, resultado.historial);
     return {
       cama: this.toCamaDto(resultado.cama),
       historial: this.toHistorialDto(resultado.historial),

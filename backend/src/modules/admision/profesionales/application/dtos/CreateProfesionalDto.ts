@@ -10,5 +10,6 @@ export interface CreateProfesionalDto {
   telefono?: string;
   matricula: string;
   tipoProfesional: TipoProfesional;
+  duracionTurnoMin?: number; // minutos por turno; por defecto 30
   estado?: EstadoProfesional; // por defecto "activo"
 }

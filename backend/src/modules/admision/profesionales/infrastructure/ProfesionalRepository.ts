@@ -20,6 +20,7 @@ export class ProfesionalRepository implements IProfesionalRepository {
     telefono: entity.telefono ?? undefined,
     matricula: entity.matricula,
     tipoProfesional: entity.tipoProfesional,
+    duracionTurnoMin: entity.duracionTurnoMin,
     estado: entity.estado,
   });
 

@@ -55,6 +55,11 @@
         </div>
 
         <div class="flex items-center justify-between py-3">
+          <span class="text-sm font-medium text-gray-500">Duración de cada turno</span>
+          <span class="text-sm text-gray-900">{{ profesional.duracionTurnoMin }} min</span>
+        </div>
+
+        <div class="flex items-center justify-between py-3">
           <span class="text-sm font-medium text-gray-500">Estado</span>
           <span
             class="rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"

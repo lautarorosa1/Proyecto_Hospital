@@ -1,8 +1,11 @@
 <template>
   <div class="min-h-screen bg-gray-50 px-4 py-10">
     <div class="mx-auto max-w-5xl rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
-      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <router-link to="/admision" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"> ← </router-link>
+      <router-link to="/admision" class="text-sm text-indigo-600 hover:underline">
+        ← Volver a Admisión
+      </router-link>
+
+      <div class="mb-6 mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 class="text-2xl font-semibold text-gray-900">Lista de Profesionales</h1>
 
         <router-link to="/profesionales/create">
@@ -93,6 +96,12 @@
                   <router-link :to="`/profesionales/edit/${profesional.id}`">
                     <button class="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 transition hover:bg-indigo-100">
                       Editar
+                    </button>
+                  </router-link>
+
+                  <router-link :to="`/profesionales/${profesional.id}/horarios`">
+                    <button class="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-100">
+                      Horarios
                     </button>
                   </router-link>
 

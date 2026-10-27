@@ -12,6 +12,9 @@ export function createApp() {
   app.get('/health', (_req: Request, res: Response) => res.json({ status: 'ok' }));
   app.use('/pacientes', container.pacienteModule.routes);
   app.use('/profesionales', container.profesionalModule.routes);
+  app.use('/habitaciones', container.recursosCamasModule.habitacionRoutes);
+  app.use('/insumos', container.recursosCamasModule.insumoRoutes);
+  app.use('/camas', container.recursosCamasModule.camaRoutes);
 
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: 'Not found' });

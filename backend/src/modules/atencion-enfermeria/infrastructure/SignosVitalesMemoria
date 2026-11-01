@@ -1,0 +1,41 @@
+import type { SignosVitales } from '../domain/SignosVitales';
+import type { ISignosVitalesRepository } from '../domain/SignosVitalesRepository';
+
+export class SignosVitalesRepositoryMemoria
+  implements ISignosVitalesRepository {
+
+  private registros: SignosVitales[] = [];
+
+  private siguienteId = 1;
+
+  async create(
+    datos: Omit<SignosVitales, 'id'>
+  ): Promise<SignosVitales> {
+    const nuevoRegistro: SignosVitales = {
+      ...datos,
+      id: this.siguienteId++,
+    };
+
+    this.registros.push(nuevoRegistro);
+
+    return { ...nuevoRegistro };
+  }
+
+  async findById(
+    id: number
+  ): Promise<SignosVitales | null> {
+    const registro = this.registros.find(
+      (signo) => signo.id === id
+    );
+
+    return registro ? { ...registro } : null;
+  }
+
+  async findByInternacionId(
+    internacionId: number
+  ): Promise<SignosVitales[]> {
+    return this.registros
+      .filter((signo) => signo.internacionId === internacionId)
+      .map((signo) => ({ ...signo }));
+  }
+}

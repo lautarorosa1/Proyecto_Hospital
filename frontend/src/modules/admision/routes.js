@@ -8,9 +8,10 @@ export default [
   // Menú del módulo
   {
     path: '/admision',
-    component: () => import('./AdmisionMenuView.vue')
+    component: () => import('./views/AdmisionMenuView.vue')
   },
 
+  // Pacientes
   {
     path: '/pacientes',
     component: () => import('./pacientes/views/PacienteListView.vue')
@@ -28,6 +29,7 @@ export default [
     component: () => import('./pacientes/views/PacienteEditView.vue')
   },
 
+  // Profesionales
   {
     path: '/profesionales',
     component: () => import('./profesionales/views/ProfesionalListView.vue')
@@ -43,5 +45,19 @@ export default [
   {
     path: '/profesionales/edit/:id',
     component: () => import('./profesionales/views/ProfesionalEditView.vue')
+  },
+  {
+    path: '/profesionales/:id/horarios',
+    component: () => import('./profesionales/views/ProfesionalHorariosView.vue')
+  },
+
+  // Turnos
+  {
+    path: '/turnos',
+    component: () => import('./turnos/views/TurnoAgendaView.vue')
+  },
+  {
+    path: '/turnos/generar',
+    component: () => import('./turnos/views/TurnoGenerarView.vue')
   }
 ]

@@ -4,6 +4,9 @@ import {
   IProfesionalRepository,
 } from '../domain/IProfesionalRepository';
 import {
+  DURACION_TURNO_DEFAULT,
+  DURACION_TURNO_MAX,
+  DURACION_TURNO_MIN,
   ESTADOS_PROFESIONAL,
   TIPOS_PROFESIONAL,
   Profesional,
@@ -42,6 +45,7 @@ export class ProfesionalService implements IProfesionalService {
       telefono: profesional.telefono,
       matricula: profesional.matricula,
       tipoProfesional: profesional.tipoProfesional,
+      duracionTurnoMin: profesional.duracionTurnoMin,
       estado: profesional.estado,
     };
   }
@@ -57,6 +61,7 @@ export class ProfesionalService implements IProfesionalService {
       telefono: dto.telefono?.trim(),
       matricula: dto.matricula.trim(),
       tipoProfesional: dto.tipoProfesional,
+      duracionTurnoMin: dto.duracionTurnoMin ?? DURACION_TURNO_DEFAULT,
       estado: dto.estado ?? 'activo',
     };
   }
@@ -78,6 +83,9 @@ export class ProfesionalService implements IProfesionalService {
     if (dto.matricula !== undefined) changes.matricula = dto.matricula.trim();
     if (dto.tipoProfesional !== undefined) {
       changes.tipoProfesional = dto.tipoProfesional;
+    }
+    if (dto.duracionTurnoMin !== undefined) {
+      changes.duracionTurnoMin = dto.duracionTurnoMin;
     }
     if (dto.estado !== undefined) changes.estado = dto.estado;
 
@@ -108,6 +116,19 @@ export class ProfesionalService implements IProfesionalService {
   private validarIdReferencia(valor: unknown, campo: string): void {
     if (typeof valor !== 'number' || !Number.isInteger(valor) || valor <= 0) {
       throw new BadRequestError(`${campo} debe ser un entero positivo`);
+    }
+  }
+
+  private validarDuracionTurno(valor: unknown): void {
+    if (
+      typeof valor !== 'number' ||
+      !Number.isInteger(valor) ||
+      valor < DURACION_TURNO_MIN ||
+      valor > DURACION_TURNO_MAX
+    ) {
+      throw new BadRequestError(
+        `La duración del turno debe ser un entero entre ${DURACION_TURNO_MIN} y ${DURACION_TURNO_MAX} minutos`,
+      );
     }
   }
 
@@ -228,6 +249,9 @@ export class ProfesionalService implements IProfesionalService {
     this.validarDni(dto.dni);
     this.validarEmail(dto.email);
     this.validarTipo(dto.tipoProfesional);
+    if (dto.duracionTurnoMin !== undefined) {
+      this.validarDuracionTurno(dto.duracionTurnoMin);
+    }
     if (dto.estado !== undefined) this.validarEstado(dto.estado);
 
     await this.validarUnicidad({
@@ -272,6 +296,9 @@ export class ProfesionalService implements IProfesionalService {
     if (dto.dni !== undefined) this.validarDni(dto.dni);
     if (dto.email !== undefined) this.validarEmail(dto.email);
     if (dto.tipoProfesional !== undefined) this.validarTipo(dto.tipoProfesional);
+    if (dto.duracionTurnoMin !== undefined) {
+      this.validarDuracionTurno(dto.duracionTurnoMin);
+    }
     if (dto.estado !== undefined) this.validarEstado(dto.estado);
 
     const existente = await this.profesionalRepository.findById(id);

@@ -11,5 +11,6 @@ export interface ResponseProfesionalDto {
   telefono?: string;
   matricula: string;
   tipoProfesional: TipoProfesional;
+  duracionTurnoMin: number;
   estado: EstadoProfesional;
 }

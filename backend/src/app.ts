@@ -1,3 +1,4 @@
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { container } from './container';
@@ -10,16 +11,24 @@ export function createApp() {
   app.use(express.json());
 
   app.get('/health', (_req: Request, res: Response) => res.json({ status: 'ok' }));
+
   app.use('/pacientes', container.pacienteModule.routes);
   app.use('/profesionales', container.profesionalModule.routes);
-  app.use('/profesionales', container.horarioModule.routes)
+
+  // Módulo de admisión y turnos
+  app.use('/profesionales', container.horarioModule.routes);
   app.use('/turnos', container.turnoModule.routes);
+
+  // Módulo de recursos y camas
+  app.use('/habitaciones', container.recursosCamasModule.habitacionRoutes);
+  app.use('/insumos', container.recursosCamasModule.insumoRoutes);
+  app.use('/camas', container.recursosCamasModule.camaRoutes);
 
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: 'Not found' });
   });
 
-  app.use(errorHandler); // siempre último
+  app.use(errorHandler);
 
   return app;
 }

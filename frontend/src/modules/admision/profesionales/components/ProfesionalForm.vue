@@ -90,6 +90,21 @@
       />
     </div>
 
+    <div class="flex flex-col gap-1.5">
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-gray-700">Duración de cada turno (minutos)</label>
+        <small class="text-xs text-red-500">{{ errores.duracionTurnoMin }}</small>
+      </div>
+      <input
+        v-model.number="profesional.duracionTurnoMin"
+        type="number"
+        min="5"
+        max="240"
+        step="5"
+        :class="inputClass"
+      />
+    </div>
+
     <div v-if="mostrarEstado" class="flex flex-col gap-1.5">
       <label class="text-sm font-medium text-gray-700">Estado</label>
       <select v-model="profesional.estado" :class="inputClass">

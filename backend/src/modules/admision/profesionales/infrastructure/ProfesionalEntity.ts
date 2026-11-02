@@ -36,6 +36,10 @@ export class ProfesionalEntity {
   @Column({ name: 'tipo_profesional', type: 'varchar' })
   tipoProfesional: TipoProfesional;
 
+  // Duración de cada turno de este profesional. Los turnos nuevos la toman de acá.
+  @Column({ name: 'duracion_turno_min', type: 'int', default: 30 })
+  duracionTurnoMin: number;
+
   @Column({ type: 'varchar', default: 'activo' })
   estado: EstadoProfesional;
 }

@@ -10,5 +10,6 @@ export interface UpdateProfesionalDto {
   telefono?: string;
   matricula?: string;
   tipoProfesional?: TipoProfesional;
+  duracionTurnoMin?: number;
   estado?: EstadoProfesional;
 }

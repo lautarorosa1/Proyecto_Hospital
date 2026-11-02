@@ -3,6 +3,8 @@ import { pacienteModule } from './modules/admision/pacientes/paciente.module';
 import { profesionalModule } from './modules/admision/profesionales/profesional.module';
 import { turnoModule } from './modules/admision/turnos/turno.module';
 import { horarioModule } from './modules/admision/horarios/horario.module';
+import { guardiaModule } from './modules/admision/guardia/guardia.module';
+
 
 import { recursosCamasModule } from './modules/recursos-camas/recursos-camas.module';
 import { historiaClinicaModule } from './modules/historia-clinica/historiaClinica.module';
@@ -12,6 +14,7 @@ export const container = {
   profesionalModule,
   turnoModule,
   horarioModule,
+  guardiaModule,
   recursosCamasModule,
   historiaClinicaModule,
 };

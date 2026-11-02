@@ -25,6 +25,7 @@
 const opciones = [
   { titulo: 'Pacientes', ruta: '/pacientes' },
   { titulo: 'Profesionales', ruta: '/profesionales' },
-  { titulo: 'Turnos', ruta: '/turnos' }
+  { titulo: 'Turnos', ruta: '/turnos' },
+  { titulo: 'Guardia', ruta: '/guardia' }
 ]
 </script>

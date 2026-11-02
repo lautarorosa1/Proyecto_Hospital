@@ -59,5 +59,15 @@ export default [
   {
     path: '/turnos/generar',
     component: () => import('./turnos/views/TurnoGenerarView.vue')
+  },
+
+  // Guardia (triaje y cola de espera)
+  {
+    path: '/guardia',
+    component: () => import('./guardia/views/GuardiaView.vue')
+  },
+  {
+    path: '/guardia/monitor',
+    component: () => import('./guardia/views/MonitorGuardiaView.vue')
   }
 ]

@@ -18,6 +18,7 @@ export function createApp() {
   // Módulo de admisión y turnos
   app.use('/profesionales', container.horarioModule.routes);
   app.use('/turnos', container.turnoModule.routes);
+  app.use('/guardia', container.guardiaModule.routes);
 
   // Módulo de recursos y camas
   app.use('/habitaciones', container.recursosCamasModule.habitacionRoutes);

@@ -45,12 +45,20 @@ onMounted(cargarPaciente)
         </p>
       </section>
 
-      <section class="modulos">
-        <div class="tarjeta">Alergias</div>
-        <div class="tarjeta">Evoluciones médicas</div>
-        <div class="tarjeta">Estudios médicos</div>
-        <div class="tarjeta">Antecedentes familiares</div>
+    
+     <section class="modulos">
+     <RouterLink
+         :to="`/historia-clinica/${route.params.id}/alergias`"
+          class="tarjeta tarjeta-enlace"
+           >
+         Alergias
+       </RouterLink>
+
+         <div class="tarjeta">Evoluciones médicas</div>
+         <div class="tarjeta">Estudios médicos</div>
+         <div class="tarjeta">Antecedentes familiares</div>
       </section>
+
     </template>
   </main>
 </template>
@@ -93,4 +101,18 @@ h1 {
   border-radius: 10px;
   font-weight: 600;
 }
+
+.tarjeta-enlace {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.tarjeta-enlace:hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
 </style>

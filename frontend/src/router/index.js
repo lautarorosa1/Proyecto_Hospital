@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import admisionRoutes from '@/modules/admision/routes'
 import historiaClinicaRoutes from '@/modules/historia-clinica/routes'
+import recursosCamasRoutes from '@/modules/recursos-camas/routes'
+// Cada módulo suma su archivo de rutas con una línea:
+// import otroModuloRoutes from '@/modules/otro-modulo/routes'
 
 const routes = [
   {
@@ -9,7 +12,9 @@ const routes = [
     component: () => import('@/shared/views/HomeView.vue')
   },
   ...admisionRoutes,
-  ...historiaClinicaRoutes
+  ...historiaClinicaRoutes,
+  ...recursosCamasRoutes
+  // ...otroModuloRoutes
 ]
 
 const router = createRouter({

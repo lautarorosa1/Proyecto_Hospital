@@ -10,6 +10,11 @@ export const TIPOS_PROFESIONAL = [
 
 export const ESTADOS_PROFESIONAL = ['activo', 'inactivo', 'licencia'] as const;
 
+// Duración de los turnos de un profesional, en minutos (la define cada profesional)
+export const DURACION_TURNO_MIN = 5;
+export const DURACION_TURNO_MAX = 240;
+export const DURACION_TURNO_DEFAULT = 30;
+
 export type TipoProfesional = (typeof TIPOS_PROFESIONAL)[number];
 export type EstadoProfesional = (typeof ESTADOS_PROFESIONAL)[number];
 
@@ -34,5 +39,6 @@ export interface Profesional {
 
   matricula: string;
   tipoProfesional: TipoProfesional;
+  duracionTurnoMin: number;
   estado: EstadoProfesional;
 }

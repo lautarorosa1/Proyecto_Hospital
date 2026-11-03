@@ -54,7 +54,14 @@ onMounted(cargarPaciente)
          Alergias
        </RouterLink>
 
-         <div class="tarjeta">Evoluciones médicas</div>
+         
+        <RouterLink
+          :to="`/historia-clinica/${route.params.id}/evoluciones`"
+          class="tarjeta tarjeta-enlace"
+          >
+           Evoluciones Médicas
+        </RouterLink>
+
          <div class="tarjeta">Estudios médicos</div>
          <div class="tarjeta">Antecedentes familiares</div>
       </section>

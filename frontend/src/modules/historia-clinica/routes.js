@@ -9,6 +9,11 @@ const historiaClinicaRoutes = [
     path: '/historia-clinica/:id',
     name: 'historia-clinica-detalle',
     component: () => import('./views/HistoriaClinicaDetalleView.vue')
+  },
+  {
+    path: '/historia-clinica/:id/alergias',
+    name: 'historia-clinica-alergias',
+    component: () => import('./views/AlergiasView.vue')
   }
 ]
 

@@ -18,6 +18,7 @@
   </div>
 </template>
 
+
 <script setup>
 // Cada módulo del sistema suma una entrada acá.
 const modulos = [
@@ -30,7 +31,11 @@ const modulos = [
     titulo: 'Recursos y camas',
     descripcion: 'Habitaciones, camas e insumos',
     ruta: '/recursos-camas'
+  },
+  {
+    titulo: 'Historia Clínica',
+    descripcion: 'Alergias, evoluciones y estudios médicos',
+    ruta: '/historia-clinica'
   }
-  // { titulo: 'Otro módulo', descripcion: '...', ruta: '/otro-modulo' }
 ]
 </script>

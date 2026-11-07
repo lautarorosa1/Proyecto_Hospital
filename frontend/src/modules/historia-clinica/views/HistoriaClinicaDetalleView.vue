@@ -24,6 +24,7 @@ async function cargarPaciente() {
 onMounted(cargarPaciente)
 </script>
 
+
 <template>
   <main class="detalle">
     <RouterLink to="/historia-clinica">
@@ -38,27 +39,47 @@ onMounted(cargarPaciente)
     <template v-else-if="paciente">
       <section class="paciente">
         <h2>{{ paciente.nombre }} {{ paciente.apellido }}</h2>
+
         <p><strong>DNI:</strong> {{ paciente.dni }}</p>
+
         <p>
           <strong>Email:</strong>
           {{ paciente.email || 'No registrado' }}
         </p>
       </section>
 
-    
-     <section class="modulos">
-     <RouterLink
-         :to="`/historia-clinica/${route.params.id}/alergias`"
+      <section class="modulos">
+
+        <!-- Alergias -->
+        <RouterLink
+          :to="`/historia-clinica/${route.params.id}/alergias`"
           class="tarjeta tarjeta-enlace"
-           >
-         Alergias
-       </RouterLink>
+        >
+          Alergias
+        </RouterLink>
 
-         <div class="tarjeta">Evoluciones médicas</div>
-         <div class="tarjeta">Estudios médicos</div>
-         <div class="tarjeta">Antecedentes familiares</div>
+        <!-- Evoluciones Médicas -->
+        <RouterLink
+          :to="`/historia-clinica/${route.params.id}/evoluciones`"
+          class="tarjeta tarjeta-enlace"
+        >
+          Evoluciones médicas
+        </RouterLink>
+
+        <!-- Estudios Médicos -->
+        <RouterLink
+          :to="`/historia-clinica/${route.params.id}/estudios-medicos`"
+          class="tarjeta tarjeta-enlace"
+        >
+          Estudios médicos
+        </RouterLink>
+
+        <!-- Antecedentes Familiares -->
+        <div class="tarjeta">
+          Antecedentes familiares
+        </div>
+
       </section>
-
     </template>
   </main>
 </template>

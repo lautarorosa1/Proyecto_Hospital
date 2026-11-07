@@ -62,8 +62,21 @@ onMounted(cargarPaciente)
            Evoluciones Médicas
         </RouterLink>
 
-         <div class="tarjeta">Estudios médicos</div>
-         <div class="tarjeta">Antecedentes familiares</div>
+         
+<RouterLink
+  :to="`/historia-clinica/${route.params.id}/estudios-medicos`"
+  class="tarjeta tarjeta-enlace"
+>
+  Estudios Médicos
+</RouterLink>
+
+<RouterLink
+  :to="`/historia-clinica/${route.params.id}/antecedentes-familiares`"
+  class="tarjeta tarjeta-enlace"
+>
+  Antecedentes Familiares
+</RouterLink>
+
       </section>
 
     </template>

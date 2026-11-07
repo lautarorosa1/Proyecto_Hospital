@@ -19,7 +19,12 @@ const historiaClinicaRoutes = [
     path: '/historia-clinica/:id/evoluciones',
     name: 'historia-clinica-evoluciones',
     component: () => import('./views/EvolucionesMedicasView.vue')
-  }
+  },
+  {
+    path: '/historia-clinica/:id/antecedentes-familiares',
+    name: 'AntecedentesFamiliares',
+    component: () => import('./views/AntecedentesFamiliaresView.vue')
+  },
 ]
 
 export default historiaClinicaRoutes

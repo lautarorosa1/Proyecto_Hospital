@@ -188,6 +188,7 @@ Vite indicará la URL en la terminal (por defecto `http://localhost:5173`).
 |---|---|
 | `npm run dev` | Inicia el servidor con recarga automática (tsx) |
 | `npm run build` | Compila TypeScript a `dist/` |
+| `npm test` | Ejecuta pruebas unitarias aisladas y verifica sus tipos |
 | `npm start` | Ejecuta la versión compilada |
 
 **Frontend** (`/frontend`)

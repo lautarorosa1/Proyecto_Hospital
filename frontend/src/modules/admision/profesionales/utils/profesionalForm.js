@@ -3,6 +3,11 @@
 
 import { emailRegex, dniRegex } from '@/shared/utils/validators'
 
+// Duración de cada turno del profesional (misma regla que el backend)
+export const DURACION_TURNO_MIN = 5
+export const DURACION_TURNO_MAX = 240
+export const DURACION_TURNO_DEFAULT = 30
+
 export const TIPOS_PROFESIONAL = [
   { value: 'medico', label: 'Médico' },
   { value: 'enfermero', label: 'Enfermero' },
@@ -42,6 +47,7 @@ export const profesionalVacio = () => ({
   tipoProfesional: '',
   especialidadId: '',
   usuarioId: '',
+  duracionTurnoMin: DURACION_TURNO_DEFAULT,
   estado: 'activo'
 })
 
@@ -53,7 +59,8 @@ export const erroresVacios = () => ({
   matricula: '',
   tipoProfesional: '',
   especialidadId: '',
-  usuarioId: ''
+  usuarioId: '',
+  duracionTurnoMin: ''
 })
 
 const esIdValido = (valor) => {
@@ -112,6 +119,17 @@ export const validarProfesional = (profesional, errores) => {
     valido = false
   }
 
+  const duracion = Number(profesional.duracionTurnoMin)
+  if (
+    profesional.duracionTurnoMin === '' ||
+    !Number.isInteger(duracion) ||
+    duracion < DURACION_TURNO_MIN ||
+    duracion > DURACION_TURNO_MAX
+  ) {
+    errores.duracionTurnoMin = `Ingrese un entero entre ${DURACION_TURNO_MIN} y ${DURACION_TURNO_MAX}`
+    valido = false
+  }
+
   return valido
 }
 
@@ -127,7 +145,8 @@ export const armarPayload = (profesional, { edicion = false } = {}) => {
     matricula: profesional.matricula.trim(),
     tipoProfesional: profesional.tipoProfesional,
     especialidadId: Number(profesional.especialidadId),
-    usuarioId: Number(profesional.usuarioId)
+    usuarioId: Number(profesional.usuarioId),
+    duracionTurnoMin: Number(profesional.duracionTurnoMin)
   }
 
   if (edicion) {

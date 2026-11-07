@@ -25,6 +25,11 @@ const modulos = [
     titulo: 'Admisión',
     descripcion: 'Pacientes, profesionales y turnos',
     ruta: '/admision'
+  },
+  {
+    titulo: 'Recursos y camas',
+    descripcion: 'Habitaciones, camas e insumos',
+    ruta: '/recursos-camas'
   }
   // { titulo: 'Otro módulo', descripcion: '...', ruta: '/otro-modulo' }
 ]

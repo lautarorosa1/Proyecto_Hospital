@@ -20,15 +20,21 @@ export function createApp() {
   app.use('/pacientes', container.pacienteModule.routes);
   app.use('/profesionales', container.profesionalModule.routes);
 
-  // Atención de enfermería: Protocolos
-  console.log('ANTES DE REGISTRAR PROTOCOLOS');
+  // Módulo de admisión y turnos
+  app.use('/profesionales', container.horarioModule.routes);
+  app.use('/turnos', container.turnoModule.routes);
+  app.use('/guardia', container.guardiaModule.routes);
 
+  // Módulo de recursos y camas
+  app.use('/habitaciones', container.recursosCamasModule.habitacionRoutes);
+  app.use('/insumos', container.recursosCamasModule.insumoRoutes);
+  app.use('/camas', container.recursosCamasModule.camaRoutes);
+
+  // Atención de enfermería: Protocolos
   app.use(
     '/atencion-enfermeria/protocolos',
     container.atencionEnfermeriaModule.routes
   );
-
-  console.log('PROTOCOLOS REGISTRADOS');
 
   // Atención de enfermería: Notas
   app.use(
@@ -36,15 +42,11 @@ export function createApp() {
     container.atencionEnfermeriaModule.notasRoutes
   );
 
-  console.log('NOTAS DE ENFERMERÍA REGISTRADAS');
-
   // Atención de enfermería: Indicaciones
   app.use(
     '/atencion-enfermeria/indicaciones',
     container.atencionEnfermeriaModule.indicacionesRoutes
   );
-
-  console.log('INDICACIONES REGISTRADAS');
 
   // Atención de enfermería: Internaciones
   app.use(
@@ -52,23 +54,17 @@ export function createApp() {
     container.atencionEnfermeriaModule.internacionesRoutes
   );
 
-  console.log('INTERNACIONES REGISTRADAS');
-
   // Atención de enfermería: Medicaciones
   app.use(
     '/atencion-enfermeria/medicaciones',
     container.atencionEnfermeriaModule.medicacionesRoutes
   );
 
-  console.log('MEDICACIONES REGISTRADAS');
-
   // Atención de enfermería: Signos Vitales
   app.use(
     '/atencion-enfermeria/signos-vitales',
     container.atencionEnfermeriaModule.signosVitalesRoutes
   );
-
-  console.log('SIGNOS VITALES REGISTRADOS');
 
   // Ruta para endpoints inexistentes
   app.use((_req: Request, res: Response) => {

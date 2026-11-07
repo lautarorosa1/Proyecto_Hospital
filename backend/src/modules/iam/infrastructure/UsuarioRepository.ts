@@ -1,6 +1,11 @@
 import { Repository } from 'typeorm';
-import { CreateUsuarioData, IUsuarioRepository } from '../domain/IUsuarioRepository';
-import { Permiso, Rol, Usuario } from '../domain/Rol';
+import {
+  CreateUsuarioData,
+  IUsuarioRepository,
+  UpdateRolData,
+  UpdateUsuarioData,
+} from '../domain/IUsuarioRepository';
+import { Permiso, Rol, ROLES_VALIDOS, Usuario } from '../domain/Rol';
 import { UsuarioEntity } from './UsuarioEntity';
 import { RolEntity } from './RolEntity';
 import { PermisoEntity } from './PermisoEntity';
@@ -19,11 +24,13 @@ export class UsuarioRepository implements IUsuarioRepository {
     };
   }
 
-  private toRolDomain(entity: RolEntity): Rol {
+  private toRolDomain(entity: RolEntity, cantidadUsuarios?: number): Rol {
     return {
       id: entity.id,
       nombre: entity.nombre,
+      descripcion: entity.descripcion || '',
       permisos: (entity.permisos || []).map((p) => this.toPermisoDomain(p)),
+      cantidadUsuarios,
     };
   }
 
@@ -56,6 +63,14 @@ export class UsuarioRepository implements IUsuarioRepository {
     return entity ? this.toUsuarioDomain(entity) : null;
   }
 
+  async findAllUsuarios(): Promise<Usuario[]> {
+    const entities = await this.usuarioRepo.find({
+      relations: { roles: { permisos: true } },
+      order: { fecha_creacion: 'DESC' },
+    });
+    return entities.map((u) => this.toUsuarioDomain(u));
+  }
+
   async create(data: CreateUsuarioData): Promise<Usuario> {
     const rolEntities: RolEntity[] = [];
 
@@ -65,7 +80,11 @@ export class UsuarioRepository implements IUsuarioRepository {
         relations: { permisos: true },
       });
       if (!found) {
-        found = this.rolRepo.create({ nombre: rol.nombre, permisos: [] });
+        found = this.rolRepo.create({
+          nombre: rol.nombre,
+          descripcion: rol.descripcion,
+          permisos: [],
+        });
         found = await this.rolRepo.save(found);
       }
       rolEntities.push(found);
@@ -84,11 +103,93 @@ export class UsuarioRepository implements IUsuarioRepository {
     return this.toUsuarioDomain(saved);
   }
 
+  async updateUsuario(
+    id: string,
+    data: UpdateUsuarioData,
+  ): Promise<Usuario | null> {
+    const entity = await this.usuarioRepo.findOne({
+      where: { id },
+      relations: { roles: { permisos: true } },
+    });
+    if (!entity) return null;
+
+    if (data.nombre !== undefined) entity.nombre = data.nombre;
+    if (data.apellido !== undefined) entity.apellido = data.apellido;
+    if (data.email !== undefined) entity.email = data.email;
+
+    const saved = await this.usuarioRepo.save(entity);
+    return this.toUsuarioDomain(saved);
+  }
+
+  async updateEstado(id: string, activo: boolean): Promise<Usuario | null> {
+    const entity = await this.usuarioRepo.findOne({
+      where: { id },
+      relations: { roles: { permisos: true } },
+    });
+    if (!entity) return null;
+
+    entity.activo = activo;
+    const saved = await this.usuarioRepo.save(entity);
+    return this.toUsuarioDomain(saved);
+  }
+
+  async setUsuarioRoles(id: string, roles: Rol[]): Promise<Usuario | null> {
+    const entity = await this.usuarioRepo.findOne({
+      where: { id },
+      relations: { roles: { permisos: true } },
+    });
+    if (!entity) return null;
+
+    const rolEntities: RolEntity[] = [];
+    for (const rol of roles) {
+      const found = await this.rolRepo.findOne({
+        where: { id: rol.id },
+        relations: { permisos: true },
+      });
+      if (found) {
+        rolEntities.push(found);
+      }
+    }
+
+    entity.roles = rolEntities;
+    const saved = await this.usuarioRepo.save(entity);
+    return this.toUsuarioDomain(saved);
+  }
+
   async findAllRoles(): Promise<Rol[]> {
+    await this.findOrCreateRoles(ROLES_VALIDOS);
+
     const entities = await this.rolRepo.find({
       relations: { permisos: true },
+      order: { id: 'ASC' },
     });
-    return entities.map((r) => this.toRolDomain(r));
+
+    const usuarios = await this.usuarioRepo.find({
+      relations: { roles: true },
+    });
+
+    return entities.map((r) => {
+      const count = usuarios.filter((u) =>
+        (u.roles || []).some((ur) => ur.id === r.id),
+      ).length;
+      return this.toRolDomain(r, count);
+    });
+  }
+
+  async findRolById(id: number): Promise<Rol | null> {
+    const entity = await this.rolRepo.findOne({
+      where: { id },
+      relations: { permisos: true },
+    });
+    return entity ? this.toRolDomain(entity) : null;
+  }
+
+  async findRolByNombre(nombre: string): Promise<Rol | null> {
+    const entity = await this.rolRepo.findOne({
+      where: { nombre },
+      relations: { permisos: true },
+    });
+    return entity ? this.toRolDomain(entity) : null;
   }
 
   async findOrCreateRoles(nombres: string[]): Promise<Rol[]> {
@@ -112,5 +213,44 @@ export class UsuarioRepository implements IUsuarioRepository {
     }
 
     return roles;
+  }
+
+  async createRol(nombre: string, descripcion?: string): Promise<Rol> {
+    const entity = this.rolRepo.create({
+      nombre,
+      descripcion,
+      permisos: [],
+    });
+    const saved = await this.rolRepo.save(entity);
+    return this.toRolDomain(saved, 0);
+  }
+
+  async updateRol(id: number, data: UpdateRolData): Promise<Rol | null> {
+    const entity = await this.rolRepo.findOne({
+      where: { id },
+      relations: { permisos: true },
+    });
+    if (!entity) return null;
+
+    if (data.nombre !== undefined) entity.nombre = data.nombre;
+    if (data.descripcion !== undefined) entity.descripcion = data.descripcion;
+
+    const saved = await this.rolRepo.save(entity);
+    const count = await this.countUsuariosByRolId(saved.id);
+    return this.toRolDomain(saved, count);
+  }
+
+  async deleteRol(id: number): Promise<boolean> {
+    const result = await this.rolRepo.delete(id);
+    return Boolean(result.affected && result.affected > 0);
+  }
+
+  async countUsuariosByRolId(rolId: number): Promise<number> {
+    const usuarios = await this.usuarioRepo.find({
+      relations: { roles: true },
+    });
+    return usuarios.filter((u) =>
+      (u.roles || []).some((r) => r.id === rolId),
+    ).length;
   }
 }

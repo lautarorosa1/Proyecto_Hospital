@@ -3,28 +3,34 @@
 **Módulo:** Identidad y Accesos (IAM)  
 **Responsable Asignado:** Nacho  
 **URLs Base Disponibles:**
-- `http://localhost:3000/auth`
+- `http://localhost:3000`
 - `http://localhost:3000/api/v1/iam`
 
 ---
 
-## 📌 Endpoints
+## 📌 Tabla General de Endpoints
 
 | Método | Ruta | Descripción | Permisos/Roles requeridos | Código de respuesta |
 | :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/auth/register` | Registrar nuevo usuario con asignación de roles | Público (o Administrador) | `201` / `400` / `409` |
+| `POST` | `/auth/register` | Registrar nuevo usuario con asignación de roles | Público | `201` / `400` / `409` |
 | `POST` | `/auth/login` | Iniciar sesión y obtener token JWT | Público | `200` / `400` / `401` / `403` |
-| `GET` | `/auth/me` | Obtener perfil del usuario autenticado | Autenticado (`Bearer <token>`) | `200` / `401` / `404` |
+| `GET` | `/auth/me` | Obtener perfil del usuario autenticado | Autenticado (`JWT`) | `200` / `401` / `404` |
+| `GET` | `/roles` | Listar todos los roles del sistema y cantidad de usuarios | `Administrador` | `200` / `401` / `403` |
+| `POST` | `/roles` | Crear un nuevo rol en el sistema | `Administrador` | `201` / `400` / `403` / `409` |
+| `PUT` | `/roles/:id` | Actualizar nombre o descripción de un rol | `Administrador` | `200` / `400` / `403` / `404` / `409` |
+| `DELETE` | `/roles/:id` | Eliminar un rol no esencial sin usuarios asignados | `Administrador` | `200` / `400` / `403` / `404` / `409` |
+| `GET` | `/usuarios` | Listar todos los usuarios con sus roles y estado | `Administrador` | `200` / `401` / `403` |
+| `GET` | `/usuarios/:id` | Obtener el detalle de un usuario por UUID | `Administrador` | `200` / `401` / `403` / `404` |
+| `PUT` | `/usuarios/:id` | Actualizar datos básicos del usuario (`nombre`, `apellido`, `email`) | `Administrador` | `200` / `400` / `403` / `404` / `409` |
+| `PATCH` | `/usuarios/:id/estado` | Activar o desactivar usuario (baja lógica) | `Administrador` | `200` / `401` / `403` / `404` |
+| `POST` | `/usuarios/:id/roles` | Asignar uno o más roles a un usuario | `Administrador` | `200` / `400` / `403` / `404` |
+| `DELETE` | `/usuarios/:id/roles/:rolId` | Quitar un rol específico a un usuario | `Administrador` | `200` / `400` / `403` / `404` |
 
 ---
 
-## 📋 Especificación de Endpoints
+## 🔐 1. Autenticación y Perfil (`/auth`)
 
-### 1. Registrar Usuario (`POST /auth/register`)
-
-Registra un nuevo usuario en el sistema, hashea su contraseña con `bcryptjs` y le asigna los roles solicitados (creándolos automáticamente en la base de datos si aún no existen). Si no se envía el arreglo `roles`, se asigna `["Paciente"]` por defecto.
-
-#### Request Body (`application/json`):
+### Registrar Usuario (`POST /auth/register`)
 ```json
 {
   "nombre": "Ignacio",
@@ -35,35 +41,7 @@ Registra un nuevo usuario en el sistema, hashea su contraseña con `bcryptjs` y 
 }
 ```
 
-#### Response Exitosa (`201 Created`):
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "usuario": {
-    "id": "a3f1c9e0-7b2d-4c8a-9f10-123456789abc",
-    "nombre": "Ignacio",
-    "apellido": "González",
-    "email": "nacho@hospital.com",
-    "roles": ["Administrador", "Médico"],
-    "permisos": []
-  }
-}
-```
-
-#### Ejemplo con `curl`:
-```bash
-curl -X POST http://localhost:3000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"Ignacio","apellido":"González","email":"nacho@hospital.com","password":"Password123!","roles":["Administrador"]}'
-```
-
----
-
-### 2. Iniciar Sesión (`POST /auth/login`)
-
-Valida las credenciales del usuario contra `password_hash`, verifica que el usuario se encuentre `activo` y devuelve un token JWT firmado con `{ userId, email, roles, permisos }`.
-
-#### Request Body (`application/json`):
+### Iniciar Sesión (`POST /auth/login`)
 ```json
 {
   "email": "nacho@hospital.com",
@@ -71,64 +49,108 @@ Valida las credenciales del usuario contra `password_hash`, verifica que el usua
 }
 ```
 
-#### Response Exitosa (`200 OK`):
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "usuario": {
-    "id": "a3f1c9e0-7b2d-4c8a-9f10-123456789abc",
-    "nombre": "Ignacio",
-    "apellido": "González",
-    "email": "nacho@hospital.com",
-    "roles": ["Administrador"],
-    "permisos": []
-  }
-}
-```
-
-#### Ejemplo con `curl`:
-```bash
-curl -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"nacho@hospital.com","password":"Password123!"}'
-```
+### Perfil Actual (`GET /auth/me`)
+Requiere header `Authorization: Bearer <JWT_TOKEN>`.
 
 ---
 
-### 3. Obtener Perfil Actual (`GET /auth/me`)
+## 🛡️ 2. Gestión de Roles (`/roles`) — Requiere Rol `Administrador`
 
-Retorna los datos actualizados del usuario autenticado a partir del token JWT enviado en el encabezado `Authorization: Bearer <token>`.
+### Listar Roles (`GET /roles`)
+Asegura la existencia de los 7 roles base del hospital y devuelve cada rol con la cantidad de usuarios que lo tienen asignado.
 
-#### Headers Requeridos:
-```http
-Authorization: Bearer <JWT_TOKEN>
+#### Response (`200 OK`):
+```json
+[
+  {
+    "id": 1,
+    "nombre": "Administrador",
+    "descripcion": "",
+    "permisos": [],
+    "cantidadUsuarios": 1,
+    "esEsencial": true
+  },
+  {
+    "id": 2,
+    "nombre": "Médico",
+    "descripcion": "",
+    "permisos": [],
+    "cantidadUsuarios": 3,
+    "esEsencial": true
+  }
+]
 ```
 
-#### Response Exitosa (`200 OK`):
+### Crear Rol (`POST /roles`)
+#### Request Body:
 ```json
 {
-  "id": "a3f1c9e0-7b2d-4c8a-9f10-123456789abc",
+  "nombre": "Auditor Médico",
+  "descripcion": "Auditoría de historias clínicas y facturación"
+}
+```
+
+### Actualizar Rol (`PUT /roles/:id`)
+#### Request Body:
+```json
+{
+  "nombre": "Auditor Clínico",
+  "descripcion": "Descripción actualizada"
+}
+```
+
+### Eliminar Rol (`DELETE /roles/:id`)
+Elimina un rol personalizado siempre que no sea uno de los 7 roles esenciales del hospital ni tenga usuarios asociados.
+
+---
+
+## 👥 3. Gestión de Usuarios y Asignación de Roles (`/usuarios`) — Requiere Rol `Administrador`
+
+### Listar Usuarios (`GET /usuarios`)
+Devuelve todos los usuarios ordenados por fecha de creación descendente, incluyendo `activo`, `roles` y `rolesDetalle`.
+
+### Actualizar Usuario (`PUT /usuarios/:id`)
+```json
+{
   "nombre": "Ignacio",
   "apellido": "González",
-  "email": "nacho@hospital.com",
-  "roles": ["Administrador"],
-  "permisos": []
+  "email": "nacho.gonzalez@hospital.com"
 }
 ```
 
-#### Ejemplo con `curl`:
-```bash
-curl -X GET http://localhost:3000/auth/me \
-  -H "Authorization: Bearer <JWT_TOKEN>"
+### Alternar Estado Activo/Inactivo (`PATCH /usuarios/:id/estado`)
+```json
+{
+  "activo": false
+}
 ```
+
+### Asignar Rol(es) a Usuario (`POST /usuarios/:id/roles`)
+Permite asignar por `rolId` numérico o por arreglo de nombres `roles`:
+```json
+{
+  "rolId": 2
+}
+```
+o bien:
+```json
+{
+  "roles": ["Médico", "Enfermero"]
+}
+```
+
+### Quitar Rol a Usuario (`DELETE /usuarios/:id/roles/:rolId`)
+Desvincula el `rolId` indicado de la tabla intermedia `usuario_roles` y devuelve el usuario actualizado.
 
 ---
 
-## ⚠️ Códigos de Error
+## ⚠️ Códigos de Respuesta y Errores
 
-| Código | Cuándo ocurre | Ejemplo de respuesta |
-| :---: | :--- | :--- |
-| `400` | Datos obligatorios faltantes, email inválido o password menor a 6 caracteres | `{ "error": "El email no es válido" }` |
-| `401` | Credenciales incorrectas o token JWT ausente, inválido o expirado | `{ "error": "Credenciales inválidas" }` |
-| `403` | Usuario inactivo o sin el rol/permiso requerido para el recurso | `{ "error": "Acceso denegado: no posee el rol requerido" }` |
-| `409` | Email ya registrado en el sistema | `{ "error": "Ya existe un usuario con ese email" }` |
+| Código | Cuándo ocurre |
+| :---: | :--- |
+| `200` / `201` | Operación exitosa |
+| `400` | Datos inválidos, campos vacíos o intento de eliminar un rol esencial del hospital |
+| `401` | Credenciales inválidas o token JWT ausente/expirado |
+| `403` | Usuario inactivo o sin el rol `Administrador` |
+| `404` | Usuario o rol no encontrado |
+| `409` | Email de usuario duplicado, nombre de rol duplicado o rol con usuarios asignados al intentar eliminar |

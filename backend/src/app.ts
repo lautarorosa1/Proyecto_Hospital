@@ -17,6 +17,7 @@ export function createApp() {
 
   app.use('/auth', container.iamModule.routes);
   app.use('/api/v1/iam', container.iamModule.routes);
+  app.use('/', container.iamModule.routes);
 
   app.use('/pacientes', container.pacienteModule.routes);
   app.use('/profesionales', container.profesionalModule.routes);

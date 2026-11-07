@@ -20,6 +20,16 @@ const routes = [
     component: () => import('@/views/RegisterView.vue'),
     meta: { guestOnly: true }
   },
+  {
+    path: '/admin/usuarios',
+    component: () => import('@/views/iam/UsuariosAdminView.vue'),
+    meta: { requiresAuth: true, roles: ['Administrador'] }
+  },
+  {
+    path: '/admin/roles',
+    component: () => import('@/views/iam/RolesAdminView.vue'),
+    meta: { requiresAuth: true, roles: ['Administrador'] }
+  },
   ...admisionRoutes,
   ...historiaClinicaRoutes,
   ...recursosCamasRoutes

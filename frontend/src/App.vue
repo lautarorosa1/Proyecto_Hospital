@@ -2,11 +2,11 @@
   <div class="min-h-screen bg-gray-50">
     <header class="border-b border-gray-200 bg-white shadow-xs">
       <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-        <div class="flex items-center gap-6">
+        <div class="flex flex-wrap items-center gap-6">
           <router-link to="/" class="text-lg font-bold text-indigo-600">
             Hospital IS
           </router-link>
-          <nav class="flex items-center gap-4 text-sm font-medium text-gray-600">
+          <nav class="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-600">
             <router-link to="/" class="transition hover:text-indigo-600">
               Inicio
             </router-link>
@@ -18,6 +18,20 @@
             </router-link>
             <router-link to="/recursos-camas" class="transition hover:text-indigo-600">
               Recursos y Camas
+            </router-link>
+            <router-link
+              v-if="authStore.hasRole('Administrador')"
+              to="/admin/usuarios"
+              class="font-semibold text-indigo-600 transition hover:text-indigo-800"
+            >
+              Gestión de Usuarios
+            </router-link>
+            <router-link
+              v-if="authStore.hasRole('Administrador')"
+              to="/admin/roles"
+              class="font-semibold text-indigo-600 transition hover:text-indigo-800"
+            >
+              Roles
             </router-link>
           </nav>
         </div>

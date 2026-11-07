@@ -26,7 +26,9 @@ export interface Permiso {
 export interface Rol {
   id: number;
   nombre: NombreRol | string;
+  descripcion?: string;
   permisos: Permiso[];
+  cantidadUsuarios?: number;
 }
 
 export interface Usuario {
@@ -39,4 +41,3 @@ export interface Usuario {
   fechaCreacion: Date;
   roles: Rol[];
 }
-

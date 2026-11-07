@@ -1,3 +1,4 @@
+
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
@@ -23,7 +24,6 @@ async function cargarPaciente() {
 
 onMounted(cargarPaciente)
 </script>
-
 
 <template>
   <main class="detalle">
@@ -135,5 +135,4 @@ h1 {
   background: #eff6ff;
   border-color: #2563eb;
 }
-
 </style>

@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { TestDataSource } from './test-data-source';
-import { AlergiaEntity } from '../infrastructure/AlergiaEntity';
-import { AlergiaRepository } from '../infrastructure/AlergiaRepository';
+import { AlergiaEntity } from '../../../../src/modules/historia-clinica/infrastructure/AlergiaEntity';
+import { AlergiaRepository } from '../../../../src/modules/historia-clinica/infrastructure/AlergiaRepository';
 
 test('Prueba de integración del repositorio de Alergias', async (t) => {
   await TestDataSource.initialize();

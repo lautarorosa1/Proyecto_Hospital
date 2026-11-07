@@ -1,15 +1,15 @@
-
+import { iamModule } from './modules/iam/iam.module';
 import { pacienteModule } from './modules/admision/pacientes/paciente.module';
 import { profesionalModule } from './modules/admision/profesionales/profesional.module';
 import { turnoModule } from './modules/admision/turnos/turno.module';
 import { horarioModule } from './modules/admision/horarios/horario.module';
 import { guardiaModule } from './modules/admision/guardia/guardia.module';
-
-
 import { recursosCamasModule } from './modules/recursos-camas/recursos-camas.module';
 import { historiaClinicaModule } from './modules/historia-clinica/historiaClinica.module';
+import { atencionEnfermeriaModule } from './modules/atencion-enfermeria/atencion-enfermeria.module';
 
 export const container = {
+  iamModule,
   pacienteModule,
   profesionalModule,
   turnoModule,
@@ -17,6 +17,5 @@ export const container = {
   guardiaModule,
   recursosCamasModule,
   historiaClinicaModule,
+  atencionEnfermeriaModule,
 };
-
-// JUNTAMOS LOS MODULOS PARA QUE APP LOS PUEDA USAR - INDICE DE MODULOS

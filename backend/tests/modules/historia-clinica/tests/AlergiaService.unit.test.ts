@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { AlergiaService } from '../application/AlergiaService';
-import type { IAlergiaRepository } from '../domain/IAlergiaRepository';
-import type { IPacienteRepository } from '../../admision/pacientes/domain/IPacienteRepository';
-import type { Alergia } from '../domain/Alergia';
-import { BadRequestError, NotFoundError } from '../../../shared/errors';
+import { AlergiaService } from '../../../../src/modules/historia-clinica/application/AlergiaService';
+import type { IAlergiaRepository } from '../../../../src/modules/historia-clinica/domain/IAlergiaRepository';
+import type { IPacienteRepository } from '../../../../src/modules/admision/pacientes/domain/IPacienteRepository';
+import type { Alergia } from '../../../../src/modules/historia-clinica/domain/Alergia';
+import { BadRequestError, NotFoundError } from '../../../../src/shared/errors';
 
 function crearServicio() {
   const alergias: Alergia[] = [];

@@ -12,4 +12,14 @@ export interface ISignosVitalesRepository {
   findByInternacionId(
     internacionId: number
   ): Promise<SignosVitales[]>;
+
+  update(
+    id: number,
+    datos: Partial<Omit<SignosVitales, 'id'>>
+  ): Promise<SignosVitales | null>;
+
+  // Eliminar signos vitales
+  delete(
+    id: number
+  ): Promise<boolean>;
 }

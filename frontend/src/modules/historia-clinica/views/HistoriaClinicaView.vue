@@ -48,7 +48,13 @@ onMounted(cargarPacientes)
 </script>
 
 <template>
+
   <main class="historia-clinica">
+    
+<RouterLink to="/" class="volver-menu">
+  ← Volver al menú principal
+</RouterLink>
+
     <h1>Historia Clínica</h1>
     <p>Consulta de pacientes registrados en el hospital.</p>
 
@@ -163,4 +169,17 @@ button:hover {
 .error {
   color: red;
 }
+
+.volver-menu {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.volver-menu:hover {
+  text-decoration: underline;
+}
+
 </style>

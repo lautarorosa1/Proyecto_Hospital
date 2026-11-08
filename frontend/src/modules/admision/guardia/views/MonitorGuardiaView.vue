@@ -40,7 +40,7 @@ import { getProfesionales } from '../../profesionales/services/profesionalServic
 import { getPacientes } from '../../pacientes/services/pacienteService'
 import { getColaGuardia } from '../services/guardiaService'
 import { useAlertasGuardia } from '../composables/useAlertasGuardia'
-import { nombreProfesional, mensajeError } from '../../turnos/utils/turnoForm'
+import { nombreProfesional, mensajeError } from '@/shared/utils/formato'
 import AlertaRiesgoVital from '../components/AlertaRiesgoVital.vue'
 import ColaGuardiaTabla from '../components/ColaGuardiaTabla.vue'
 

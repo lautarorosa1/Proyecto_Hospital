@@ -59,17 +59,14 @@ export const formatearFecha = (iso) => {
   return `${dia}/${mes}/${anio}`
 }
 
-export const nombreProfesional = (profesional) =>
-  profesional ? `${profesional.apellido}, ${profesional.nombre}` : '—'
-
-export const nombrePaciente = (paciente) =>
-  paciente ? `${paciente.apellido}, ${paciente.nombre}` : '—'
-
-// Mensaje legible a partir de un error de axios ({ error: "mensaje" } del backend)
-export const mensajeError = (error, porDefecto = 'Ocurrió un error inesperado') => {
-  if (!error.response) return 'No se pudo conectar con el servidor'
-  return error.response.data?.error || porDefecto
-}
+// Estos helpers viven en shared/ (los usan también otros submódulos);
+// se re-exportan para no tocar las vistas de turnos.
+export {
+  nombreProfesional,
+  nombrePaciente,
+  nombrePacienteDe,
+  mensajeError
+} from '@/shared/utils/formato'
 
 // ---------- Creación de turnos ----------
 

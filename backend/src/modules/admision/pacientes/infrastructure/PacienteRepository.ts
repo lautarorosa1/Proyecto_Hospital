@@ -15,10 +15,11 @@ export class PacienteRepository implements IPacienteRepository {
     fechaNacimiento: entity.fechaNacimiento,
     telefono: entity.telefono ?? undefined,
     direccion: entity.direccion ?? undefined,
+    activo: entity.activo,
   });
 
   async findAll(): Promise<Paciente[]> {
-    const entities = await this.repo.find();
+    const entities = await this.repo.find({ where: { activo: true } });
     return entities.map(this.toDomain);
   }
 
@@ -52,10 +53,5 @@ export class PacienteRepository implements IPacienteRepository {
     this.repo.merge(entity, data);
     const saved = await this.repo.save(entity);
     return this.toDomain(saved);
-  }
-
-  async delete(id: number): Promise<boolean> {
-    const result = await this.repo.delete(id);
-    return (result.affected ?? 0) > 0;
   }
 }

@@ -132,7 +132,7 @@
               </td>
               <td class="px-4 py-3">{{ nombreProfesional(profesionalesPorId[turno.profesionalId]) }}</td>
               <td class="px-4 py-3">
-                {{ turno.pacienteId ? nombrePaciente(pacientesPorId[turno.pacienteId]) : '—' }}
+                {{ turno.pacienteId ? nombrePacienteDe(pacientesPorId, turno.pacienteId) : '—' }}
               </td>
               <td class="px-4 py-3">
                 <span
@@ -231,7 +231,7 @@ import {
   claseEstadoTurno,
   formatearFecha,
   nombreProfesional,
-  nombrePaciente,
+  nombrePacienteDe,
   mensajeError
 } from '../utils/turnoForm'
 

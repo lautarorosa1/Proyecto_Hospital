@@ -1,4 +1,4 @@
-import { In, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import type { EstadoTurno, NuevoTurno, Turno } from '../domain/Turno';
 import type { AjusteTurno, TurnoAjustado } from '../domain/Entreturno';
 import type {
@@ -83,10 +83,44 @@ export class TurnoRepository implements ITurnoRepository {
     return entities.map(this.toDomain);
   }
 
-  async create(data: NuevoTurno): Promise<Turno> {
-    const entity = this.repo.create(data);
-    const saved = await this.repo.save(entity);
-    return this.toDomain(saved);
+  /**
+   * Lock de transacción por (profesional, día). Lo comparten el alta de slots y
+   * el entreturno, así que nunca modifican la misma agenda a la vez. También
+   * cubre el caso en que no hay filas que bloquear (hueco libre en la agenda).
+   */
+  private async bloquearAgenda(
+    manager: EntityManager,
+    profesionalId: number,
+    fecha: string,
+  ): Promise<void> {
+    const claveDia = Number(fecha.replace(/-/g, '')); // 20261024 (cabe en int4)
+    await manager.query('SELECT pg_advisory_xact_lock($1, $2)', [
+      profesionalId,
+      claveDia,
+    ]);
+  }
+
+  async crearExclusivo(
+    data: NuevoTurno,
+    validar: (activos: Turno[]) => void,
+  ): Promise<Turno> {
+    return this.repo.manager.transaction(async (manager) => {
+      await this.bloquearAgenda(manager, data.profesionalId, data.fecha);
+
+      const entities = await manager
+        .createQueryBuilder(TurnoEntity, 't')
+        .where('t.profesionalId = :profesionalId', {
+          profesionalId: data.profesionalId,
+        })
+        .andWhere('t.fecha = :fecha', { fecha: data.fecha })
+        .andWhere('t.estado <> :cancelado', { cancelado: 'cancelado' })
+        .getMany();
+
+      validar(entities.map(this.toDomain));
+
+      const saved = await manager.save(manager.create(TurnoEntity, data));
+      return this.toDomain(saved);
+    });
   }
 
   async reservar(
@@ -172,15 +206,10 @@ export class TurnoRepository implements ITurnoRepository {
     planificar: (activos: Turno[]) => AjusteTurno[],
   ): Promise<{ entreturno: Turno; afectados: TurnoAjustado[] }> {
     return this.repo.manager.transaction(async (manager) => {
-      // 1) Lock de transacción por (profesional, día): dos entreturnos (o un
-      //    entreturno y otro cambio de agenda que use este lock) del mismo
-      //    profesional y fecha se ejecutan de a uno. También cubre el caso en
-      //    que no hay filas que bloquear (hueco libre en la agenda).
-      const claveDia = Number(data.fecha.replace(/-/g, '')); // 20261024 (cabe en int4)
-      await manager.query('SELECT pg_advisory_xact_lock($1, $2)', [
-        data.profesionalId,
-        claveDia,
-      ]);
+      // 1) Lock de transacción por (profesional, día): dos entreturnos, o un
+      //    entreturno y el alta de un slot, del mismo profesional y fecha se
+      //    ejecutan de a uno.
+      await this.bloquearAgenda(manager, data.profesionalId, data.fecha);
 
       // 2) Lectura de la agenda con las filas bloqueadas: nadie puede
       //    reservar/cambiar estado de estos turnos hasta el commit.

@@ -101,14 +101,21 @@ export class ProfesionalService implements IProfesionalService {
     }
   }
 
-  private validarEmail(email: string): void {
-    if (!EMAIL_REGEX.test(email.trim())) {
+  /** Campo opcional: si viene, tiene que ser texto. */
+  private validarTextoOpcional(valor: unknown, campo: string): void {
+    if (valor !== undefined && typeof valor !== 'string') {
+      throw new BadRequestError(`${campo} debe ser texto`);
+    }
+  }
+
+  private validarEmail(email: unknown): void {
+    if (typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
       throw new BadRequestError('El email no es válido');
     }
   }
 
-  private validarDni(dni: string): void {
-    if (!DNI_REGEX.test(dni.trim())) {
+  private validarDni(dni: unknown): void {
+    if (typeof dni !== 'string' || !DNI_REGEX.test(dni.trim())) {
       throw new BadRequestError('El DNI no es válido');
     }
   }
@@ -240,6 +247,7 @@ export class ProfesionalService implements IProfesionalService {
     this.validarTextoObligatorio(dto.dni, 'El DNI es obligatorio');
     this.validarTextoObligatorio(dto.email, 'El email es obligatorio');
     this.validarTextoObligatorio(dto.matricula, 'La matrícula es obligatoria');
+    this.validarTextoOpcional(dto.telefono, 'El teléfono');
     if (!dto.tipoProfesional) {
       throw new BadRequestError('El tipo de profesional es obligatorio');
     }
@@ -293,6 +301,7 @@ export class ProfesionalService implements IProfesionalService {
         'La matrícula no puede estar vacía',
       );
     }
+    this.validarTextoOpcional(dto.telefono, 'El teléfono');
     if (dto.dni !== undefined) this.validarDni(dto.dni);
     if (dto.email !== undefined) this.validarEmail(dto.email);
     if (dto.tipoProfesional !== undefined) this.validarTipo(dto.tipoProfesional);

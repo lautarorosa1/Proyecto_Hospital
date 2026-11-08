@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import { container } from './container';
 import { errorHandler } from './shared/errorHandler';
@@ -10,6 +10,11 @@ export function createApp() {
 
   app.use(cors());
   app.use(express.json());
+  // Express 5 deja req.body en undefined si no llega un JSON: se normaliza
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    req.body ??= {};
+    next();
+  });
 
   app.get('/health', (_req: Request, res: Response) =>
     res.json({ status: 'ok' })

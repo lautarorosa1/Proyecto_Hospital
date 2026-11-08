@@ -32,7 +32,13 @@ const routes = [
   },
   ...admisionRoutes,
   ...historiaClinicaRoutes,
-  ...recursosCamasRoutes
+  ...recursosCamasRoutes,
+
+// Siempre al final: captura cualquier ruta que no coincida con las anteriores
+  {
+    path: '/:pathMatch(.*)*',
+    component: () => import('@/shared/views/NotFoundView.vue')
+  }
 ]
 
 const router = createRouter({

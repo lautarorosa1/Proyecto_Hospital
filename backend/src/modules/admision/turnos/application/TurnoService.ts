@@ -169,7 +169,15 @@ export class TurnoService implements ITurnoService {
     where.desde = ahoraLocal();
 
     const turnos = await this.turnoRepository.findAll(where);
-    return turnos.map((t) => this.toDto(t));
+
+    // Solo se ofrecen slots de profesionales activos (los de baja o en licencia
+    // no pueden recibir reservas).
+    const activos = await this.profesionalRepository.findAll({ estado: 'activo' });
+    const idsActivos = new Set(activos.map((p) => p.id));
+
+    return turnos
+      .filter((t) => idsActivos.has(t.profesionalId))
+      .map((t) => this.toDto(t));
   }
 
   async getById(id: number): Promise<ResponseTurnoDto> {
@@ -229,28 +237,29 @@ export class TurnoService implements ITurnoService {
     }
 
     // No se permite pisar turnos existentes (no cancelados) del profesional.
-    const existentes = await this.turnoRepository.findActivosByProfesionalYFecha(
-      dto.profesionalId,
-      dto.fecha,
+    // La verificación y el alta ocurren juntas, bajo el lock de la agenda: así
+    // dos altas simultáneas del mismo horario no pueden duplicarse.
+    const creado = await this.turnoRepository.crearExclusivo(
+      {
+        profesionalId: dto.profesionalId,
+        fecha: dto.fecha,
+        horaInicio: dto.horaInicio,
+        duracionMin,
+        estado: 'disponible',
+      },
+      (existentes) => {
+        const haySolapamiento = existentes.some((t) => {
+          const tInicio = horaAMinutos(t.horaInicio);
+          const tFin = tInicio + t.duracionMin;
+          return tInicio < fin && tFin > inicio;
+        });
+        if (haySolapamiento) {
+          throw new ConflictError(
+            'El profesional ya tiene un turno que se superpone con ese horario',
+          );
+        }
+      },
     );
-    const haySolapamiento = existentes.some((t) => {
-      const tInicio = horaAMinutos(t.horaInicio);
-      const tFin = tInicio + t.duracionMin;
-      return tInicio < fin && tFin > inicio;
-    });
-    if (haySolapamiento) {
-      throw new ConflictError(
-        'El profesional ya tiene un turno que se superpone con ese horario',
-      );
-    }
-
-    const creado = await this.turnoRepository.create({
-      profesionalId: dto.profesionalId,
-      fecha: dto.fecha,
-      horaInicio: dto.horaInicio,
-      duracionMin,
-      estado: 'disponible',
-    });
 
     return this.toDto(creado);
   }
@@ -295,6 +304,7 @@ export class TurnoService implements ITurnoService {
 
     const paciente = await this.pacienteRepository.findById(dto.pacienteId);
     if (!paciente) throw new NotFoundError('Paciente not found');
+    if (!paciente.activo) throw new ConflictError('El paciente está dado de baja');
 
     // El entreturno no necesita caer en la grilla, pero sí dentro de un
     // mismo rango de atención del profesional.
@@ -371,6 +381,7 @@ export class TurnoService implements ITurnoService {
 
     const paciente = await this.pacienteRepository.findById(dto.pacienteId);
     if (!paciente) throw new NotFoundError('Paciente not found');
+    if (!paciente.activo) throw new ConflictError('El paciente está dado de baja');
 
     const profesional = await this.profesionalRepository.findById(
       turno.profesionalId,

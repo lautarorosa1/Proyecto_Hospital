@@ -31,6 +31,7 @@ export class PacienteService implements IPacienteService {
       fechaNacimiento: paciente.fechaNacimiento,
       telefono: paciente.telefono,
       direccion: paciente.direccion,
+      activo: paciente.activo,
     };
   }
 
@@ -43,6 +44,7 @@ export class PacienteService implements IPacienteService {
       fechaNacimiento: dto.fechaNacimiento.trim(),
       telefono: dto.telefono?.trim(),
       direccion: dto.direccion?.trim(),
+      activo: true,
     };
   }
 
@@ -64,21 +66,36 @@ export class PacienteService implements IPacienteService {
 
   // ---------- Validaciones ----------
 
-  private validarEmail(email: string): void {
-    if (!EMAIL_REGEX.test(email.trim())) {
+  /** Exige un string no vacío (protege también de tipos incorrectos en runtime). */
+  private validarTextoObligatorio(valor: unknown, mensaje: string): void {
+    if (typeof valor !== 'string' || !valor.trim()) {
+      throw new BadRequestError(mensaje);
+    }
+  }
+
+  /** Campo opcional: si viene, tiene que ser texto. */
+  private validarTextoOpcional(valor: unknown, campo: string): void {
+    if (valor !== undefined && typeof valor !== 'string') {
+      throw new BadRequestError(`${campo} debe ser texto`);
+    }
+  }
+
+  private validarEmail(email: unknown): void {
+    if (typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
       throw new BadRequestError('El email no es válido');
     }
   }
 
-  private validarDni(dni: string): void {
-    if (!DNI_REGEX.test(dni.trim())) {
+  private validarDni(dni: unknown): void {
+    if (typeof dni !== 'string' || !DNI_REGEX.test(dni.trim())) {
       throw new BadRequestError('El DNI no es válido');
     }
   }
 
   /** Valida formato "YYYY-MM-DD", que la fecha exista y que no sea futura */
-  private validarFechaNacimiento(fecha: string): void {
-    const match = FECHA_ISO_REGEX.exec(fecha.trim());
+  private validarFechaNacimiento(fecha: unknown): void {
+    const match =
+      typeof fecha === 'string' ? FECHA_ISO_REGEX.exec(fecha.trim()) : null;
     if (!match) {
       throw new BadRequestError(
         'La fecha de nacimiento debe tener formato YYYY-MM-DD',
@@ -142,13 +159,16 @@ export class PacienteService implements IPacienteService {
   }
 
   async create(dto: CreatePacienteDto): Promise<ResponsePacienteDto> {
-    if (!dto.nombre?.trim()) throw new BadRequestError('El nombre es obligatorio');
-    if (!dto.apellido?.trim()) throw new BadRequestError('El apellido es obligatorio');
-    if (!dto.dni) throw new BadRequestError('El DNI es obligatorio');
-    if (!dto.email) throw new BadRequestError('El email es obligatorio');
-    if (!dto.fechaNacimiento) {
-      throw new BadRequestError('La fecha de nacimiento es obligatoria');
-    }
+    this.validarTextoObligatorio(dto.nombre, 'El nombre es obligatorio');
+    this.validarTextoObligatorio(dto.apellido, 'El apellido es obligatorio');
+    this.validarTextoObligatorio(dto.dni, 'El DNI es obligatorio');
+    this.validarTextoObligatorio(dto.email, 'El email es obligatorio');
+    this.validarTextoObligatorio(
+      dto.fechaNacimiento,
+      'La fecha de nacimiento es obligatoria',
+    );
+    this.validarTextoOpcional(dto.telefono, 'El teléfono');
+    this.validarTextoOpcional(dto.direccion, 'La dirección');
 
     this.validarDni(dto.dni);
     this.validarEmail(dto.email);
@@ -163,12 +183,17 @@ export class PacienteService implements IPacienteService {
   }
 
   async update(id: number, dto: UpdatePacienteDto): Promise<ResponsePacienteDto> {
-    if (dto.nombre !== undefined && !dto.nombre.trim()) {
-      throw new BadRequestError('El nombre no puede estar vacío');
+    if (dto.nombre !== undefined) {
+      this.validarTextoObligatorio(dto.nombre, 'El nombre no puede estar vacío');
     }
-    if (dto.apellido !== undefined && !dto.apellido.trim()) {
-      throw new BadRequestError('El apellido no puede estar vacío');
+    if (dto.apellido !== undefined) {
+      this.validarTextoObligatorio(
+        dto.apellido,
+        'El apellido no puede estar vacío',
+      );
     }
+    this.validarTextoOpcional(dto.telefono, 'El teléfono');
+    this.validarTextoOpcional(dto.direccion, 'La dirección');
     if (dto.dni !== undefined) this.validarDni(dto.dni);
     if (dto.email !== undefined) this.validarEmail(dto.email);
     if (dto.fechaNacimiento !== undefined) {
@@ -189,8 +214,12 @@ export class PacienteService implements IPacienteService {
     return this.toDto(updated);
   }
 
+  /**
+   * Baja lógica: los turnos y los ingresos de guardia referencian al paciente,
+   * por lo que no se borra la fila; queda inactivo y no se lista ni recibe turnos.
+   */
   async remove(id: number): Promise<void> {
-    const deleted = await this.pacienteRepository.delete(id);
-    if (!deleted) throw new NotFoundError('Paciente not found');
+    const baja = await this.pacienteRepository.update(id, { activo: false });
+    if (!baja) throw new NotFoundError('Paciente not found');
   }
 }

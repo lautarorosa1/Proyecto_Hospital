@@ -106,12 +106,6 @@ export const validarIngreso = (datos, errores) => {
 export const formatearHora = (iso) =>
   new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })
 
-// Nombre del paciente a partir del mapa id -> paciente (la cola solo trae el id)
-export const nombrePacienteDe = (pacientesPorId, id) => {
-  const p = pacientesPorId[id]
-  return p ? `${p.apellido}, ${p.nombre}` : `Paciente #${id}`
-}
-
 // Aviso de éxito tras registrar un ingreso: { ingreso, desplazados, medicosAlertados }
 export const mensajeRegistro = ({ ingreso, desplazados, medicosAlertados }) => {
   let texto = `Paciente registrado como ${etiquetaNivel(ingreso.nivelTriaje)}: posición ${ingreso.posicion} en la cola.`

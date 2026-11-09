@@ -25,4 +25,9 @@ export class PacienteEntity {
 
   @Column({ type: 'varchar', nullable: true })
   direccion?: string;
+
+  // Baja lógica: los turnos y los ingresos de guardia referencian al paciente
+  // por id (sin FK), por lo que no se borra la fila.
+  @Column({ type: 'boolean', default: true })
+  activo: boolean;
 }

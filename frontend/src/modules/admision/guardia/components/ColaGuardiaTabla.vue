@@ -41,7 +41,8 @@
 </template>
 
 <script setup>
-import { claseNivel, etiquetaNivel, formatearHora, nombrePacienteDe } from '../utils/guardiaForm'
+import { claseNivel, etiquetaNivel, formatearHora } from '../utils/guardiaForm'
+import { nombrePacienteDe } from '@/shared/utils/formato'
 
 defineProps({
   cola: { type: Array, default: () => [] },

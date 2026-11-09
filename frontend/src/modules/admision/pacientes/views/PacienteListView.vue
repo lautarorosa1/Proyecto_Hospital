@@ -57,7 +57,7 @@
                     @click="abrirModal(paciente.id)"
                     class="rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100"
                   >
-                    Eliminar
+                    Dar de baja
                   </button>
                 </div>
               </td>
@@ -65,6 +65,8 @@
           </tbody>
         </table>
       </div>
+
+      <p v-if="errorBaja" class="mt-4 text-center text-sm text-red-500">{{ errorBaja }}</p>
 
       <p v-if="errorConexion" class="mt-6 text-center text-sm text-red-500">
         No se pudo conectar con el servidor
@@ -78,9 +80,9 @@
 
   <ConfirmModal
     v-model="mostrarModal"
-    titulo="Eliminar paciente"
-    mensaje="¿Seguro que querés eliminar esta paciente?"
-    textoConfirmar="Eliminar"
+    titulo="Dar de baja al paciente"
+    mensaje="¿Seguro que querés dar de baja a este paciente? Sus turnos e historial se conservan, pero dejará de figurar en el listado y no podrá recibir nuevos turnos."
+    textoConfirmar="Dar de baja"
     @confirm="confirmarEliminar"
   />
 </template>
@@ -89,9 +91,11 @@
 import ConfirmModal from '@/shared/components/ConfirmModal.vue'
 import { ref, onMounted } from 'vue'
 import { getPacientes, deletePaciente } from '../services/pacienteService'
+import { mensajeError } from '@/shared/utils/formato'
 
 const mostrarModal = ref(false)
-const pacienteSeleccionada = ref(null)
+const pacienteSeleccionado = ref(null)
+const errorBaja = ref('')
 
 const pacientes = ref([])
 const errorConexion = ref(false)
@@ -107,16 +111,18 @@ const cargarPacientes = async () => {
 }
 
 const abrirModal = (id) => {
-  pacienteSeleccionada.value = id
+  pacienteSeleccionado.value = id
+  errorBaja.value = ''
   mostrarModal.value = true
 }
 
 const confirmarEliminar = async () => {
   try {
-    await deletePaciente(pacienteSeleccionada.value)
+    await deletePaciente(pacienteSeleccionado.value)
     await cargarPacientes()
   } catch (error) {
-    console.error('Error eliminando paciente:', error)
+    console.error('Error dando de baja al paciente:', error)
+    errorBaja.value = mensajeError(error, 'No se pudo dar de baja al paciente')
   }
 }
 

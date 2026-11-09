@@ -95,6 +95,7 @@ export class GuardiaService implements IGuardiaService {
 
     const paciente = await this.pacienteRepository.findById(pacienteId);
     if (!paciente) throw new NotFoundError('Paciente no encontrado');
+    if (!paciente.activo) throw new ConflictError('El paciente está dado de baja');
 
     const enfermero = await this.profesionalRepository.findById(enfermeroId);
     if (!enfermero) throw new NotFoundError('Enfermero no encontrado');

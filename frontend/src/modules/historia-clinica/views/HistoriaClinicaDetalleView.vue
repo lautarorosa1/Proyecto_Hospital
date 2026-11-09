@@ -1,3 +1,4 @@
+
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
@@ -38,47 +39,58 @@ onMounted(cargarPaciente)
     <template v-else-if="paciente">
       <section class="paciente">
         <h2>{{ paciente.nombre }} {{ paciente.apellido }}</h2>
+
         <p><strong>DNI:</strong> {{ paciente.dni }}</p>
+
         <p>
           <strong>Email:</strong>
           {{ paciente.email || 'No registrado' }}
         </p>
       </section>
 
-    
-     <section class="modulos">
-     <RouterLink
-         :to="`/historia-clinica/${route.params.id}/alergias`"
-          class="tarjeta tarjeta-enlace"
-           >
-         Alergias
-       </RouterLink>
+      <section class="modulos">
 
-         
+        <!-- Alergias -->
+        <RouterLink
+          :to="`/historia-clinica/${route.params.id}/alergias`"
+          class="tarjeta tarjeta-enlace"
+        >
+          Alergias
+        </RouterLink>
+
+        <!-- Evoluciones Médicas -->
         <RouterLink
           :to="`/historia-clinica/${route.params.id}/evoluciones`"
           class="tarjeta tarjeta-enlace"
-          >
-           Evoluciones Médicas
+        >
+          Evoluciones médicas
         </RouterLink>
 
-         
-<RouterLink
-  :to="`/historia-clinica/${route.params.id}/estudios-medicos`"
-  class="tarjeta tarjeta-enlace"
->
-  Estudios Médicos
-</RouterLink>
 
-<RouterLink
-  :to="`/historia-clinica/${route.params.id}/antecedentes-familiares`"
-  class="tarjeta tarjeta-enlace"
->
-  Antecedentes Familiares
-</RouterLink>
+        <!-- Estudios Médicos -->
+        <RouterLink
+          :to="`/historia-clinica/${route.params.id}/estudios-medicos`"
+          class="tarjeta tarjeta-enlace"
+        >
+          Estudios médicos
+        </RouterLink>
+
+        <!-- Antecedentes Familiares -->
+        <RouterLink
+          :to="`/historia-clinica/${route.params.id}/antecedentes-familiares`"
+          class="tarjeta tarjeta-enlace"
+        >
+          Antecedentes Familiares
+        </RouterLink>
 
       </section>
 
+        <!-- Antecedentes Familiares -->
+        <div class="tarjeta">
+          Antecedentes familiares
+        </div>
+
+      </section>
     </template>
   </main>
 </template>
@@ -134,5 +146,4 @@ h1 {
   background: #eff6ff;
   border-color: #2563eb;
 }
-
 </style>

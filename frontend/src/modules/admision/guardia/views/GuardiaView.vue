@@ -56,7 +56,7 @@ import { getProfesionales } from '../../profesionales/services/profesionalServic
 import { getPacientes } from '../../pacientes/services/pacienteService'
 import { getColaGuardia } from '../services/guardiaService'
 import { mensajeRegistro } from '../utils/guardiaForm'
-import { mensajeError } from '../../turnos/utils/turnoForm'
+import { mensajeError } from '@/shared/utils/formato'
 import ColaGuardiaTabla from '../components/ColaGuardiaTabla.vue'
 import IngresoGuardiaModal from '../components/IngresoGuardiaModal.vue'
 

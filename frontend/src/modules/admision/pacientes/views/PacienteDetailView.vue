@@ -1,7 +1,14 @@
 <template>
   <div class="min-h-screen bg-gray-50 px-4 py-10">
     <div class="mx-auto max-w-lg rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
-      <h1 class="mb-6 text-2xl font-semibold text-gray-900">Detalle de la paciente</h1>
+      <h1 class="mb-6 text-2xl font-semibold text-gray-900">Detalle del paciente</h1>
+
+      <p
+        v-if="paciente && paciente.activo === false"
+        class="mb-4 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-600 ring-1 ring-gray-200"
+      >
+        Paciente dado de baja: se conservan sus turnos e historial.
+      </p>
 
       <div v-if="paciente" class="flex flex-col divide-y divide-gray-100">
         <div class="flex items-center justify-between py-3">

@@ -32,6 +32,8 @@ const routes = [
     component: () => import('@/views/iam/RolesAdminView.vue'),
     meta: { requiresAuth: true, roles: ['Administrador'] }
   },
+
+  // Rutas de los módulos
   ...admisionRoutes,
   ...historiaClinicaRoutes,
   ...recursosCamasRoutes,

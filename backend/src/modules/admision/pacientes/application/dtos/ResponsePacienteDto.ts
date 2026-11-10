@@ -6,5 +6,6 @@ export interface ResponsePacienteDto {
   email: string;
   fechaNacimiento: string; // "YYYY-MM-DD"
   telefono?: string;
-  direccion?: string; 
+  direccion?: string;
+  activo: boolean;
 }

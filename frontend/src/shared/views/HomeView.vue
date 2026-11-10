@@ -74,6 +74,7 @@
   </div>
 </template>
 
+
 <script setup>
 // Cada módulo del sistema suma una entrada acá.
 const modulos = [

@@ -101,8 +101,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { hoyISO } from '@/shared/utils/validators'
-import { getProfesionales } from '../../profesionales/services/profesionalService'
-import { getHorarios } from '../../profesionales/services/profesionalService'
+import { getProfesionales, getHorarios } from '../../profesionales/services/profesionalService'
 import { crearTurno, getTurnos } from '../services/turnoService'
 import {
   generarVacio,

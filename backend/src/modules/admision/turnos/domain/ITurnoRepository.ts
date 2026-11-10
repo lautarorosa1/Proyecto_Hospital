@@ -22,7 +22,16 @@ export interface ITurnoRepository {
     fecha: string,
   ): Promise<Turno[]>;
 
-  create(data: NuevoTurno): Promise<Turno>;
+  /**
+   * Crea un slot de forma atómica frente a otros altas y entreturnos: toma el
+   * mismo lock por (profesional, fecha) que `insertarEntreturno`, lee los
+   * turnos activos YA con el lock y le pide a `validar` que verifique que no se
+   * superponen (si lanza un error, no se inserta nada).
+   */
+  crearExclusivo(
+    data: NuevoTurno,
+    validar: (activos: Turno[]) => void,
+  ): Promise<Turno>;
 
   /**
    * Reserva el slot de forma atómica: solo se aplica si el turno sigue

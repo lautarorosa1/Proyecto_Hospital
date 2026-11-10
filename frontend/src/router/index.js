@@ -1,9 +1,11 @@
+
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
 import admisionRoutes from '@/modules/admision/routes'
 import historiaClinicaRoutes from '@/modules/historia-clinica/routes'
 import recursosCamasRoutes from '@/modules/recursos-camas/routes'
+import atencionEnfermeriaRoutes from '@/modules/atencion-enfermeria/routes'
 
 const routes = [
   {
@@ -30,11 +32,14 @@ const routes = [
     component: () => import('@/views/iam/RolesAdminView.vue'),
     meta: { requiresAuth: true, roles: ['Administrador'] }
   },
+
+  // Rutas de los módulos
   ...admisionRoutes,
   ...historiaClinicaRoutes,
   ...recursosCamasRoutes,
+  ...atencionEnfermeriaRoutes,
 
-// Siempre al final: captura cualquier ruta que no coincida con las anteriores
+  // Siempre al final: captura cualquier ruta que no coincida con las anteriores
   {
     path: '/:pathMatch(.*)*',
     component: () => import('@/shared/views/NotFoundView.vue')

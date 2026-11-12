@@ -4,6 +4,7 @@ import { CrearTurnoDto } from '../application/dtos/CrearTurnoDto';
 import { CrearEntreturnoDto } from '../application/dtos/CrearEntreturnoDto';
 import { ReservarTurnoDto } from '../application/dtos/ReservarTurnoDto';
 import { FiltrosTurnoDto } from '../application/dtos/FiltrosTurnoDto';
+import { AgregarEsperaDto } from '../application/dtos/AgregarEsperaDto';
 import { BadRequestError } from '../../../../shared/errors';
 
 type IdParams = { id: string };
@@ -132,6 +133,33 @@ export class TurnoController {
   cancelar = async (req: Request<IdParams>, res: Response, next: NextFunction) => {
     try {
       res.json(await this.turnoService.cancelar(this.parseId(req.params.id)));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  // ---------- Lista de espera (HU 1.3) ----------
+
+  agregarEspera = async (
+    req: Request<Record<string, never>, unknown, AgregarEsperaDto>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      res.status(201).json(await this.turnoService.agregarAListaEspera(req.body));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getEspera = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(
+        await this.turnoService.getListaEspera({
+          profesionalId: this.queryId(req.query.profesionalId, 'profesionalId'),
+          fecha: this.queryString(req.query.fecha),
+        }),
+      );
     } catch (err) {
       next(err);
     }

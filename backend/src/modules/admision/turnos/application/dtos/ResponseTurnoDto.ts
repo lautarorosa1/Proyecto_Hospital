@@ -20,4 +20,7 @@ export interface ResponseTurnoDto {
   reducidoPorEntreturnoId?: number;
   /** Texto de aviso para el médico (solo si `reducido`). */
   advertencia?: string;
+
+  /** Solo al cancelar: paciente de la lista de espera que recibió el horario liberado. */
+  promovidoDesdeEspera?: { esperaId: number; turnoId: number; pacienteId: number };
 }

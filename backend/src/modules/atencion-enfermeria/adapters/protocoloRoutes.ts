@@ -7,6 +7,8 @@ export function createProtocoloRoutes(
   const router = Router();
 
   router.get('/', protocoloController.getAll);
+  // Protocolos generados al ingresar a una internación (antes de "/:id")
+  router.get('/internacion/:internacionId', protocoloController.getByInternacion);
   router.get('/:id', protocoloController.getById);
 
   router.post('/', (req, res, next) => {

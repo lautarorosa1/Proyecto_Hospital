@@ -4,6 +4,7 @@ import { RegistrarSignosVitales } from '../application/RegistrarSignosVitales';
 import { ActualizarSignosVitales } from '../application/ActualizarSignosVitales';
 import { EliminarSignosVitales } from '../application/EliminarSignosVitales';
 import type { ISignosVitalesRepository } from '../domain/SignosVitalesRepository';
+import { statusDe } from '../../../shared/errors';
 
 export class SignosVitalesController {
   constructor(
@@ -20,7 +21,7 @@ export class SignosVitalesController {
 
       res.status(201).json(registro);
     } catch (error) {
-      res.status(400).json({
+      res.status(statusDe(error, 400)).json({
         mensaje: error instanceof Error
           ? error.message
           : 'Error al registrar los signos vitales.',

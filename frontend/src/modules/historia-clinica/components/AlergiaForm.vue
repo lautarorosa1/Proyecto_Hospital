@@ -3,6 +3,8 @@
 <script setup>
 import { reactive, ref, watch } from 'vue'
 
+const emit = defineEmits(['guardar'])
+
 const props = defineProps({
   alergia: {
     type: Object,
@@ -56,9 +58,7 @@ function validarFormulario() {
   }
 
   
-mensaje.value = props.alergia
-  ? 'Formulario válido. La edición todavía no está habilitada.'
-  : 'Formulario válido. El registro todavía no está habilitado.'
+emit('guardar', { alergeno, reaccion, severidad: formulario.severidad })
 
 }
 </script>

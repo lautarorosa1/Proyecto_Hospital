@@ -186,7 +186,7 @@ export class CamaRepository implements ICamaRepository {
     camaId: number;
     estadoNuevo: EstadoCama;
     usuarioId: number;
-    version: number;
+    version?: number;
   }): Promise<ResultadoCambioCama> {
     return this.dataSource.transaction<ResultadoCambioCama>(async (manager) => {
       const cama = await manager.findOne(CamaEntity, {
@@ -194,7 +194,9 @@ export class CamaRepository implements ICamaRepository {
         lock: { mode: 'pessimistic_write' },
       });
       if (!cama) return { ok: false, fallo: 'no_encontrada' };
-      if (cama.version !== input.version) return { ok: false, fallo: 'version' };
+      if (input.version !== undefined && cama.version !== input.version) {
+        return { ok: false, fallo: 'version' };
+      }
 
       const estadoActual = this.aEstado(cama.estado);
       if (!transicionDirectaPermitida(estadoActual, input.estadoNuevo)) {

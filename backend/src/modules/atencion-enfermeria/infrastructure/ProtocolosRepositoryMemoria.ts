@@ -36,6 +36,12 @@ export class ProtocolosRepositoryMemoria
       : null;
   }
 
+  async findByInternacionId(internacionId: number): Promise<Protocolo[]> {
+    return this.protocolos
+      .filter((item) => item.internacionId === internacionId)
+      .map((item) => ({ ...item, pasos: [...item.pasos] }));
+  }
+
   async findAll(): Promise<Protocolo[]> {
 
     return this.protocolos.map((item) => ({

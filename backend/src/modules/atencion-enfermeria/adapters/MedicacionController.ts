@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 import { RegistrarMedicacion } from '../application/RegistrarMedicacion';
 import { ConsultarMedicaciones } from '../application/ConsultarMedicaciones';
 import { ActualizarMedicacion } from '../application/ActualizarMedicacion';
+import { statusDe } from '../../../shared/errors';
 
 export class MedicacionController {
   constructor(
@@ -18,7 +19,7 @@ export class MedicacionController {
 
       res.status(201).json(medicacion);
     } catch (error) {
-      res.status(400).json({
+      res.status(statusDe(error, 400)).json({
         mensaje: error instanceof Error ? error.message : 'Error al registrar la medicación.',
       });
     }

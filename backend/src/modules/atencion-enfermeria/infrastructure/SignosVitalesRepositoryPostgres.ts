@@ -33,6 +33,7 @@ export class SignosVitalesRepositoryPostgres
       presionDiastolica: datos.presionDiastolica,
       saturacionOxigeno: datos.saturacionOxigeno,
       observaciones: datos.observaciones,
+      alerta: datos.alerta ?? false,
     });
 
     const guardado = await this.repository.save(registro);
@@ -139,6 +140,10 @@ export class SignosVitalesRepositoryPostgres
       registro.observaciones = datos.observaciones;
     }
 
+    if (datos.alerta !== undefined) {
+      registro.alerta = datos.alerta;
+    }
+
     await this.repository.save(registro);
 
     const actualizado = await this.repository.findOne({
@@ -179,6 +184,7 @@ export class SignosVitalesRepositoryPostgres
       presionDiastolica: registro.presionDiastolica,
       saturacionOxigeno: registro.saturacionOxigeno,
       observaciones: registro.observaciones ?? undefined,
+      alerta: registro.alerta ?? false,
     };
   }
 }

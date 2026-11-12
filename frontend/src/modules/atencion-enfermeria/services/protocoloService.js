@@ -28,3 +28,10 @@ export const actualizarProtocolo = async (id, datos) => {
 export const eliminarProtocolo = async (id) => {
   await api.delete(`/atencion-enfermeria/protocolos/${id}`)
 }
+// Protocolos generados automáticamente al ingresar una internación
+export const listarProtocolosPorInternacion = async (internacionId) => {
+  const respuesta = await api.get(
+    `/atencion-enfermeria/protocolos/internacion/${internacionId}`
+  )
+  return respuesta.data
+}

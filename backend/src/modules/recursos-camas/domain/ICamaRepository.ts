@@ -28,6 +28,7 @@ export interface ICamaRepository {
     camaId: number;
     estadoNuevo: EstadoCama;
     usuarioId: number;
-    version: number;
+    /** Si se omite no se compara versión (cambios internos del sistema, p. ej. alta). */
+    version?: number;
   }): Promise<ResultadoCambioCama>;
 }

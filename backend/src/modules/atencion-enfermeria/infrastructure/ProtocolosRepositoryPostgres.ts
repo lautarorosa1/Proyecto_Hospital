@@ -1,4 +1,3 @@
-
 import { AppDataSource } from '../../../data-source';
 import { ProtocoloEntity } from './ProtocoloEntity';
 import { IProtocoloRepository } from '../domain/ProtocolosRepository';
@@ -11,6 +10,16 @@ export class ProtocolosRepositoryPostgres
     return AppDataSource.getRepository(ProtocoloEntity);
   }
 
+  private toDomain(entity: ProtocoloEntity): Protocolo {
+    return {
+      id: entity.id,
+      nombre: entity.nombre,
+      descripcion: entity.descripcion,
+      pasos: entity.pasos,
+      internacionId: entity.internacionId ?? undefined,
+    };
+  }
+
   async create(
     datos: Omit<Protocolo, 'id'>
   ): Promise<Protocolo> {
@@ -19,21 +28,31 @@ export class ProtocolosRepositoryPostgres
 
     const guardado = await this.repository.save(protocolo);
 
-    return guardado;
+    return this.toDomain(guardado);
   }
 
   async findById(id: number): Promise<Protocolo | null> {
 
     const protocolo = await this.repository.findOneBy({ id });
 
-    return protocolo;
+    return protocolo ? this.toDomain(protocolo) : null;
   }
 
   async findAll(): Promise<Protocolo[]> {
 
     const protocolos = await this.repository.find();
 
-    return protocolos;
+    return protocolos.map((item) => this.toDomain(item));
+  }
+
+  async findByInternacionId(internacionId: number): Promise<Protocolo[]> {
+
+    const protocolos = await this.repository.find({
+      where: { internacionId },
+      order: { id: 'ASC' },
+    });
+
+    return protocolos.map((item) => this.toDomain(item));
   }
 
   async update(
@@ -41,7 +60,7 @@ export class ProtocolosRepositoryPostgres
     datos: Partial<Omit<Protocolo, 'id'>>
   ): Promise<Protocolo | null> {
 
-    const protocolo = await this.findById(id);
+    const protocolo = await this.repository.findOneBy({ id });
 
     if (!protocolo) {
       return null;
@@ -49,7 +68,7 @@ export class ProtocolosRepositoryPostgres
 
     const actualizado = this.repository.merge(protocolo, datos);
 
-    return await this.repository.save(actualizado);
+    return this.toDomain(await this.repository.save(actualizado));
   }
 
   async delete(id: number): Promise<boolean> {

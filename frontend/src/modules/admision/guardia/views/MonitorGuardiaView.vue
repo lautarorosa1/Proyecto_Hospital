@@ -1,5 +1,10 @@
 <template>
   <AlertaRiesgoVital :alertas="alertas" @descartar="descartar" />
+  <AlertaSignosVitales
+    :alertas="alertasClinicas"
+    :pacientesPorId="pacientesPorId"
+    @descartar="descartarClinica"
+  />
 
   <div class="min-h-screen bg-gray-50 px-4 py-10">
     <div class="mx-auto max-w-5xl rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
@@ -42,6 +47,7 @@ import { getColaGuardia } from '../services/guardiaService'
 import { useAlertasGuardia } from '../composables/useAlertasGuardia'
 import { nombreProfesional, mensajeError } from '@/shared/utils/formato'
 import AlertaRiesgoVital from '../components/AlertaRiesgoVital.vue'
+import AlertaSignosVitales from '../components/AlertaSignosVitales.vue'
 import ColaGuardiaTabla from '../components/ColaGuardiaTabla.vue'
 
 const inputClass =
@@ -82,7 +88,10 @@ const alAlerta = async () => {
   cargarCola()
 }
 
-const { alertas, conectado, descartar } = useAlertasGuardia(profesionalId, { onAlerta: alAlerta })
+const { alertas, alertasClinicas, conectado, descartar, descartarClinica } = useAlertasGuardia(
+  profesionalId,
+  { onAlerta: alAlerta, onAlertaClinica: alAlerta }
+)
 
 onMounted(async () => {
   try {

@@ -55,6 +55,21 @@ export class ProtocoloController {
     }
   };
 
+  getByInternacion = async (
+    req: Request<{ internacionId: string }>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const protocolos = await this.consultarProtocolos.consultarPorInternacion(
+        this.parseId(req.params.internacionId),
+      );
+      res.json(protocolos);
+    } catch (err) {
+      next(err);
+    }
+  };
+
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const protocolo = await this.crearProtocolo.execute(req.body);

@@ -91,6 +91,18 @@
         </ul>
       </div>
 
+      <div
+        v-if="avisoPromocion"
+        class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800 ring-1 ring-green-200"
+        role="alert"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <p><span class="font-semibold">Lista de espera:</span> {{ avisoPromocion }}</p>
+          <button type="button" class="text-xs text-green-700 hover:underline" @click="avisoPromocion = ''">
+            Cerrar
+          </button>
+        </div>
+      </div>
       <div class="overflow-x-auto">
         <table class="w-full border-collapse text-left text-sm">
           <thead>
@@ -176,6 +188,13 @@
       </p>
 
       <p v-if="errorAccion" class="mt-4 text-center text-sm text-red-500">{{ errorAccion }}</p>
+      <ListaEsperaPanel
+        v-if="filtros.profesionalId !== '' && filtros.fecha"
+        ref="panelEspera"
+        :profesionalId="filtros.profesionalId"
+        :fecha="filtros.fecha"
+        :pacientes="pacientes"
+      />
     </div>
   </div>
 
@@ -216,13 +235,16 @@ import { getProfesionales } from '../../profesionales/services/profesionalServic
 import { getPacientes } from '../../pacientes/services/pacienteService'
 import ReservarTurnoModal from '../components/ReservarTurnoModal.vue'
 import EntreturnoModal from '../components/EntreturnoModal.vue'
+import ListaEsperaPanel from '../components/ListaEsperaPanel.vue'
+import { useEventStream } from '@/shared/composables/useEventStream'
 import {
   getTurnos,
   getTurnosDisponibles,
   confirmarTurno,
   registrarLlegadaTurno,
   atenderTurno,
-  cancelarTurno
+  cancelarTurno,
+  urlAlertasRecepcionStream
 } from '../services/turnoService'
 import {
   ACCIONES_TURNO,
@@ -277,7 +299,7 @@ const pacientesPorId = computed(() =>
 const mensajeCancelacion = computed(() => {
   const t = turnoSeleccionado.value
   if (!t) return ''
-  return `Se cancelará el turno del ${formatearFecha(t.fecha)} a las ${t.horaInicio}. El horario volverá a quedar disponible.`
+  return `Se cancelará el turno del ${formatearFecha(t.fecha)} a las ${t.horaInicio}. Si hay pacientes en la lista de espera, el horario se asigna al primero de la cola; si no, vuelve a quedar disponible.`
 })
 
 const cargarTurnos = async () => {
@@ -314,6 +336,20 @@ const cargarReferencias = async () => {
     errorLista.value = mensajeError(error)
   }
 }
+
+// ---------- Lista de espera (HU 1.3) ----------
+const panelEspera = ref(null)
+// aviso para recepción: un paciente de la lista de espera recibió un horario liberado
+const avisoPromocion = ref('')
+
+// Llega por SSE (también a otras terminales de recepción) cuando se promueve a alguien
+useEventStream(urlAlertasRecepcionStream(), {
+  lista_espera_promovida: (evento) => {
+    avisoPromocion.value = evento.mensaje
+    cargarTurnos()
+    panelEspera.value?.recargar()
+  }
+})
 
 const cambiarModo = (disponibles) => {
   soloDisponibles.value = disponibles
@@ -386,7 +422,13 @@ const abrirCancelacion = (turno) => {
 const confirmarCancelacion = async () => {
   errorAccion.value = ''
   try {
-    await cancelarTurno(turnoSeleccionado.value.id)
+    const { data } = await cancelarTurno(turnoSeleccionado.value.id)
+    // si había lista de espera, el horario ya se le asignó al primero de la cola
+    if (data.promovidoDesdeEspera) {
+      const { pacienteId } = data.promovidoDesdeEspera
+      avisoPromocion.value = `Avisar a ${nombrePacienteDe(pacientesPorId.value, pacienteId)}: se le asignó el turno de las ${data.horaInicio} del ${formatearFecha(data.fecha)}.`
+    }
+    panelEspera.value?.recargar()
     await cargarTurnos()
   } catch (error) {
     console.error('Error cancelando turno:', error)

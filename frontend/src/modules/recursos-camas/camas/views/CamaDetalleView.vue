@@ -11,7 +11,16 @@
       <div class="flex flex-col gap-5">
         <div v-if="cama?.estado === 'Libre'" class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
           <h2 class="font-medium text-gray-900">Asignar paciente</h2>
-          <input v-model.number="asignar.paciente_id" type="number" min="1" placeholder="paciente_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+          <select v-model.number="asignar.paciente_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+            <option value="" disabled>Seleccionar paciente internado…</option>
+            <option v-for="c in candidatos" :key="c.pacienteId" :value="c.pacienteId">
+              {{ c.nombre }}{{ c.dni ? ` — DNI ${c.dni}` : '' }}
+            </option>
+          </select>
+          <p v-if="candidatos.length === 0" class="text-xs text-amber-600">
+            No hay pacientes internados sin cama. Primero hay que confirmar su ingreso en
+            Atención de Enfermería › Internaciones.
+          </p>
           <input v-model.number="asignar.usuario_id" type="number" min="1" placeholder="usuario_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
           <button @click="hacerAsignacion" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
             Asignar
@@ -27,7 +36,12 @@
         </div>
 
         <div v-if="cama?.estado === 'En limpieza' || cama?.estado === 'Bloqueada'" class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
-          <h2 class="font-medium text-gray-900">Volver a Libre</h2>
+          <h2 class="font-medium text-gray-900">
+            {{ cama.estado === 'En limpieza' ? 'Confirmar higiene y liberar' : 'Volver a Libre' }}
+          </h2>
+          <p v-if="cama.estado === 'En limpieza'" class="text-xs text-gray-500">
+            La cama quedó bloqueada tras el alta hasta que maestranza confirme la higiene.
+          </p>
           <input v-model.number="liberar.usuario_id" type="number" min="1" placeholder="usuario_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
           <button @click="hacerLiberar" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
             Liberar cama
@@ -50,21 +64,26 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   getCamaById,
   asignarCama,
   pasarALimpieza,
-  cambiarEstadoCama
+  cambiarEstadoCama,
+  urlCamasStream
 } from '../services/camaService'
+import { listarInternaciones } from '@/modules/atencion-enfermeria/services/internacionService'
+import { getPacientes } from '@/modules/admision/pacientes/services/pacienteService'
+import { useEventStream } from '@/shared/composables/useEventStream'
+import { usuarioIdActual } from '@/shared/utils/formato'
 
 const route = useRoute()
 const cama = ref(null)
 const error = ref('')
 const ok = ref('')
 
-const asignar = reactive({ paciente_id: 1, usuario_id: 1 })
+const asignar = reactive({ paciente_id: '', usuario_id: usuarioIdActual() })
 const limpieza = reactive({ usuario_id: 1 })
 const liberar = reactive({ usuario_id: 1 })
 const bloquear = reactive({ usuario_id: 1 })
@@ -86,6 +105,10 @@ onMounted(async () => {
 const hacerAsignacion = async () => {
   error.value = ''
   ok.value = ''
+  if (!asignar.paciente_id) {
+    error.value = 'Seleccioná el paciente a internar'
+    return
+  }
   try {
     await asignarCama(cama.value.id, {
       paciente_id: asignar.paciente_id,
@@ -98,6 +121,45 @@ const hacerAsignacion = async () => {
     error.value = e.response?.data?.error || 'No se pudo asignar'
   }
 }
+
+// Solo se asigna cama a pacientes ya ingresados (con internación activa) y sin cama todavía
+const internaciones = ref([])
+const pacientes = ref([])
+
+const candidatos = computed(() =>
+  internaciones.value
+    .filter((i) => i.estado === 'ACTIVA' && !i.camaId)
+    .map((i) => {
+      const p = pacientes.value.find((x) => Number(x.id) === Number(i.pacienteId))
+      return {
+        pacienteId: i.pacienteId,
+        nombre: p ? `${p.apellido}, ${p.nombre}` : `Paciente #${i.pacienteId}`,
+        dni: p?.dni
+      }
+    })
+)
+
+const cargarCandidatos = async () => {
+  try {
+    const [resInternaciones, resPacientes] = await Promise.all([listarInternaciones(), getPacientes()])
+    internaciones.value = resInternaciones
+    pacientes.value = Array.isArray(resPacientes.data) ? resPacientes.data : resPacientes.data?.data || []
+  } catch (e) {
+    console.error('No se pudieron cargar los pacientes internados:', e)
+  }
+}
+
+onMounted(cargarCandidatos)
+
+// Tiempo real: si cambia el estado de esta cama (alta, limpieza confirmada) se refresca sola
+useEventStream(urlCamasStream(), {
+  cama_estado: async (evento) => {
+    if (cama.value && Number(evento.camaId) === Number(cama.value.id)) {
+      await cargar().catch(() => {})
+      await cargarCandidatos()
+    }
+  }
+})
 
 const hacerLimpieza = async () => {
   error.value = ''

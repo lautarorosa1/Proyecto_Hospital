@@ -50,6 +50,14 @@ onMounted(cargarPaciente)
 
       <section class="modulos">
 
+        <!-- Línea de tiempo: ingresos, signos vitales, medicación y altas -->
+        <RouterLink
+          :to="`/historia-clinica/${route.params.id}/linea-tiempo`"
+          class="tarjeta tarjeta-enlace"
+        >
+          Línea de tiempo clínica
+        </RouterLink>
+
         <!-- Alergias -->
         <RouterLink
           :to="`/historia-clinica/${route.params.id}/alergias`"

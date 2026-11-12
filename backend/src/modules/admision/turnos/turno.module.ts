@@ -1,14 +1,13 @@
 import { AppDataSource } from '../../../data-source';
 import { TurnoEntity } from './infrastructure/TurnoEntity';
 import { TurnoRepository } from './infrastructure/TurnoRepository';
-import {
-  EVENTO_PACIENTE_EN_SALA_ESPERA,
-  EVENTO_TURNOS_REDUCIDOS,
-  PacienteEnSalaEsperaEvento,
-  TurnosReducidosEvento,
-  TurnoNotificador,
-} from './infrastructure/TurnoNotificador';
-import { eventBus } from '../../../shared/eventBus';
+import { TurnoNotificador } from './infrastructure/TurnoNotificador';
+import { EsperaTurnoEntity } from './infrastructure/EsperaTurnoEntity';
+import { ListaEsperaRepository } from './infrastructure/ListaEsperaRepository';
+import { eventBus } from '../../../shared/events';
+import type { IEventBus } from '../../../shared/domain/events/IEventBus';
+import { DomainEvents } from '../../../shared/domain/events/DomainEvents';
+import { SseChannel } from '../../../shared/infrastructure/sse/SseChannel';
 import { TurnoService } from './application/TurnoService';
 import { TurnoController } from './adapters/TurnoController';
 import { createTurnoRoutes } from './adapters/turnoRoutes';
@@ -36,25 +35,13 @@ const horarioRepository = new HorarioRepository(
 );
 
 const turnoNotificador = new TurnoNotificador(eventBus);
-
-// Hasta que exista el módulo de consultorio, el aviso solo se registra en consola.
-// Cuando exista, se suscribe a este mismo evento desde su propio módulo.
-eventBus.on(
-  EVENTO_PACIENTE_EN_SALA_ESPERA,
-  (e: PacienteEnSalaEsperaEvento) => {
-    console.log(
-      `[Consultorio] Paciente ${e.pacienteId} en sala de espera (turno ${e.turnoId}, profesional ${e.profesionalId}, ${e.fecha} ${e.horaInicio})`,
-    );
-  },
+const listaEsperaRepository = new ListaEsperaRepository(
+  AppDataSource.getRepository(EsperaTurnoEntity),
 );
 
-eventBus.on(EVENTO_TURNOS_REDUCIDOS, (e: TurnosReducidosEvento) => {
-  for (const a of e.afectados) {
-    console.log(
-      `[Consultorio] Entreturno ${e.entreturnoId} (profesional ${e.profesionalId}, ${e.fecha} ${e.horaInicio}): turno ${a.turnoId} de ${a.duracionAnteriorMin} a ${a.duracionNuevaMin} min (inicio ${a.horaInicioAnterior} -> ${a.horaInicioNueva})`,
-    );
-  }
-});
+// Canal en tiempo real hacia recepción: avisa cuando un paciente de la lista de
+// espera recibe un horario liberado (el recepcionista debe llamarlo/notificarlo).
+const recepcionStream = new SseChannel();
 
 const turnoService = new TurnoService(
   turnoRepository,
@@ -62,10 +49,35 @@ const turnoService = new TurnoService(
   pacienteRepository,
   horarioRepository,
   turnoNotificador,
+  listaEsperaRepository,
 );
 const turnoController = new TurnoController(turnoService);
 
+/** Suscriptores de los eventos que publica el propio módulo (consultorio y recepción). */
+export function suscribirTurnos(bus: IEventBus): void {
+  // Hasta que exista el módulo de consultorio, el aviso solo se registra en consola.
+  bus.subscribe(DomainEvents.TURNO_PACIENTE_EN_SALA_ESPERA, (e) => {
+    console.log(
+      `[Consultorio] Paciente ${e.pacienteId} en sala de espera (turno ${e.turnoId}, profesional ${e.profesionalId}, ${e.fecha} ${e.horaInicio})`,
+    );
+  });
+
+  bus.subscribe(DomainEvents.TURNOS_REDUCIDOS, (e) => {
+    for (const a of e.afectados) {
+      console.log(
+        `[Consultorio] Entreturno ${e.entreturnoId} (profesional ${e.profesionalId}, ${e.fecha} ${e.horaInicio}): turno ${a.turnoId} de ${a.duracionAnteriorMin} a ${a.duracionNuevaMin} min (inicio ${a.horaInicioAnterior} -> ${a.horaInicioNueva})`,
+      );
+    }
+  });
+
+  bus.subscribe(DomainEvents.LISTA_ESPERA_PROMOVIDA, (e) => {
+    console.log(`[Recepción] ${e.mensaje}`);
+    recepcionStream.difundir('lista_espera_promovida', e);
+  });
+}
+
 export const turnoModule = {
   controller: turnoController,
-  routes: createTurnoRoutes(turnoController),
+  routes: createTurnoRoutes(turnoController, recepcionStream),
+  recepcionStream,
 };

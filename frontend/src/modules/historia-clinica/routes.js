@@ -11,6 +11,11 @@ const historiaClinicaRoutes = [
     component: () => import('./views/HistoriaClinicaDetalleView.vue')
   },
   {
+    path: '/historia-clinica/:id/linea-tiempo',
+    name: 'historia-clinica-linea-tiempo',
+    component: () => import('./views/LineaTiempoView.vue')
+  },
+  {
     path: '/historia-clinica/:id/alergias',
     name: 'historia-clinica-alergias',
     component: () => import('./views/AlergiasView.vue')

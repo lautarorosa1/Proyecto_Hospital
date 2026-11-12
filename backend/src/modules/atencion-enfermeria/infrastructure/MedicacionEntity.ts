@@ -46,4 +46,10 @@ export class MedicacionEntity {
 
   @Column({ type: 'text', nullable: true })
   observaciones?: string;
+
+  @Column({ name: 'insumo_id', type: 'int', nullable: true })
+  insumoId?: number | null;
+
+  @Column({ name: 'cantidad_insumo', type: 'int', default: 1 })
+  cantidadInsumo!: number;
 }

@@ -1,48 +1,23 @@
-import type { EventEmitter } from 'node:events';
+import type { IEventBus } from '../../../../shared/domain/events/IEventBus';
+import { DomainEvents } from '../../../../shared/domain/events/DomainEvents';
 import type { Turno } from '../domain/Turno';
 import type { TurnoAjustado } from '../domain/Entreturno';
 import type { ITurnoNotificador } from '../domain/ITurnoNotificador';
+import type { EsperaTurno } from '../domain/ListaEspera';
+import type { Paciente } from '../../pacientes/domain/Paciente';
 
-export const EVENTO_PACIENTE_EN_SALA_ESPERA = 'turno.paciente_en_sala_espera';
-
-export interface PacienteEnSalaEsperaEvento {
-  turnoId: number;
-  profesionalId: number;
-  pacienteId?: number;
-  fecha: string;
-  horaInicio: string;
-}
-
-export const EVENTO_TURNOS_REDUCIDOS = 'turno.duracion_reducida';
-
-export interface TurnosReducidosEvento {
-  entreturnoId: number;
-  profesionalId: number;
-  fecha: string;
-  horaInicio: string;
-  afectados: {
-    turnoId: number;
-    pacienteId?: number;
-    horaInicioAnterior: string;
-    horaInicioNueva: string;
-    duracionAnteriorMin: number;
-    duracionNuevaMin: number;
-  }[];
-}
-
-/** Publica los avisos como eventos internos; el consultorio se suscribe al bus. */
+/** Publica los avisos como eventos de dominio; consultorios y recepción se suscriben al bus. */
 export class TurnoNotificador implements ITurnoNotificador {
-  constructor(private readonly bus: EventEmitter) {}
+  constructor(private readonly bus: IEventBus) {}
 
   pacienteEnSalaDeEspera(turno: Turno): void {
-    const evento: PacienteEnSalaEsperaEvento = {
+    this.bus.publish(DomainEvents.TURNO_PACIENTE_EN_SALA_ESPERA, {
       turnoId: turno.id,
       profesionalId: turno.profesionalId,
       pacienteId: turno.pacienteId,
       fecha: turno.fecha,
       horaInicio: turno.horaInicio,
-    };
-    this.bus.emit(EVENTO_PACIENTE_EN_SALA_ESPERA, evento);
+    });
   }
 
   turnosReducidosPorEntreturno(
@@ -50,7 +25,7 @@ export class TurnoNotificador implements ITurnoNotificador {
     afectados: TurnoAjustado[],
   ): void {
     if (afectados.length === 0) return;
-    const evento: TurnosReducidosEvento = {
+    this.bus.publish(DomainEvents.TURNOS_REDUCIDOS, {
       entreturnoId: entreturno.id,
       profesionalId: entreturno.profesionalId,
       fecha: entreturno.fecha,
@@ -63,7 +38,35 @@ export class TurnoNotificador implements ITurnoNotificador {
         duracionAnteriorMin: antes.duracionMin,
         duracionNuevaMin: despues.duracionMin,
       })),
-    };
-    this.bus.emit(EVENTO_TURNOS_REDUCIDOS, evento);
+    });
+  }
+
+  turnoCancelado(cancelado: Turno, liberado: Turno): void {
+    this.bus.publish(DomainEvents.TURNO_CANCELADO, {
+      turnoId: cancelado.id,
+      profesionalId: cancelado.profesionalId,
+      pacienteId: cancelado.pacienteId,
+      fecha: cancelado.fecha,
+      horaInicio: cancelado.horaInicio,
+      turnoLiberadoId: liberado.id,
+    });
+  }
+
+  listaEsperaPromovida(
+    espera: EsperaTurno,
+    turno: Turno,
+    paciente: Paciente,
+  ): void {
+    const nombre = `${paciente.apellido}, ${paciente.nombre}`;
+    this.bus.publish(DomainEvents.LISTA_ESPERA_PROMOVIDA, {
+      esperaId: espera.id,
+      turnoId: turno.id,
+      pacienteId: paciente.id,
+      pacienteNombre: nombre,
+      profesionalId: turno.profesionalId,
+      fecha: turno.fecha,
+      horaInicio: turno.horaInicio,
+      mensaje: `Avisar a ${nombre}: se le asignó el turno de las ${turno.horaInicio} del ${turno.fecha}`,
+    });
   }
 }

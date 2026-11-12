@@ -32,6 +32,9 @@ export function createApp() {
   app.use('/turnos', container.turnoModule.routes);
   app.use('/guardia', container.guardiaModule.routes);
 
+  // Admisión confirma el traslado a internación (publica PACIENTE_INGRESADO)
+  app.use('/ingresos-internacion', container.ingresoInternacionModule.routes);
+
   app.use('/habitaciones', container.recursosCamasModule.habitacionRoutes);
   app.use('/insumos', container.recursosCamasModule.insumoRoutes);
   app.use('/camas', container.recursosCamasModule.camaRoutes);
@@ -66,7 +69,16 @@ export function createApp() {
     container.atencionEnfermeriaModule.signosVitalesRoutes
   );
 
+  app.use(
+    '/atencion-enfermeria/administraciones',
+    container.atencionEnfermeriaModule.administracionesRoutes
+  );
 
+  // Historia clínica: alergias y línea de tiempo del paciente
+  app.use('/alergias', container.historiaClinicaModule.routes);
+  app.use('/historia-clinica', container.historiaClinicaModule.eventosRoutes);
+
+  // Facturación y Administración (Back-Office)
   app.use('/api/facturacion', facturacionRoutes);
 
   app.use((_req: Request, res: Response) => {

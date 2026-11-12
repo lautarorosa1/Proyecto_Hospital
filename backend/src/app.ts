@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import { container } from './container';
 import { errorHandler } from './shared/errorHandler';
+import facturacionRoutes from './modules/facturacion/facturacion.routes';
 
 export function createApp() {
   console.log('ENTRANDO EN CREATE APP');
@@ -64,6 +65,9 @@ export function createApp() {
     '/atencion-enfermeria/signos-vitales',
     container.atencionEnfermeriaModule.signosVitalesRoutes
   );
+
+
+  app.use('/api/facturacion', facturacionRoutes);
 
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: 'Not found' });

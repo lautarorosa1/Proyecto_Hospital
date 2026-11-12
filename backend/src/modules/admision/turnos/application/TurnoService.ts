@@ -10,6 +10,10 @@ import {
 } from '../domain/Entreturno';
 import { EstadoTurnoState, estadoDe } from '../domain/EstadoTurnoState';
 import type { ITurnoNotificador } from '../domain/ITurnoNotificador';
+import type { IListaEsperaRepository } from '../domain/IListaEsperaRepository';
+import type { EsperaTurno } from '../domain/ListaEspera';
+import { AgregarEsperaDto } from './dtos/AgregarEsperaDto';
+import { ResponseEsperaDto } from './dtos/ResponseEsperaDto';
 import {
   NOMBRES_DIAS,
   ahoraLocal,
@@ -42,6 +46,8 @@ export class TurnoService implements ITurnoService {
     private readonly pacienteRepository: IPacienteRepository,
     private readonly horarioRepository: IHorarioRepository,
     private readonly notificador: ITurnoNotificador,
+    /** Lista de espera (HU 1.3). Sin ella, cancelar solo libera el horario. */
+    private readonly listaEsperaRepository?: IListaEsperaRepository,
   ) {}
 
   // ---------- Mapeos ----------
@@ -469,8 +475,9 @@ export class TurnoService implements ITurnoService {
 
   /**
    * Cancela un turno reservado y libera su horario como un slot nuevo.
-   * Punto de extensión: acá se engancha la promoción desde la lista de espera
-   * (HU 1.3) usando el slot `liberado`.
+   * Luego publica TURNO_CANCELADO y, si hay pacientes en la lista de espera de
+   * ese profesional y día, promueve al primero asignándole el horario liberado
+   * (HU 1.3) y avisa a recepción para que lo notifique.
    */
   async cancelar(id: number): Promise<ResponseTurnoDto> {
     const turno = await this.turnoRepository.findById(id);
@@ -489,6 +496,166 @@ export class TurnoService implements ITurnoService {
       );
     }
 
-    return this.toDto(resultado.cancelado);
+    try {
+      await this.notificador.turnoCancelado(
+        resultado.cancelado,
+        resultado.liberado,
+      );
+    } catch (err) {
+      console.error('No se pudo notificar la cancelación del turno', err);
+    }
+
+    const promovido = await this.promoverDesdeEspera(resultado.liberado);
+
+    const dto = this.toDto(resultado.cancelado);
+    if (promovido) {
+      dto.promovidoDesdeEspera = {
+        esperaId: promovido.espera.id,
+        turnoId: promovido.turno.id,
+        pacienteId: promovido.espera.pacienteId,
+      };
+    }
+    return dto;
+  }
+
+  // ---------- Lista de espera (HU 1.3) ----------
+
+  private toEsperaDto(e: EsperaTurno, posicion: number): ResponseEsperaDto {
+    return {
+      id: e.id,
+      profesionalId: e.profesionalId,
+      pacienteId: e.pacienteId,
+      fecha: e.fecha,
+      estado: e.estado,
+      posicion,
+      turnoId: e.turnoId,
+    };
+  }
+
+  private exigirListaEspera(): IListaEsperaRepository {
+    if (!this.listaEsperaRepository) {
+      throw new ConflictError('La lista de espera no está habilitada');
+    }
+    return this.listaEsperaRepository;
+  }
+
+  /**
+   * Agrega al paciente a la cola de entreturnos (standby) de un profesional
+   * para un día. Solo tiene sentido con la agenda completa: si hay horarios
+   * disponibles se le pide reservar uno directamente.
+   */
+  async agregarAListaEspera(dto: AgregarEsperaDto): Promise<ResponseEsperaDto> {
+    const lista = this.exigirListaEspera();
+    this.validarId(dto?.profesionalId, 'profesionalId');
+    this.validarId(dto?.pacienteId, 'pacienteId');
+    this.validarFecha(dto?.fecha, 'fecha');
+
+    const hoy = ahoraLocal().fecha;
+    if (dto.fecha < hoy) {
+      throw new BadRequestError('No se puede esperar un turno de una fecha pasada');
+    }
+
+    const profesional = await this.profesionalRepository.findById(dto.profesionalId);
+    if (!profesional || profesional.estado !== 'activo') {
+      throw new ConflictError('El profesional no está disponible para recibir turnos');
+    }
+    const paciente = await this.pacienteRepository.findById(dto.pacienteId);
+    if (!paciente) throw new NotFoundError('Paciente not found');
+    if (!paciente.activo) throw new ConflictError('El paciente está dado de baja');
+
+    const disponibles = await this.turnoRepository.findAll({
+      profesionalId: dto.profesionalId,
+      fecha: dto.fecha,
+      estado: 'disponible',
+    });
+    if (disponibles.length > 0) {
+      throw new ConflictError(
+        'Hay turnos disponibles ese día: reservá uno directamente en lugar de entrar a la lista de espera',
+      );
+    }
+
+    const enCola = await lista.findEnEspera(dto.profesionalId, dto.fecha);
+    if (enCola.some((e) => e.pacienteId === dto.pacienteId)) {
+      throw new ConflictError('El paciente ya está en la lista de espera de ese día');
+    }
+
+    const creada = await lista.crear({
+      profesionalId: dto.profesionalId,
+      pacienteId: dto.pacienteId,
+      fecha: dto.fecha,
+    });
+    return this.toEsperaDto(creada, enCola.length + 1);
+  }
+
+  async getListaEspera(
+    filtros: { profesionalId?: number; fecha?: string } = {},
+  ): Promise<ResponseEsperaDto[]> {
+    const lista = this.exigirListaEspera();
+    if (filtros.profesionalId !== undefined) {
+      this.validarId(filtros.profesionalId, 'profesionalId');
+    }
+    if (filtros.fecha !== undefined) this.validarFecha(filtros.fecha, 'fecha');
+
+    const entradas = await lista.findAllEnEspera(filtros);
+    // La posición es por (profesional, fecha): cada cola es independiente.
+    const contador = new Map<string, number>();
+    return entradas.map((e) => {
+      const clave = `${e.profesionalId}|${e.fecha}`;
+      const pos = (contador.get(clave) ?? 0) + 1;
+      contador.set(clave, pos);
+      return this.toEsperaDto(e, pos);
+    });
+  }
+
+  /**
+   * Desencola al primero de la lista de espera y le reserva `slot`. Si el
+   * horario ya fue tomado por otro, devuelve al paciente a la cola. Los
+   * pacientes dados de baja se descartan y se prueba con el siguiente.
+   * Nunca lanza: la cancelación ya se persistió.
+   */
+  private async promoverDesdeEspera(
+    slot: Turno,
+  ): Promise<{ espera: EsperaTurno; turno: Turno } | null> {
+    const lista = this.listaEsperaRepository;
+    if (!lista) return null;
+
+    try {
+      for (;;) {
+        const espera = await lista.reclamarPrimero(slot.profesionalId, slot.fecha);
+        if (!espera) return null;
+
+        const paciente = await this.pacienteRepository.findById(espera.pacienteId);
+        if (!paciente || !paciente.activo) {
+          await lista.descartar(espera.id);
+          continue;
+        }
+
+        // Mismo UPDATE ... WHERE id AND version que una reserva normal.
+        const reservado = await this.turnoRepository.reservar(
+          slot.id,
+          slot.version,
+          espera.pacienteId,
+        );
+        if (!reservado) {
+          await lista.devolver(espera.id);
+          return null;
+        }
+
+        await lista.registrarTurno(espera.id, slot.id);
+        const turno = await this.turnoRepository.findById(slot.id);
+        if (!turno) return null;
+
+        const asignada: EsperaTurno = { ...espera, estado: 'asignado', turnoId: turno.id };
+        try {
+          await this.notificador.listaEsperaPromovida(asignada, turno, paciente);
+        } catch (err) {
+          console.error('No se pudo avisar a recepción de la promoción', err);
+        }
+        return { espera: asignada, turno };
+      }
+    } catch (err) {
+      console.error('No se pudo promover desde la lista de espera', err);
+      return null;
+    }
   }
 }

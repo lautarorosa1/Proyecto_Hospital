@@ -19,4 +19,7 @@ export class ProtocoloEntity {
 
   @Column({ type: 'jsonb' })
   pasos!: string[];
+
+  @Column({ name: 'internacion_id', type: 'int', nullable: true })
+  internacionId?: number | null;
 }

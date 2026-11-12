@@ -8,7 +8,12 @@
         >
           ←
         </router-link>
-        <h1 class="text-2xl font-semibold text-gray-900">Mapa de camas</h1>
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-900">Mapa de camas</h1>
+          <p class="mt-1 text-xs" :class="conectado ? 'text-green-600' : 'text-amber-600'">
+            {{ conectado ? '● En vivo' : '● Reconectando…' }}
+          </p>
+        </div>
         <router-link to="/camas/create">
           <button class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700">
             Crear cama
@@ -61,7 +66,14 @@
               <td class="px-4 py-3">{{ c.numero }}</td>
               <td class="px-4 py-3">{{ c.habitacion_id }}</td>
               <td class="px-4 py-3">{{ c.sector }}</td>
-              <td class="px-4 py-3">{{ c.estado }}</td>
+              <td class="px-4 py-3">
+                <span
+                  class="rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
+                  :class="claseEstado(c.estado)"
+                >
+                  {{ c.estado }}
+                </span>
+              </td>
               <td class="px-4 py-3">{{ c.version }}</td>
               <td class="px-4 py-3">
                 <router-link :to="`/camas/${c.id}`">
@@ -85,7 +97,8 @@
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import { getMapaCamas } from '../services/camaService'
+import { getMapaCamas, urlCamasStream } from '../services/camaService'
+import { useEventStream } from '@/shared/composables/useEventStream'
 
 const camas = ref([])
 const error = ref('')
@@ -105,4 +118,19 @@ const cargar = async () => {
 }
 
 onMounted(cargar)
+
+// Tiempo real: cada cambio de estado (asignación, alta → limpieza, higiene confirmada)
+// llega por SSE y el mapa se refresca solo.
+const { conectado } = useEventStream(urlCamasStream(), {
+  cama_estado: cargar,
+  cama_asignada: cargar
+})
+
+const claseEstado = (estado) =>
+  ({
+    Libre: 'bg-green-50 text-green-700 ring-green-200',
+    Ocupada: 'bg-red-50 text-red-700 ring-red-200',
+    'En limpieza': 'bg-amber-50 text-amber-700 ring-amber-200',
+    Bloqueada: 'bg-gray-100 text-gray-700 ring-gray-300'
+  })[estado] ?? 'bg-gray-50 text-gray-600 ring-gray-200'
 </script>

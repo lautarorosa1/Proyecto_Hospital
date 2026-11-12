@@ -20,7 +20,7 @@ test('registra ingreso con prioridad y posición calculadas', async () => {
     findActivoByPaciente: async () => null,
     findCola: async () => ingresoGuardado ? [ingresoGuardado] : [],
   } as IIngresoGuardiaRepository;
-  const pacientes = { findById: async (id: number) => id === 1 ? { id } : null } as IPacienteRepository;
+  const pacientes = { findById: async (id: number) => id === 1 ? { id, activo: true } : null } as IPacienteRepository;
   const profesionales = {
     findAll: async () => [],
     findById: async (id: number) => ({

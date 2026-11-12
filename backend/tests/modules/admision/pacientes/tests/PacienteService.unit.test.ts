@@ -24,12 +24,6 @@ function crearServicio() {
       pacientes[index] = { ...pacientes[index], ...data };
       return pacientes[index];
     },
-    delete: async (id) => {
-      const index = pacientes.findIndex((p) => p.id === id);
-      if (index < 0) return false;
-      pacientes.splice(index, 1);
-      return true;
-    },
   };
   return new PacienteService(repository);
 }

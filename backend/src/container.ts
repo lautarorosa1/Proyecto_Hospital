@@ -4,6 +4,7 @@ import { profesionalModule } from './modules/admision/profesionales/profesional.
 import { turnoModule } from './modules/admision/turnos/turno.module';
 import { horarioModule } from './modules/admision/horarios/horario.module';
 import { guardiaModule } from './modules/admision/guardia/guardia.module';
+import { ingresoInternacionModule } from './modules/admision/ingresos-internacion/ingresoInternacion.module';
 import { recursosCamasModule } from './modules/recursos-camas/recursos-camas.module';
 import { historiaClinicaModule } from './modules/historia-clinica/historiaClinica.module';
 import { atencionEnfermeriaModule } from './modules/atencion-enfermeria/atencion-enfermeria.module';
@@ -15,6 +16,7 @@ export const container = {
   turnoModule,
   horarioModule,
   guardiaModule,
+  ingresoInternacionModule,
   recursosCamasModule,
   historiaClinicaModule,
   atencionEnfermeriaModule,

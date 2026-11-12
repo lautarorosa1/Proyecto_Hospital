@@ -1,5 +1,6 @@
 
 import type { SignosVitales } from '../domain/SignosVitales';
+import { requiereAlertaTemperatura } from '../domain/SignosVitales';
 import type { ISignosVitalesRepository } from '../domain/SignosVitalesRepository';
 
 export class ActualizarSignosVitales {
@@ -93,7 +94,13 @@ export class ActualizarSignosVitales {
     }
 
     // Actualizar registro
-    const actualizado = await this.repositorio.update(id, datos);
+    // Si se corrige la temperatura, la marca de alerta se recalcula.
+    const cambios: Partial<Omit<SignosVitales, 'id'>> =
+      datos.temperatura !== undefined
+        ? { ...datos, alerta: requiereAlertaTemperatura(datos.temperatura) }
+        : datos;
+
+    const actualizado = await this.repositorio.update(id, cambios);
 
     if (!actualizado) {
       throw new Error('No se pudieron actualizar los signos vitales.');

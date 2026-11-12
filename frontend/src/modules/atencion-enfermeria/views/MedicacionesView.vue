@@ -1,6 +1,6 @@
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 
 import { listarInternaciones } from '../services/internacionService'
 
@@ -12,12 +12,31 @@ import {
 
 import { getProfesionales } from '@/modules/admision/profesionales/services/profesionalService'
 import { getPacientes } from '@/modules/admision/pacientes/services/pacienteService'
+import { getInsumos } from '@/modules/recursos-camas/insumos/services/insumoService'
+import {
+  administrarDosis,
+  listarAdministracionesPorInternacion
+} from '../services/administracionService'
+import { mensajeError } from '@/shared/utils/formato'
 
 // Datos principales
 const internaciones = ref([])
 const profesionales = ref([])
 const medicaciones = ref([])
 const pacientes = ref([])
+const insumos = ref([])
+const administraciones = ref([])
+
+// Insumo del inventario que consume cada dosis (Recursos y Camas descuenta el stock)
+const insumoSeleccionado = ref('')
+const cantidadInsumo = ref(1)
+
+// Administración de dosis (ventana de confirmación)
+const medicacionDosis = ref(null)
+const enfermeroDosis = ref('')
+const programadaPara = ref('')
+const administrando = ref(false)
+const errorDosis = ref('')
 
 // Selecciones
 const internacionSeleccionada = ref('')
@@ -50,7 +69,33 @@ const medicacionDetalle = ref(null)
 // Cargar datos al entrar
 onMounted(async () => {
   await cargarDatos()
+  await cargarInsumos()
 })
+
+// Insumos disponibles para asociar a una medicación
+async function cargarInsumos() {
+  try {
+    const respuesta = await getInsumos()
+    insumos.value = Array.isArray(respuesta.data) ? respuesta.data : respuesta.data?.data || []
+  } catch (err) {
+    console.error('No se pudieron cargar los insumos:', err)
+  }
+}
+
+// Dosis ya administradas de la internación seleccionada
+async function cargarAdministraciones() {
+  administraciones.value = []
+  if (!internacionSeleccionada.value) return
+  try {
+    administraciones.value = await listarAdministracionesPorInternacion(
+      internacionSeleccionada.value
+    )
+  } catch (err) {
+    console.error('No se pudieron cargar las administraciones:', err)
+  }
+}
+
+watch(internacionSeleccionada, cargarAdministraciones)
 
 // Cargar internaciones, profesionales y pacientes
 async function cargarDatos() {
@@ -125,6 +170,8 @@ function limpiarFormulario() {
   fechaInicio.value = ''
   fechaFin.value = ''
   observaciones.value = ''
+  insumoSeleccionado.value = ''
+  cantidadInsumo.value = 1
 }
 
 // Registrar medicación
@@ -182,6 +229,11 @@ async function guardarMedicacion() {
     fechaInicio: fechaInicio.value,
     estado: 'ACTIVA',
     observaciones: observaciones.value.trim()
+  }
+
+  if (insumoSeleccionado.value) {
+    nuevaMedicacion.insumoId = Number(insumoSeleccionado.value)
+    nuevaMedicacion.cantidadInsumo = Number(cantidadInsumo.value) || 1
   }
 
   // Solo enviar fechaFin cuando tenga un valor
@@ -294,6 +346,81 @@ function verDetalles(medicacion) {
 // Cerrar detalles
 function cerrarDetalles() {
   medicacionDetalle.value = null
+}
+
+// Enfermeros que pueden confirmar la administración
+const enfermeros = computed(() =>
+  profesionales.value.filter(p => p.tipoProfesional === 'enfermero' && p.estado !== 'inactivo')
+)
+
+function nombreInsumo(id) {
+  if (!id) return 'Sin insumo asociado'
+  const insumo = insumos.value.find(i => Number(i.id) === Number(id))
+  return insumo ? `${insumo.nombre} (stock: ${insumo.stock_actual})` : `Insumo #${id}`
+}
+
+function fechaHoraLegible(fecha) {
+  const convertida = new Date(fecha)
+  return Number.isNaN(convertida.getTime()) ? '-' : convertida.toLocaleString('es-AR')
+}
+
+// datetime-local en hora local, redondeado al minuto
+function ahoraLocal() {
+  const ahora = new Date()
+  ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset())
+  return ahora.toISOString().slice(0, 16)
+}
+
+function abrirDosis(medicacion) {
+  errorDosis.value = ''
+  medicacionDosis.value = medicacion
+  programadaPara.value = ahoraLocal()
+  enfermeroDosis.value = enfermeros.value.length === 1 ? enfermeros.value[0].id : ''
+}
+
+function cerrarDosis() {
+  medicacionDosis.value = null
+  errorDosis.value = ''
+}
+
+// Confirmar la administración: el backend valida la ventana de ±30 minutos, evita registrar
+// dos veces la misma dosis y descuenta el insumo del stock del piso.
+async function confirmarDosis() {
+  errorDosis.value = ''
+
+  if (!enfermeroDosis.value) {
+    errorDosis.value = 'Seleccioná el enfermero que aplicó la dosis.'
+    return
+  }
+  if (!programadaPara.value) {
+    errorDosis.value = 'Indicá el horario programado de la dosis.'
+    return
+  }
+
+  administrando.value = true
+  try {
+    const medicacion = medicacionDosis.value
+    await administrarDosis({
+      medicacionId: medicacion.id,
+      enfermeroId: Number(enfermeroDosis.value),
+      programadaPara: new Date(programadaPara.value).toISOString()
+    })
+    mensaje.value = medicacion.insumoId
+      ? 'Dosis administrada. El insumo se descontó del stock del piso.'
+      : 'Dosis administrada correctamente.'
+    cerrarDosis()
+    await cargarAdministraciones()
+    await cargarInsumos()
+  } catch (err) {
+    console.error(err)
+    errorDosis.value = mensajeError(err, 'No se pudo registrar la administración.')
+  } finally {
+    administrando.value = false
+  }
+}
+
+function nombreMedicacion(id) {
+  return medicaciones.value.find(m => Number(m.id) === Number(id))?.nombre || `Medicación #${id}`
 }
 
 // Contadores
@@ -519,6 +646,39 @@ const medicacionesFiltradas = computed(() => {
             </div>
           </div>
 
+          <!-- Insumo que consume cada dosis -->
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div>
+              <label class="mb-2 block font-medium text-gray-700">
+                Insumo del inventario (opcional)
+              </label>
+              <select
+                v-model="insumoSeleccionado"
+                class="w-full rounded-lg border border-gray-300 p-3"
+              >
+                <option value="">Sin insumo asociado</option>
+                <option v-for="insumo in insumos" :key="insumo.id" :value="insumo.id">
+                  {{ insumo.nombre }} (stock: {{ insumo.stock_actual }})
+                </option>
+              </select>
+              <p class="mt-1 text-xs text-gray-500">
+                Al administrar cada dosis se descuenta automáticamente del stock del piso.
+              </p>
+            </div>
+            <div v-if="insumoSeleccionado">
+              <label class="mb-2 block font-medium text-gray-700">
+                Unidades por dosis
+              </label>
+              <input
+                v-model.number="cantidadInsumo"
+                type="number"
+                min="1"
+                step="1"
+                class="w-full rounded-lg border border-gray-300 p-3"
+              />
+            </div>
+          </div>
+
           <!-- Observaciones -->
           <div>
             <label class="mb-2 block font-medium text-gray-700">
@@ -542,6 +702,44 @@ const medicacionesFiltradas = computed(() => {
             {{ cargando ? 'Procesando...' : 'Registrar medicación' }}
           </button>
         </form>
+      </section>
+
+      <!-- Dosis administradas -->
+      <section
+        v-if="internacionSeleccionada && administraciones.length"
+        class="mb-8 rounded-xl bg-white p-6 shadow"
+      >
+        <h2 class="mb-4 text-xl font-semibold text-gray-800">
+          Dosis administradas
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-b bg-gray-50 text-gray-600">
+                <th class="p-3">Medicación</th>
+                <th class="p-3">Horario programado</th>
+                <th class="p-3">Administrada</th>
+                <th class="p-3">Enfermero</th>
+                <th class="p-3">Insumo descontado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="administracion in administraciones"
+                :key="administracion.id"
+                class="border-b"
+              >
+                <td class="p-3 font-medium">{{ nombreMedicacion(administracion.medicacionId) }}</td>
+                <td class="p-3">{{ fechaHoraLegible(administracion.programadaPara) }}</td>
+                <td class="p-3">{{ fechaHoraLegible(administracion.administradaEn) }}</td>
+                <td class="p-3">{{ nombreProfesional(administracion.enfermeroId) }}</td>
+                <td class="p-3">
+                  {{ administracion.cantidadDescontada ? `${administracion.cantidadDescontada} u.` : '—' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <!-- Historial -->
@@ -641,6 +839,7 @@ const medicacionesFiltradas = computed(() => {
                 <th class="p-3">Fecha inicio</th>
                 <th class="p-3">Estado</th>
                 <th class="p-3">Actualizar</th>
+                <th class="p-3">Dosis</th>
                 <th class="p-3">Detalles</th>
               </tr>
             </thead>
@@ -702,6 +901,18 @@ const medicacionesFiltradas = computed(() => {
                   </select>
                 </td>
 
+                <!-- Administrar dosis -->
+                <td class="p-3">
+                  <button
+                    v-if="medicacion.estado === 'ACTIVA'"
+                    type="button"
+                    @click="abrirDosis(medicacion)"
+                    class="rounded-lg bg-green-100 px-3 py-2 text-sm font-semibold text-green-700 hover:bg-green-200"
+                  >
+                    Administrar
+                  </button>
+                  <span v-else class="text-gray-400">—</span>
+                </td>
                 <!-- Detalles -->
                 <td class="p-3">
                   <button
@@ -717,6 +928,80 @@ const medicacionesFiltradas = computed(() => {
           </table>
         </div>
       </section>
+    </div>
+
+    <!-- Ventana para administrar una dosis -->
+    <div
+      v-if="medicacionDosis"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      @click.self="cerrarDosis"
+    >
+      <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+        <h2 class="mb-1 text-xl font-bold text-gray-800">Administrar dosis</h2>
+        <p class="mb-4 text-sm text-gray-600">
+          {{ medicacionDosis.nombre }} — {{ medicacionDosis.dosis }} ({{ medicacionDosis.frecuencia }})
+        </p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">
+              Enfermero que aplica la dosis
+            </label>
+            <select
+              v-model="enfermeroDosis"
+              class="w-full rounded-lg border border-gray-300 p-3"
+            >
+              <option value="">Seleccionar enfermero...</option>
+              <option v-for="enfermero in enfermeros" :key="enfermero.id" :value="enfermero.id">
+                {{ enfermero.nombre }} {{ enfermero.apellido }}
+              </option>
+            </select>
+            <p v-if="enfermeros.length === 0" class="mt-1 text-xs text-amber-600">
+              No hay enfermeros activos cargados.
+            </p>
+          </div>
+
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">
+              Horario programado de la dosis
+            </label>
+            <input
+              v-model="programadaPara"
+              type="datetime-local"
+              class="w-full rounded-lg border border-gray-300 p-3"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              Solo se puede administrar dentro de ±30 minutos de este horario.
+            </p>
+          </div>
+
+          <p class="text-sm text-gray-600">
+            Insumo: <strong>{{ nombreInsumo(medicacionDosis.insumoId) }}</strong>
+          </p>
+
+          <p v-if="errorDosis" class="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+            {{ errorDosis }}
+          </p>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+          <button
+            type="button"
+            @click="cerrarDosis"
+            class="flex-1 rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            :disabled="administrando"
+            @click="confirmarDosis"
+            class="flex-1 rounded-lg bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            {{ administrando ? 'Registrando...' : 'Confirmar administración' }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Ventana de detalles -->
@@ -831,6 +1116,15 @@ const medicacionesFiltradas = computed(() => {
           </div>
         </div>
 
+        <div class="mt-4">
+          <p class="text-sm text-gray-500">Insumo asociado</p>
+          <p class="font-semibold">
+            {{ nombreInsumo(medicacionDetalle.insumoId) }}
+            <span v-if="medicacionDetalle.insumoId" class="font-normal text-gray-500">
+              · {{ medicacionDetalle.cantidadInsumo || 1 }} u. por dosis
+            </span>
+          </p>
+        </div>
         <!-- Cerrar -->
         <button
           type="button"

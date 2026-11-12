@@ -33,6 +33,8 @@ export class MedicacionesRepositoryPostgres
       fechaFin: datos.fechaFin,
       estado: datos.estado,
       observaciones: datos.observaciones,
+      insumoId: datos.insumoId ?? null,
+      cantidadInsumo: datos.cantidadInsumo ?? 1,
     });
 
     const guardada = await this.repository.save(medicacion);
@@ -121,6 +123,8 @@ export class MedicacionesRepositoryPostgres
     if (datos.fechaFin !== undefined) medicacion.fechaFin = datos.fechaFin;
     if (datos.estado !== undefined) medicacion.estado = datos.estado;
     if (datos.observaciones !== undefined) medicacion.observaciones = datos.observaciones;
+    if (datos.insumoId !== undefined) medicacion.insumoId = datos.insumoId;
+    if (datos.cantidadInsumo !== undefined) medicacion.cantidadInsumo = datos.cantidadInsumo;
 
     const actualizada = await this.repository.save(medicacion);
 
@@ -140,6 +144,8 @@ export class MedicacionesRepositoryPostgres
       fechaFin: medicacion.fechaFin ?? undefined,
       estado: medicacion.estado,
       observaciones: medicacion.observaciones,
+      insumoId: medicacion.insumoId ?? undefined,
+      cantidadInsumo: medicacion.cantidadInsumo ?? 1,
     };
   }
 }

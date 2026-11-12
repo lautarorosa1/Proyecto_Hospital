@@ -10,4 +10,8 @@ export interface Medicacion {
   fechaFin?: string;
   estado: 'ACTIVA' | 'SUSPENDIDA' | 'FINALIZADA';
   observaciones?: string;
+  /** Insumo del inventario que se consume en cada dosis (Recursos y Camas). */
+  insumoId?: number;
+  /** Unidades de insumo por dosis (default 1). */
+  cantidadInsumo?: number;
 }

@@ -31,4 +31,10 @@ export class InternacionEntity {
 
   @Column({ type: 'text', nullable: true })
   observaciones?: string;
+
+  @Column({ name: 'tipo_ingreso', type: 'varchar', default: 'GENERAL' })
+  tipoIngreso!: 'CIRUGIA_PROGRAMADA' | 'INFECCION_RESPIRATORIA' | 'GENERAL';
+
+  @Column({ name: 'cama_id', type: 'int', nullable: true })
+  camaId?: number | null;
 }

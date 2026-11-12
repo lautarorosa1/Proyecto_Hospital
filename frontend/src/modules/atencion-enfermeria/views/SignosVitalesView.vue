@@ -292,6 +292,7 @@
                 v-for="registro in signosVitales"
                 :key="registro.id"
                 class="border-t border-gray-100"
+                :class="esAlerta(registro) ? 'bg-red-50 text-red-800' : ''"
               >
                 <td class="p-3">
                   {{ formatearFecha(registro.fechaHora) }}
@@ -323,10 +324,10 @@
 
                 <td class="p-3">
                   <span
-                    v-if="registro.temperatura > 39"
+                    v-if="esAlerta(registro)"
                     class="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700"
                   >
-                    Temperatura elevada
+                    ⚠ Temperatura elevada
                   </span>
 
                   <span
@@ -430,6 +431,11 @@ const obtenerNombrePaciente = (pacienteId) => {
     ? `${paciente.nombre} ${paciente.apellido}`
     : `Paciente #${pacienteId}`
 }
+
+// El backend marca `alerta` cuando la temperatura supera 39 °C (y avisa al médico de guardia)
+const UMBRAL_TEMPERATURA = 39
+const esAlerta = (registro) =>
+  registro.alerta ?? Number(registro.temperatura) > UMBRAL_TEMPERATURA
 
 // FORMATEAR FECHA
 const formatearFecha = (fecha) => {
@@ -538,9 +544,11 @@ const guardarSignosVitales = async () => {
       saturacionOxigeno: Number(formulario.value.saturacionOxigeno)
     }
 
-    await registrarSignosVitales(datos)
+    const registro = await registrarSignosVitales(datos)
 
-    mensaje.value = 'Signos vitales registrados correctamente.'
+    mensaje.value = esAlerta(registro)
+      ? `⚠ Temperatura de ${registro.temperatura} °C: se notificó al médico de guardia y se dejó una nota de enfermería.`
+      : 'Signos vitales registrados correctamente. Se agregó una nota de enfermería automática.'
 
     limpiarFormulario()
     mostrarFormulario.value = false

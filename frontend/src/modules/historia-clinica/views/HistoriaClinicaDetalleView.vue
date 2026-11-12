@@ -1,4 +1,5 @@
 
+
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
@@ -66,7 +67,6 @@ onMounted(cargarPaciente)
           Evoluciones médicas
         </RouterLink>
 
-
         <!-- Estudios Médicos -->
         <RouterLink
           :to="`/historia-clinica/${route.params.id}/estudios-medicos`"
@@ -82,13 +82,6 @@ onMounted(cargarPaciente)
         >
           Antecedentes Familiares
         </RouterLink>
-
-      </section>
-
-        <!-- Antecedentes Familiares -->
-        <div class="tarjeta">
-          Antecedentes familiares
-        </div>
 
       </section>
     </template>

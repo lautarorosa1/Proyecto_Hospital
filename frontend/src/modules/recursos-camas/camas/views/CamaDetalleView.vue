@@ -3,12 +3,32 @@
     <div class="mx-auto max-w-lg rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
       <router-link to="/camas" class="text-sm text-indigo-600 hover:underline">← Volver al mapa</router-link>
 
-      <h1 class="mt-4 mb-2 text-2xl font-semibold text-gray-900">Cama {{ cama?.numero }}</h1>
+      <h1 class="mt-4 mb-2 text-2xl font-semibold text-gray-900">Cama {{ cama?.id }}</h1>
       <p v-if="cama" class="mb-6 text-sm text-gray-500">
-        Estado: <strong>{{ cama.estado }}</strong> · Version: <strong>{{ cama.version }}</strong> · Habitación: {{ cama.habitacion_id }}
+        Estado: <strong>{{ cama.estado }}</strong> · Habitación: {{ cama.habitacion_id }}
+        <span v-if="habitacionActual"> ({{ habitacionActual.numero }} · {{ habitacionActual.sector }})</span>
       </p>
 
       <div class="flex flex-col gap-5">
+        <div class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
+          <h2 class="font-medium text-gray-900">Mover habitación / sector</h2>
+          <select
+            v-model.number="destinoHabitacionId"
+            class="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          >
+            <option :value="0" disabled>Elegí habitación…</option>
+            <option v-for="h in habitaciones" :key="h.id" :value="h.id">
+              #{{ h.id }} — {{ h.numero }} ({{ h.sector }})
+            </option>
+          </select>
+          <button
+            @click="hacerMover"
+            class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            Mover
+          </button>
+        </div>
+
         <div v-if="cama?.estado === 'Libre'" class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
           <h2 class="font-medium text-gray-900">Asignar paciente</h2>
           <select v-model.number="asignar.paciente_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
@@ -21,18 +41,26 @@
             No hay pacientes internados sin cama. Primero hay que confirmar su ingreso en
             Atención de Enfermería › Internaciones.
           </p>
-          <input v-model.number="asignar.usuario_id" type="number" min="1" placeholder="usuario_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
           <button @click="hacerAsignacion" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
             Asignar
           </button>
         </div>
 
-        <div v-if="cama?.estado === 'Ocupada'" class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
-          <h2 class="font-medium text-gray-900">Pasar a limpieza</h2>
-          <input v-model.number="limpieza.usuario_id" type="number" min="1" placeholder="usuario_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+        <div v-if="cama?.estado === 'Ocupada' && esAdmin" class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
+          <h2 class="font-medium text-gray-900">Pasar a limpieza (admin)</h2>
+          <p class="text-xs text-gray-500">
+            Uso excepcional. El flujo normal es el alta del paciente.
+          </p>
           <button @click="hacerLimpieza" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
             Enviar a limpieza
           </button>
+        </div>
+
+        <div
+          v-else-if="cama?.estado === 'Ocupada'"
+          class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+        >
+          Esta cama está ocupada. Pasa a limpieza con el alta del paciente.
         </div>
 
         <div v-if="cama?.estado === 'En limpieza' || cama?.estado === 'Bloqueada'" class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
@@ -42,7 +70,6 @@
           <p v-if="cama.estado === 'En limpieza'" class="text-xs text-gray-500">
             La cama quedó bloqueada tras el alta hasta que maestranza confirme la higiene.
           </p>
-          <input v-model.number="liberar.usuario_id" type="number" min="1" placeholder="usuario_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
           <button @click="hacerLiberar" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
             Liberar cama
           </button>
@@ -50,7 +77,6 @@
 
         <div v-if="cama?.estado === 'Libre'" class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
           <h2 class="font-medium text-gray-900">Bloquear cama</h2>
-          <input v-model.number="bloquear.usuario_id" type="number" min="1" placeholder="usuario_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
           <button @click="hacerBloqueo" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
             Bloquear
           </button>
@@ -68,39 +94,73 @@ import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   getCamaById,
+  moverCama,
   asignarCama,
   pasarALimpieza,
   cambiarEstadoCama,
   urlCamasStream
 } from '../services/camaService'
+import { getHabitaciones } from '../../habitaciones/services/habitacionService'
 import { listarInternaciones } from '@/modules/atencion-enfermeria/services/internacionService'
 import { getPacientes } from '@/modules/admision/pacientes/services/pacienteService'
 import { useEventStream } from '@/shared/composables/useEventStream'
 import { usuarioIdActual } from '@/shared/utils/formato'
+import { useAuthStore } from '@/stores/authStore'
 
 const route = useRoute()
+const authStore = useAuthStore()
 const cama = ref(null)
+const habitaciones = ref([])
+const destinoHabitacionId = ref(0)
 const error = ref('')
 const ok = ref('')
+const esAdmin = authStore.hasRole('Administrador')
 
-const asignar = reactive({ paciente_id: '', usuario_id: usuarioIdActual() })
-const limpieza = reactive({ usuario_id: 1 })
-const liberar = reactive({ usuario_id: 1 })
-const bloquear = reactive({ usuario_id: 1 })
+const asignar = reactive({ paciente_id: '' })
+
+const habitacionActual = computed(() =>
+  habitaciones.value.find((h) => Number(h.id) === Number(cama.value?.habitacion_id))
+)
 
 const cargar = async () => {
   error.value = ''
   const res = await getCamaById(route.params.id)
   cama.value = res.data
+  destinoHabitacionId.value = res.data.habitacion_id
+}
+
+const cargarHabitaciones = async () => {
+  const res = await getHabitaciones()
+  habitaciones.value = res.data
 }
 
 onMounted(async () => {
   try {
-    await cargar()
+    await Promise.all([cargar(), cargarHabitaciones()])
   } catch (e) {
     error.value = e.response?.data?.error || 'No se pudo cargar la cama'
   }
 })
+
+const hacerMover = async () => {
+  error.value = ''
+  ok.value = ''
+  if (!destinoHabitacionId.value) {
+    error.value = 'Elegí una habitación'
+    return
+  }
+  if (destinoHabitacionId.value === cama.value.habitacion_id) {
+    error.value = 'La cama ya está en esa habitación'
+    return
+  }
+  try {
+    await moverCama(cama.value.id, { habitacion_id: destinoHabitacionId.value })
+    ok.value = 'Cama movida'
+    await cargar()
+  } catch (e) {
+    error.value = e.response?.data?.error || 'No se pudo mover la cama'
+  }
+}
 
 const hacerAsignacion = async () => {
   error.value = ''
@@ -112,8 +172,7 @@ const hacerAsignacion = async () => {
   try {
     await asignarCama(cama.value.id, {
       paciente_id: asignar.paciente_id,
-      usuario_id: asignar.usuario_id,
-      version: cama.value.version
+      usuario_id: usuarioIdActual()
     })
     ok.value = 'Cama asignada'
     await cargar()
@@ -122,7 +181,6 @@ const hacerAsignacion = async () => {
   }
 }
 
-// Solo se asigna cama a pacientes ya ingresados (con internación activa) y sin cama todavía
 const internaciones = ref([])
 const pacientes = ref([])
 
@@ -151,7 +209,6 @@ const cargarCandidatos = async () => {
 
 onMounted(cargarCandidatos)
 
-// Tiempo real: si cambia el estado de esta cama (alta, limpieza confirmada) se refresca sola
 useEventStream(urlCamasStream(), {
   cama_estado: async (evento) => {
     if (cama.value && Number(evento.camaId) === Number(cama.value.id)) {
@@ -166,8 +223,7 @@ const hacerLimpieza = async () => {
   ok.value = ''
   try {
     await pasarALimpieza(cama.value.id, {
-      usuario_id: limpieza.usuario_id,
-      version: cama.value.version
+      usuario_id: usuarioIdActual()
     })
     ok.value = 'Cama en limpieza'
     await cargar()
@@ -182,8 +238,7 @@ const hacerLiberar = async () => {
   try {
     await cambiarEstadoCama(cama.value.id, {
       estado: 'Libre',
-      usuario_id: liberar.usuario_id,
-      version: cama.value.version
+      usuario_id: usuarioIdActual()
     })
     ok.value = 'Cama libre'
     await cargar()
@@ -198,8 +253,7 @@ const hacerBloqueo = async () => {
   try {
     await cambiarEstadoCama(cama.value.id, {
       estado: 'Bloqueada',
-      usuario_id: bloquear.usuario_id,
-      version: cama.value.version
+      usuario_id: usuarioIdActual()
     })
     ok.value = 'Cama bloqueada'
     await cargar()

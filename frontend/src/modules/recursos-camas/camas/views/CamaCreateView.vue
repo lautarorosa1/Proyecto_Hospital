@@ -5,10 +5,6 @@
 
       <form class="flex flex-col gap-5" @submit.prevent="guardar">
         <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium text-gray-700">Número</label>
-          <input v-model="form.numero" type="text" class="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />
-        </div>
-        <div class="flex flex-col gap-1.5">
           <label class="text-sm font-medium text-gray-700">Habitación</label>
           <select v-model.number="form.habitacion_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
             <option :value="0" disabled>Elegí una habitación</option>
@@ -42,7 +38,7 @@ import { getHabitaciones } from '../../habitaciones/services/habitacionService'
 const router = useRouter()
 const habitaciones = ref([])
 const error = ref('')
-const form = reactive({ numero: '', habitacion_id: 0 })
+const form = reactive({ habitacion_id: 0 })
 
 onMounted(async () => {
   try {
@@ -56,7 +52,7 @@ onMounted(async () => {
 const guardar = async () => {
   error.value = ''
   try {
-    await createCama({ numero: form.numero, habitacion_id: form.habitacion_id })
+    await createCama({ habitacion_id: form.habitacion_id })
     router.push('/camas')
   } catch (e) {
     error.value = e.response?.data?.error || 'No se pudo crear la cama'

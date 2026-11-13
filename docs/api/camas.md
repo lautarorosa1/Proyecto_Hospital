@@ -6,6 +6,8 @@
 
 `usuario_id`, `paciente_id` y `referencia_id` llegan como números. Los errores responden `{ "error": "mensaje" }`.
 
+Frontend del módulo: `/recursos-camas` (habitaciones, insumos, mapa de camas y pantalla Gestionar).
+
 ---
 
 ## Endpoints
@@ -21,17 +23,18 @@
 | `GET` | `/insumos/stock` | Consultar el stock de todos los insumos | `200` |
 | `GET` | `/insumos/:id` | Obtener un insumo | `200` / `400` / `404` |
 | `GET` | `/insumos/:id/stock` | Consultar el stock de un insumo | `200` / `400` / `404` |
-| `POST` | `/insumos` | Crear un insumo con stock inicial | `201` / `400` |
-| `POST` | `/insumos/:id/ingresos` | Ingresar stock y guardar el movimiento | `201` / `400` / `404` |
-| `PUT` | `/insumos/:id` | Actualizar nombre o unidad de medida | `200` / `400` / `404` |
+| `POST` | `/insumos` | Crear un insumo con stock y precio | `201` / `400` |
+| `POST` | `/insumos/:id/ingresos` | Registrar ingreso de stock con movimiento | `201` / `400` / `404` |
+| `PUT` | `/insumos/:id` | Actualizar nombre, unidad, stock y/o precio | `200` / `400` / `404` |
 | `DELETE` | `/insumos/:id` | Eliminar un insumo | `204` / `400` / `404` |
 | `GET` | `/camas` | Mapa de camas, filtrable por estado y sector | `200` / `400` |
 | `GET` | `/camas/eventos/stream` | Stream SSE de cambios de cama en tiempo real | `200` |
 | `GET` | `/camas/:id` | Obtener una cama | `200` / `400` / `404` |
-| `POST` | `/camas` | Crear una cama en estado Libre y version 0 | `201` / `400` / `404` |
+| `POST` | `/camas` | Crear una cama en estado Libre | `201` / `400` / `404` |
+| `PUT` | `/camas/:id/ubicacion` | Mover la cama a otra habitación (y sector) | `200` / `400` / `404` |
 | `POST` | `/camas/:id/asignaciones` | Asignar un paciente si la cama está Libre | `201` / `400` / `404` / `409` |
-| `POST` | `/camas/:id/limpieza` | Pasar la cama a En limpieza y cerrar la asignación | `200` / `400` / `404` / `409` |
-| `PUT` | `/camas/:id/estado` | Cambiar el estado por una transición permitida | `200` / `400` / `404` / `409` |
+| `POST` | `/camas/:id/limpieza` | Pasar a En limpieza (solo Administrador) | `200` / `400` / `401` / `403` / `404` / `409` |
+| `PUT` | `/camas/:id/estado` | Cambiar estado por transición permitida | `200` / `400` / `404` / `409` |
 
 ---
 
@@ -43,6 +46,8 @@
 | `numero` | string | Sí | Texto, no vacío |
 | `piso` | string | Sí | Texto, no vacío |
 | `sector` | string | Sí | Texto, no vacío. El mapa de camas filtra por este campo |
+
+En la UI de crear/editar, `sector` se elige con un select (`Clinica`, `Cirugia`, `Pediatria`, `UTI`, `Guardia`) o **Otro** (input libre). La API recibe siempre el texto final; nunca se guarda la palabra `Otro`.
 
 ### Crear habitación (`POST /habitaciones`)
 
@@ -71,46 +76,65 @@ Respuesta `201`:
 | :--- | :---: | :---: | :--- |
 | `id` | número | — | Generado por la base |
 | `nombre` | string | Sí | Texto, no vacío |
-| `stock_actual` | número | Sí en el alta | Entero mayor o igual a 0. Después solo cambia con un ingreso o un descuento |
+| `stock_actual` | número | Sí en el alta | Entero ≥ 0. Se puede setear con `PUT /insumos/:id` (subir o bajar) |
 | `unidad_medida` | string | Sí | Texto, no vacío |
+| `precio` | número | Sí en el alta | Número **mayor a 0** (hasta 2 decimales). No puede ser `0` |
 
-`PUT /insumos/:id` acepta `nombre` y `unidad_medida`. Si el cuerpo trae `stock_actual`, responde `400`.
+`PUT /insumos/:id` acepta `nombre`, `unidad_medida`, `stock_actual` y `precio`.
+
+En la UI:
+- Unidad: select (`unidad`, `caja`, `ml`, `mg`, `ampolla`) o **Otro** (input libre).
+- Precio: se muestra con prefijo `$` en alta, listado y edición.
+- Editar stock/precio: pantalla **Editar stock** (sin Referencia ID).
 
 ### Crear insumo (`POST /insumos`)
 
 ```bash
 curl -X POST http://localhost:3000/insumos \
   -H "Content-Type: application/json" \
-  -d '{"nombre":"Gasa esteril","stock_actual":20,"unidad_medida":"unidad"}'
-```
-
-### Ingresar stock (`POST /insumos/:id/ingresos`)
-
-```bash
-curl -X POST http://localhost:3000/insumos/1/ingresos \
-  -H "Content-Type: application/json" \
-  -d '{"cantidad":10,"referencia_id":50}'
+  -d '{"nombre":"Gasa esteril","stock_actual":20,"unidad_medida":"unidad","precio":150.5}'
 ```
 
 Respuesta `201`:
 
 ```json
 {
-  "insumo": {
-    "id": 1,
-    "nombre": "Gasa esteril",
-    "stock_actual": 30,
-    "unidad_medida": "unidad"
-  },
-  "movimiento": {
-    "id": 1,
-    "insumo_id": 1,
-    "tipo": "Ingreso",
-    "cantidad": 10,
-    "referencia_id": 50,
-    "fecha_hora": "2026-11-12T21:00:00.000Z"
-  }
+  "id": 1,
+  "nombre": "Gasa esteril",
+  "stock_actual": 20,
+  "unidad_medida": "unidad",
+  "precio": 150.5
 }
+```
+
+### Editar stock y precio (`PUT /insumos/:id`)
+
+```bash
+curl -X PUT http://localhost:3000/insumos/1 \
+  -H "Content-Type: application/json" \
+  -d '{"stock_actual":50,"precio":120}'
+```
+
+Respuesta `200`:
+
+```json
+{
+  "id": 1,
+  "nombre": "Gasa esteril",
+  "stock_actual": 50,
+  "unidad_medida": "unidad",
+  "precio": 120
+}
+```
+
+### Ingreso con movimiento (`POST /insumos/:id/ingresos`)
+
+Sigue disponible para registrar un movimiento tipo `Ingreso` con `cantidad` y `referencia_id`. La pantalla de insumos usa la edición directa por `PUT`.
+
+```bash
+curl -X POST http://localhost:3000/insumos/1/ingresos \
+  -H "Content-Type: application/json" \
+  -d '{"cantidad":10,"referencia_id":50}'
 ```
 
 ---
@@ -119,11 +143,9 @@ Respuesta `201`:
 
 | Campo | Tipo | Obligatorio | Notas |
 | :--- | :---: | :---: | :--- |
-| `id` | número | — | Generado por la base |
-| `numero` | string | Sí | Texto, no vacío |
+| `id` | número | — | Generado por la base. Identifica la cama (no hay `numero` ni `version`) |
 | `habitacion_id` | número | Sí | Tiene que existir la habitación |
 | `estado` | string | — | Arranca en `Libre`. No se manda en el alta |
-| `version` | número | — | Arranca en `0`. Cada cambio la incrementa en 1 |
 
 Estados exactos: `Libre`, `Ocupada`, `En limpieza`, `Bloqueada`.
 
@@ -137,13 +159,20 @@ Transiciones permitidas:
 | `En limpieza` | `Libre` |
 | `Bloqueada` | `Libre` |
 
-Cualquier otra transición responde `409`. `Libre` → `Ocupada` se hace solo con `POST /camas/:id/asignaciones`. El `PUT /camas/:id/estado` no acepta `Ocupada`.
+Reglas:
+
+- `Libre` → `Ocupada` solo con `POST /camas/:id/asignaciones`.
+- `PUT /camas/:id/estado` **no** acepta `Ocupada` ni `En limpieza`.
+- `Ocupada` → `En limpieza` ocurre con el alta del paciente (`PACIENTE_DADO_DE_ALTA` → `liberarPorAlta`) o, de forma excepcional, con `POST /camas/:id/limpieza` si el usuario es **Administrador** (JWT + rol).
+- En **Gestionar**, un usuario sin rol Administrador no ve el botón de forzar limpieza; solo un aviso de que pasa a limpieza con el alta.
+- Mover habitación/sector se hace en **Gestionar** (`PUT /camas/:id/ubicacion`). El sector sale de la habitación destino.
+- Las acciones de Gestionar usan el `usuario_id` del usuario logueado (no se pide input numérico).
 
 Cada cambio guarda una fila en `historial_estados_cama`: `id`, `cama_id`, `estado_anterior`, `estado_nuevo`, `fecha_cambio`, `usuario_id`.
 
 La asignación guarda `asignaciones_cama`: `id`, `cama_id`, `paciente_id`, `fecha_asignacion`, `fecha_liberacion`. Solo se asigna si la cama está `Libre`. Si ya hay una asignación abierta, responde `409`.
 
-La operación de asignar lee la cama, compara `version`, pasa a `Ocupada`, incrementa `version` y crea la asignación en una transacción. Si la `version` no coincide, responde `409` y no escribe nada.
+La operación de asignar lee la cama bajo lock, pasa a `Ocupada` y crea la asignación en una transacción.
 
 Si el módulo tiene conectado el verificador de ingreso, también exige que el paciente tenga una **internación activa**. Si no la tiene, responde `409`.
 
@@ -151,14 +180,12 @@ Al pasar a `En limpieza`, la asignación abierta recibe `fecha_liberacion`.
 
 `GET /camas` une cama y habitación. Filtros opcionales: `estado` y `sector`. La respuesta incluye `sector`.
 
-`pasarAEnLimpieza` es el caso de uso HTTP (`POST /camas/:id/limpieza`). Ante el evento `PACIENTE_DADO_DE_ALTA`, el módulo llama `liberarPorAlta` y deja la cama en `En limpieza`.
-
 ### Crear cama (`POST /camas`)
 
 ```bash
 curl -X POST http://localhost:3000/camas \
   -H "Content-Type: application/json" \
-  -d '{"numero":"A","habitacion_id":1}'
+  -d '{"habitacion_id":1}'
 ```
 
 Respuesta `201`:
@@ -166,10 +193,8 @@ Respuesta `201`:
 ```json
 {
   "id": 1,
-  "numero": "A",
   "habitacion_id": 1,
-  "estado": "Libre",
-  "version": 0
+  "estado": "Libre"
 }
 ```
 
@@ -181,13 +206,30 @@ Respuesta `200`:
 [
   {
     "id": 1,
-    "numero": "A",
     "habitacion_id": 1,
     "estado": "Libre",
-    "version": 0,
     "sector": "Clinica"
   }
 ]
+```
+
+### Mover habitación / sector (`PUT /camas/:id/ubicacion`)
+
+```bash
+curl -X PUT http://localhost:3000/camas/1/ubicacion \
+  -H "Content-Type: application/json" \
+  -d '{"habitacion_id":2}'
+```
+
+Respuesta `200`:
+
+```json
+{
+  "id": 1,
+  "habitacion_id": 2,
+  "estado": "Libre",
+  "sector": "Cirugia"
+}
 ```
 
 ### Asignar (`POST /camas/:id/asignaciones`)
@@ -195,20 +237,29 @@ Respuesta `200`:
 ```bash
 curl -X POST http://localhost:3000/camas/1/asignaciones \
   -H "Content-Type: application/json" \
-  -d '{"paciente_id":10,"usuario_id":3,"version":0}'
+  -d '{"paciente_id":10,"usuario_id":3}'
 ```
 
-Respuesta `201`: la cama queda `Ocupada` con `version` 1, más el historial y la asignación con `fecha_liberacion` en `null`.
+Respuesta `201`: la cama queda `Ocupada`, más el historial y la asignación con `fecha_liberacion` en `null`.
 
-### Pasar a limpieza (`POST /camas/:id/limpieza`)
+### Pasar a limpieza — solo Administrador (`POST /camas/:id/limpieza`)
 
 ```bash
 curl -X POST http://localhost:3000/camas/1/limpieza \
+  -H "Authorization: Bearer <token_admin>" \
   -H "Content-Type: application/json" \
-  -d '{"usuario_id":3,"version":1}'
+  -d '{"usuario_id":3}'
 ```
 
-Respuesta `200`: la cama queda `En limpieza` y la asignación abierta tiene `fecha_liberacion`.
+Respuesta `200`: la cama queda `En limpieza` y la asignación abierta tiene `fecha_liberacion`. Sin token o sin rol Administrador: `401` / `403`.
+
+### Liberar / bloquear (`PUT /camas/:id/estado`)
+
+Acepta transiciones a `Libre` o `Bloqueada` (según el estado actual). Body:
+
+```json
+{ "estado": "Libre", "usuario_id": 3 }
+```
 
 ### Stream en tiempo real (`GET /camas/eventos/stream`)
 
@@ -262,7 +313,6 @@ Consume:
   "estadoAnterior": "Libre",
   "estadoNuevo": "Ocupada",
   "usuarioId": 3,
-  "version": 1,
   "timestamp": "2026-11-12T21:00:00.000Z"
 }
 ```
@@ -310,7 +360,9 @@ Si `camaId` no viene, el módulo no libera ninguna cama.
 
 | Código | Cuándo ocurre |
 | :---: | :--- |
-| `400` | Dato faltante o inválido, id que no es un entero positivo, estado desconocido o `stock_actual` mandado en el `PUT` de insumo |
+| `400` | Dato faltante o inválido, id que no es un entero positivo, estado desconocido, `stock_actual` inválido, o `precio` ≤ 0 |
+| `401` | Token faltante o inválido (p. ej. `POST /camas/:id/limpieza`) |
+| `403` | Sin rol Administrador en rutas protegidas |
 | `404` | Habitación, insumo o cama inexistente |
-| `409` | Transición no permitida, `version` distinta, asignación abierta, paciente sin internación activa, o descuento que dejaría el stock negativo |
+| `409` | Transición no permitida, asignación abierta, paciente sin internación activa, o descuento que dejaría el stock negativo |
 | `500` | Error interno del servidor |

@@ -189,7 +189,6 @@ export interface CamaEstadoCambiadoPayload {
   estadoAnterior: string;
   estadoNuevo: string;
   usuarioId: number;
-  version: number;
   timestamp: Date;
 }
 

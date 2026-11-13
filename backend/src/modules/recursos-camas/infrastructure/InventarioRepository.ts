@@ -19,6 +19,7 @@ export class InventarioRepository implements IInventarioRepository {
       nombre: entity.nombre,
       stock_actual: entity.stock_actual,
       unidad_medida: entity.unidad_medida,
+      precio: Number(entity.precio),
     };
   }
 

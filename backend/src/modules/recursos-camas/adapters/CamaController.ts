@@ -3,6 +3,7 @@ import { ICamaService } from '../application/ICamaService';
 import { AsignarCamaDto } from '../application/dtos/AsignarCamaDto';
 import { CambiarEstadoCamaDto } from '../application/dtos/CambiarEstadoCamaDto';
 import { CreateCamaDto } from '../application/dtos/CreateCamaDto';
+import { MoverCamaDto } from '../application/dtos/MoverCamaDto';
 import { PasarALimpiezaDto } from '../application/dtos/PasarALimpiezaDto';
 import { BadRequestError } from '../../../shared/errors';
 
@@ -56,6 +57,19 @@ export class CamaController {
     try {
       const cama = await this.camaService.crear(req.body);
       res.status(201).json(cama);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  mover = async (
+    req: Request<IdParams, unknown, MoverCamaDto>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const cama = await this.camaService.mover(this.parseId(req.params.id), req.body);
+      res.json(cama);
     } catch (err) {
       next(err);
     }

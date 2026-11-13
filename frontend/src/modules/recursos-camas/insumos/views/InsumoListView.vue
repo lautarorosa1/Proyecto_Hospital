@@ -24,6 +24,7 @@
               <th class="px-4 py-3 font-medium">Nombre</th>
               <th class="px-4 py-3 font-medium">Stock</th>
               <th class="px-4 py-3 font-medium">Unidad</th>
+              <th class="px-4 py-3 font-medium">Precio</th>
               <th class="px-4 py-3 font-medium">Acciones</th>
             </tr>
           </thead>
@@ -37,11 +38,12 @@
               <td class="px-4 py-3">{{ i.nombre }}</td>
               <td class="px-4 py-3">{{ i.stock_actual }}</td>
               <td class="px-4 py-3">{{ i.unidad_medida }}</td>
+              <td class="px-4 py-3">${{ Number(i.precio).toFixed(2) }}</td>
               <td class="px-4 py-3">
                 <div class="flex flex-wrap gap-2">
-                  <router-link :to="`/insumos/${i.id}/ingresos`">
+                  <router-link :to="`/insumos/${i.id}/editar-stock`">
                     <button class="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 transition hover:bg-indigo-100">
-                      Ingresar stock
+                      Editar stock
                     </button>
                   </router-link>
                   <button

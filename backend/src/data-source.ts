@@ -2,6 +2,9 @@ import 'reflect-metadata';
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import { join } from 'path';
+import { NomencladorPrestacion } from './modules/facturacion/domain/entities/NomencladorPrestacion';
+import { CargoFacturacion } from './modules/facturacion/domain/entities/CargoFacturacion';
+import { Factura } from './modules/facturacion/domain/entities/Factura';
 
 // Configuración de conexión a PostgreSQL
 const DB_HOST = process.env.DB_HOST || 'localhost';
@@ -39,9 +42,12 @@ export const AppDataSource = new DataSource({
   logging: DB_LOGGING,
 
   // Entidades de todos los módulos del proyecto
-  entities: [
-    join(__dirname, 'modules', '**', 'infrastructure', '*Entity{.js,.ts}'),
-  ],
+    entities: [
+      join(__dirname, 'modules', '**', 'infrastructure', '*Entity{.js,.ts}'),
+      NomencladorPrestacion,
+      CargoFacturacion,
+      Factura,
+    ],
 
   // Migraciones del proyecto
   migrations: [

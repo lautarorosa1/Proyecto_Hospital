@@ -19,6 +19,9 @@
             <router-link to="/recursos-camas" class="transition hover:text-indigo-600">
               Recursos y Camas
             </router-link>
+            <router-link to="/facturacion" class="transition hover:text-indigo-600">
+              Facturación
+            </router-link>
             <router-link
               v-if="authStore.hasRole('Administrador')"
               to="/admin/usuarios"

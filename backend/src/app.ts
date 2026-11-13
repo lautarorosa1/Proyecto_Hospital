@@ -4,8 +4,6 @@ import { container } from './container';
 import { errorHandler } from './shared/errorHandler';
 
 export function createApp() {
-  console.log('ENTRANDO EN CREATE APP');
-
   const app = express();
 
   app.use(cors());
@@ -76,6 +74,9 @@ export function createApp() {
   // Historia clínica: alergias y línea de tiempo del paciente
   app.use('/alergias', container.historiaClinicaModule.routes);
   app.use('/historia-clinica', container.historiaClinicaModule.eventosRoutes);
+
+  // Facturación y Administración (Back-Office)
+  app.use('/api/facturacion', container.facturacionModule.routes);
 
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: 'Not found' });

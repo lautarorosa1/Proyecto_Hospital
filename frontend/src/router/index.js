@@ -7,6 +7,9 @@ import historiaClinicaRoutes from '@/modules/historia-clinica/routes'
 import recursosCamasRoutes from '@/modules/recursos-camas/routes'
 import atencionEnfermeriaRoutes from '@/modules/atencion-enfermeria/routes'
 
+import facturacionRoutes from '@/modules/facturacion/routes'
+
+
 const routes = [
   {
     path: '/',
@@ -38,6 +41,7 @@ const routes = [
   ...historiaClinicaRoutes,
   ...recursosCamasRoutes,
   ...atencionEnfermeriaRoutes,
+  ...facturacionRoutes,
 
   // Siempre al final: captura cualquier ruta que no coincida con las anteriores
   {

@@ -71,47 +71,45 @@ Respuesta `201`:
 | :--- | :---: | :---: | :--- |
 | `id` | número | — | Generado por la base |
 | `nombre` | string | Sí | Texto, no vacío |
-| `stock_actual` | número | Sí en el alta | Entero mayor o igual a 0. Después solo cambia con un ingreso o un descuento |
+| `stock_actual` | número | Sí en el alta | Entero mayor o igual a 0. Se puede editar con `PUT /insumos/:id` o bajar por el evento de medicación |
 | `unidad_medida` | string | Sí | Texto, no vacío |
+| `precio` | número | Sí en el alta | Número mayor o igual a 0 (hasta 2 decimales). Se puede editar con `PUT /insumos/:id` |
 
-`PUT /insumos/:id` acepta `nombre` y `unidad_medida`. Si el cuerpo trae `stock_actual`, responde `400`.
+`PUT /insumos/:id` acepta `nombre`, `unidad_medida`, `stock_actual` y `precio`. Stock y precio se setean al valor mandado (subir o bajar).
 
 ### Crear insumo (`POST /insumos`)
 
 ```bash
 curl -X POST http://localhost:3000/insumos \
   -H "Content-Type: application/json" \
-  -d '{"nombre":"Gasa esteril","stock_actual":20,"unidad_medida":"unidad"}'
+  -d '{"nombre":"Gasa esteril","stock_actual":20,"unidad_medida":"unidad","precio":150.5}'
 ```
 
-### Ingresar stock (`POST /insumos/:id/ingresos`)
+### Editar stock y precio (`PUT /insumos/:id`)
+
+Setea stock y/o precio al valor que mandes (subir o bajar):
 
 ```bash
-curl -X POST http://localhost:3000/insumos/1/ingresos \
+curl -X PUT http://localhost:3000/insumos/1 \
   -H "Content-Type: application/json" \
-  -d '{"cantidad":10,"referencia_id":50}'
+  -d '{"stock_actual":50,"precio":120}'
 ```
 
-Respuesta `201`:
+Respuesta `200`:
 
 ```json
 {
-  "insumo": {
-    "id": 1,
-    "nombre": "Gasa esteril",
-    "stock_actual": 30,
-    "unidad_medida": "unidad"
-  },
-  "movimiento": {
-    "id": 1,
-    "insumo_id": 1,
-    "tipo": "Ingreso",
-    "cantidad": 10,
-    "referencia_id": 50,
-    "fecha_hora": "2026-11-12T21:00:00.000Z"
-  }
+  "id": 1,
+  "nombre": "Gasa esteril",
+  "stock_actual": 50,
+  "unidad_medida": "unidad",
+  "precio": 120
 }
 ```
+
+### Ingreso con movimiento (`POST /insumos/:id/ingresos`)
+
+Sigue disponible para registrar un movimiento tipo `Ingreso` con `cantidad` y `referencia_id`. La pantalla de insumos usa la edición directa por `PUT`.
 
 ---
 
@@ -310,7 +308,7 @@ Si `camaId` no viene, el módulo no libera ninguna cama.
 
 | Código | Cuándo ocurre |
 | :---: | :--- |
-| `400` | Dato faltante o inválido, id que no es un entero positivo, estado desconocido o `stock_actual` mandado en el `PUT` de insumo |
+| `400` | Dato faltante o inválido, id que no es un entero positivo, estado desconocido, `stock_actual` que no es un entero mayor o igual a 0, o `precio` que no es un número mayor o igual a 0 |
 | `404` | Habitación, insumo o cama inexistente |
 | `409` | Transición no permitida, `version` distinta, asignación abierta, paciente sin internación activa, o descuento que dejaría el stock negativo |
 | `500` | Error interno del servidor |

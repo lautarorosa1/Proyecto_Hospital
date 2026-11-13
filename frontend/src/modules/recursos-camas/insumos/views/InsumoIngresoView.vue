@@ -27,13 +27,13 @@
             <input
               v-model.number="form.precio"
               type="number"
-              min="0"
+              min="0.01"
               step="0.01"
               class="w-full rounded-lg border border-gray-300 py-2 pl-7 pr-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
           <p class="text-xs text-gray-400">
-            Podés subir o bajar el precio al valor que quieras.
+            Podés subir o bajar el precio, pero no puede ser 0.
           </p>
         </div>
 
@@ -88,6 +88,10 @@ onMounted(async () => {
 
 const guardar = async () => {
   error.value = ''
+  if (typeof form.precio !== 'number' || form.precio <= 0) {
+    error.value = 'El precio debe ser mayor a 0'
+    return
+  }
   try {
     await updateInsumo(route.params.id, {
       stock_actual: form.stock_actual,

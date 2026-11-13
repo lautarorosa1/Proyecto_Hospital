@@ -3,7 +3,7 @@ import type { Cama, CamaMapa } from './Cama';
 import type { EstadoCama } from './EstadoCama';
 import type { HistorialEstadoCama } from './HistorialEstadoCama';
 
-export type FalloCama = 'no_encontrada' | 'version' | 'transicion' | 'doble_asignacion';
+export type FalloCama = 'no_encontrada' | 'transicion' | 'doble_asignacion';
 
 export type ResultadoCambioCama =
   | {
@@ -15,20 +15,18 @@ export type ResultadoCambioCama =
   | { ok: false; fallo: FalloCama };
 
 export interface ICamaRepository {
-  crear(data: { numero: string; habitacion_id: number }): Promise<Cama>;
+  crear(data: { habitacion_id: number }): Promise<Cama>;
   buscarPorId(id: number): Promise<Cama | null>;
   buscarMapa(filtro: { estado?: EstadoCama; sector?: string }): Promise<CamaMapa[]>;
+  actualizarHabitacion(id: number, habitacionId: number): Promise<Cama | null>;
   asignar(input: {
     camaId: number;
     pacienteId: number;
     usuarioId: number;
-    version: number;
   }): Promise<ResultadoCambioCama>;
   cambiarEstado(input: {
     camaId: number;
     estadoNuevo: EstadoCama;
     usuarioId: number;
-    /** Si se omite no se compara versión (cambios internos del sistema, p. ej. alta). */
-    version?: number;
   }): Promise<ResultadoCambioCama>;
 }

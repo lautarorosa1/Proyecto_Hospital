@@ -17,7 +17,6 @@ export class AdaptadorEventosRecursosCamas implements IPublicadorEstadoCama {
         estadoAnterior: evento.estado_anterior,
         estadoNuevo: evento.estado_nuevo,
         usuarioId: evento.usuario_id,
-        version: evento.version,
         timestamp: new Date(evento.fecha_cambio),
       });
     } catch (error) {

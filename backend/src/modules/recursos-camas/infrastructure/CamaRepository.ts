@@ -16,10 +16,8 @@ import { HistorialEstadoCamaEntity } from './HistorialEstadoCamaEntity';
 
 type FilaMapa = {
   id: number | string;
-  numero: string;
   habitacion_id: number | string;
   estado: string;
-  version: number | string;
   sector: string;
 };
 
@@ -48,10 +46,8 @@ export class CamaRepository implements ICamaRepository {
   private aCama(entity: CamaEntity): Cama {
     return {
       id: entity.id,
-      numero: entity.numero,
       habitacion_id: entity.habitacion_id,
       estado: this.aEstado(entity.estado),
-      version: entity.version,
     };
   }
 
@@ -76,13 +72,11 @@ export class CamaRepository implements ICamaRepository {
     };
   }
 
-  async crear(data: { numero: string; habitacion_id: number }): Promise<Cama> {
+  async crear(data: { habitacion_id: number }): Promise<Cama> {
     const repo = this.dataSource.getRepository(CamaEntity);
     const entity = repo.create({
-      numero: data.numero,
       habitacion_id: data.habitacion_id,
       estado: 'Libre',
-      version: 0,
     });
     const saved = await repo.save(entity);
     return this.aCama(saved);
@@ -93,16 +87,23 @@ export class CamaRepository implements ICamaRepository {
     return entity ? this.aCama(entity) : null;
   }
 
+  async actualizarHabitacion(id: number, habitacionId: number): Promise<Cama | null> {
+    const repo = this.dataSource.getRepository(CamaEntity);
+    const entity = await repo.findOneBy({ id });
+    if (!entity) return null;
+    entity.habitacion_id = habitacionId;
+    const saved = await repo.save(entity);
+    return this.aCama(saved);
+  }
+
   async buscarMapa(filtro: { estado?: EstadoCama; sector?: string }): Promise<CamaMapa[]> {
     const qb = this.dataSource
       .getRepository(CamaEntity)
       .createQueryBuilder('cama')
       .innerJoin(HabitacionEntity, 'habitacion', 'habitacion.id = cama.habitacion_id')
       .select('cama.id', 'id')
-      .addSelect('cama.numero', 'numero')
       .addSelect('cama.habitacion_id', 'habitacion_id')
       .addSelect('cama.estado', 'estado')
-      .addSelect('cama.version', 'version')
       .addSelect('habitacion.sector', 'sector')
       .orderBy('cama.id', 'ASC');
 
@@ -116,10 +117,8 @@ export class CamaRepository implements ICamaRepository {
     const filas = await qb.getRawMany<FilaMapa>();
     return filas.map((fila) => ({
       id: this.aEntero(fila.id),
-      numero: fila.numero,
       habitacion_id: this.aEntero(fila.habitacion_id),
       estado: this.aEstado(fila.estado),
-      version: this.aEntero(fila.version),
       sector: fila.sector,
     }));
   }
@@ -128,7 +127,6 @@ export class CamaRepository implements ICamaRepository {
     camaId: number;
     pacienteId: number;
     usuarioId: number;
-    version: number;
   }): Promise<ResultadoCambioCama> {
     return this.dataSource.transaction<ResultadoCambioCama>(async (manager) => {
       const cama = await manager.findOne(CamaEntity, {
@@ -136,7 +134,6 @@ export class CamaRepository implements ICamaRepository {
         lock: { mode: 'pessimistic_write' },
       });
       if (!cama) return { ok: false, fallo: 'no_encontrada' };
-      if (cama.version !== input.version) return { ok: false, fallo: 'version' };
 
       const estadoActual = this.aEstado(cama.estado);
       if (estadoActual !== 'Libre' || !transicionPermitida(estadoActual, 'Ocupada')) {
@@ -151,7 +148,6 @@ export class CamaRepository implements ICamaRepository {
 
       const ahora = new Date();
       cama.estado = 'Ocupada';
-      cama.version = cama.version + 1;
       const camaGuardada = await manager.save(cama);
 
       const historial = await manager.save(
@@ -186,7 +182,6 @@ export class CamaRepository implements ICamaRepository {
     camaId: number;
     estadoNuevo: EstadoCama;
     usuarioId: number;
-    version?: number;
   }): Promise<ResultadoCambioCama> {
     return this.dataSource.transaction<ResultadoCambioCama>(async (manager) => {
       const cama = await manager.findOne(CamaEntity, {
@@ -194,9 +189,6 @@ export class CamaRepository implements ICamaRepository {
         lock: { mode: 'pessimistic_write' },
       });
       if (!cama) return { ok: false, fallo: 'no_encontrada' };
-      if (input.version !== undefined && cama.version !== input.version) {
-        return { ok: false, fallo: 'version' };
-      }
 
       const estadoActual = this.aEstado(cama.estado);
       if (!transicionDirectaPermitida(estadoActual, input.estadoNuevo)) {
@@ -217,7 +209,6 @@ export class CamaRepository implements ICamaRepository {
       }
 
       cama.estado = input.estadoNuevo;
-      cama.version = cama.version + 1;
       const camaGuardada = await manager.save(cama);
 
       const historial = await manager.save(

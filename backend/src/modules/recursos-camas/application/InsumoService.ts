@@ -62,8 +62,8 @@ export class InsumoService implements IInsumoService {
   }
 
   private exigirPrecio(valor: unknown): number {
-    if (typeof valor !== 'number' || Number.isNaN(valor) || !Number.isFinite(valor) || valor < 0) {
-      throw new BadRequestError('El precio debe ser un número mayor o igual a 0');
+    if (typeof valor !== 'number' || Number.isNaN(valor) || !Number.isFinite(valor) || valor <= 0) {
+      throw new BadRequestError('El precio debe ser un número mayor a 0');
     }
     return Math.round(valor * 100) / 100;
   }

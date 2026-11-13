@@ -6,7 +6,6 @@ export interface EventoCambioEstadoCama {
   estado_nuevo: EstadoCama;
   usuario_id: number;
   fecha_cambio: string;
-  version: number;
 }
 
 export interface EventoAsignacionCama {

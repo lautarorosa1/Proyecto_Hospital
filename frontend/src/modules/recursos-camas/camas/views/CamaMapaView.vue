@@ -48,11 +48,9 @@
           <thead>
             <tr class="border-b border-gray-200 text-gray-500">
               <th class="px-4 py-3 font-medium">ID</th>
-              <th class="px-4 py-3 font-medium">Número</th>
               <th class="px-4 py-3 font-medium">Habitación</th>
               <th class="px-4 py-3 font-medium">Sector</th>
               <th class="px-4 py-3 font-medium">Estado</th>
-              <th class="px-4 py-3 font-medium">Version</th>
               <th class="px-4 py-3 font-medium">Acciones</th>
             </tr>
           </thead>
@@ -63,7 +61,6 @@
               class="border-b border-gray-100 text-gray-700 transition hover:bg-gray-50"
             >
               <td class="px-4 py-3">{{ c.id }}</td>
-              <td class="px-4 py-3">{{ c.numero }}</td>
               <td class="px-4 py-3">{{ c.habitacion_id }}</td>
               <td class="px-4 py-3">{{ c.sector }}</td>
               <td class="px-4 py-3">
@@ -74,7 +71,6 @@
                   {{ c.estado }}
                 </span>
               </td>
-              <td class="px-4 py-3">{{ c.version }}</td>
               <td class="px-4 py-3">
                 <router-link :to="`/camas/${c.id}`">
                   <button class="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">
@@ -119,8 +115,6 @@ const cargar = async () => {
 
 onMounted(cargar)
 
-// Tiempo real: cada cambio de estado (asignación, alta → limpieza, higiene confirmada)
-// llega por SSE y el mapa se refresca solo.
 const { conectado } = useEventStream(urlCamasStream(), {
   cama_estado: cargar,
   cama_asignada: cargar

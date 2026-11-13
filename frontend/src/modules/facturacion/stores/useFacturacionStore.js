@@ -2,8 +2,11 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
 const API_URL = 'http://localhost:3000/api/facturacion';
+const PACIENTES_URL = 'http://localhost:3000/pacientes';
 
 export const useFacturacionStore = defineStore('facturacion', () => {
+  // Estado reactivo
+  const pacientes = ref([]);
   const nomenclador = ref([]);
   const cuentaActual = ref(null);
   const facturas = ref([]);
@@ -11,6 +14,7 @@ export const useFacturacionStore = defineStore('facturacion', () => {
   const cargando = ref(false);
   const error = ref(null);
 
+  // Propiedades computadas
   const cantidadPrestaciones = computed(() => nomenclador.value.length);
 
   const cargosPendientes = computed(() =>
@@ -20,6 +24,18 @@ export const useFacturacionStore = defineStore('facturacion', () => {
   const totalFacturadoGeneral = computed(() =>
     facturas.value.reduce((acc, f) => acc + Number(f.montoTotal), 0)
   );
+
+  // Acciones contra la API
+  async function cargarPacientes() {
+    try {
+      const resp = await fetch(PACIENTES_URL);
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Error al obtener la lista de pacientes.');
+      pacientes.value = Array.isArray(data) ? data : (data.data || []);
+    } catch (err) {
+      error.value = err.message;
+    }
+  }
 
   async function cargarNomenclador() {
     cargando.value = true;
@@ -153,6 +169,7 @@ export const useFacturacionStore = defineStore('facturacion', () => {
   }
 
   return {
+    pacientes,
     nomenclador,
     cuentaActual,
     facturas,
@@ -162,6 +179,7 @@ export const useFacturacionStore = defineStore('facturacion', () => {
     cantidadPrestaciones,
     cargosPendientes,
     totalFacturadoGeneral,
+    cargarPacientes,
     cargarNomenclador,
     agregarPrestacion,
     simularCalculo,

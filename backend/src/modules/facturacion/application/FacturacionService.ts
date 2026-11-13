@@ -167,17 +167,6 @@ export class FacturacionService {
   }
 
   async inicializarNomencladorSiVacio(): Promise<void> {
-    const total = await this.nomencladorRepo.count();
-    if (total === 0) {
-      const prestacionesBase = [
-        { codigo: 'CONS-GRAL', descripcion: 'Consulta Médica General', precioBase: 15000.0 },
-        { codigo: 'CONS-GUARDIA', descripcion: 'Atención de Guardia Médica', precioBase: 18000.0 },
-        { codigo: 'MED-IBUP-400', descripcion: 'Suministro Farmacia: Ibuprofeno 400mg', precioBase: 2500.0 },
-        { codigo: 'MED-PARAC-500', descripcion: 'Suministro Farmacia: Paracetamol 500mg', precioBase: 2200.0 },
-        { codigo: 'EST-HEMOGRAMA', descripcion: 'Laboratorio: Hemograma Completo', precioBase: 8500.0 },
-        { codigo: 'DIA-INTERNACION', descripcion: 'Día de Cama en Sala Común', precioBase: 45000.0 },
-      ];
-      await this.nomencladorRepo.save(prestacionesBase);
-    }
+    // El nomenclador inicia vacío para carga manual desde el Back-Office
   }
 }

@@ -16,6 +16,20 @@ export class FacturacionController {
     }
   };
 
+  obtenerPrestacion = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) {
+        res.status(400).json({ error: 'Identificador de prestación inválido.' });
+        return;
+      }
+      const prestacion = await this.service.obtenerPrestacionPorId(id);
+      res.json(prestacion);
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
+    }
+  };
+
   crearPrestacion = async (req: Request, res: Response): Promise<void> => {
     try {
       const { codigo, descripcion, precioBase } = req.body;
@@ -25,6 +39,44 @@ export class FacturacionController {
       }
       const creada = await this.service.crearPrestacion(codigo, descripcion, Number(precioBase));
       res.status(201).json(creada);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  };
+
+  actualizarPrestacion = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      const { codigo, descripcion, precioBase } = req.body;
+      if (isNaN(id)) {
+        res.status(400).json({ error: 'Identificador de prestación inválido.' });
+        return;
+      }
+      if (!codigo || !descripcion || precioBase === undefined || isNaN(precioBase)) {
+        res.status(400).json({ error: 'Código, descripción y precioBase numérico son obligatorios.' });
+        return;
+      }
+      const actualizada = await this.service.actualizarPrestacion(
+        id,
+        codigo,
+        descripcion,
+        Number(precioBase)
+      );
+      res.json(actualizada);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  };
+
+  eliminarPrestacion = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) {
+        res.status(400).json({ error: 'Identificador de prestación inválido.' });
+        return;
+      }
+      await this.service.eliminarPrestacion(id);
+      res.json({ mensaje: 'Prestación eliminada correctamente.' });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -65,6 +117,54 @@ export class FacturacionController {
         eventoOrigenId,
       });
       res.status(201).json(cargoGuardado);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  };
+
+  obtenerCargo = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) {
+        res.status(400).json({ error: 'Identificador de cargo inválido.' });
+        return;
+      }
+      const cargo = await this.service.obtenerCargoPorId(id);
+      res.json(cargo);
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
+    }
+  };
+
+  actualizarCargo = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      const { tipoCobertura, copagoFijo, entidadNombre } = req.body;
+      if (isNaN(id) || !tipoCobertura) {
+        res.status(400).json({ error: 'Parámetros inválidos para actualizar el cargo.' });
+        return;
+      }
+      const actualizado = await this.service.actualizarCargo(
+        id,
+        tipoCobertura,
+        copagoFijo !== undefined ? Number(copagoFijo) : undefined,
+        entidadNombre
+      );
+      res.json(actualizado);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  };
+
+  eliminarCargo = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) {
+        res.status(400).json({ error: 'Identificador de cargo inválido.' });
+        return;
+      }
+      await this.service.eliminarCargo(id);
+      res.json({ mensaje: 'Cargo eliminado correctamente.' });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }

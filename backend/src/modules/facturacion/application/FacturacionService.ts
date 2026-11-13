@@ -26,18 +26,69 @@ export class FacturacionService {
     });
   }
 
-  async crearPrestacion(codigo: string, descripcion: string, precioBase: number): Promise<NomencladorPrestacion> {
-    const existente = await this.nomencladorRepo.findOne({ where: { codigo } });
-    if (existente) {
-      throw new Error(`Ya existe una prestación registrada con el código "${codigo}".`);
+  async obtenerPrestacionPorId(id: number): Promise<NomencladorPrestacion> {
+    const prestacion = await this.nomencladorRepo.findOne({
+      where: { id, activo: true },
+    });
+    if (!prestacion) {
+      throw new Error(`No se encontró la prestación con ID #${id}.`);
     }
+    return prestacion;
+  }
+
+  async crearPrestacion(codigo: string, descripcion: string, precioBase: number): Promise<NomencladorPrestacion> {
+    const codigoLimpio = codigo.toUpperCase().trim();
+    const existente = await this.nomencladorRepo.findOne({ where: { codigo: codigoLimpio } });
+
+    if (existente) {
+      if (existente.activo) {
+        throw new Error(`Ya existe una prestación activa registrada con el código "${codigoLimpio}".`);
+      }
+      // Si había sido dada de baja antes, se reactiva con los nuevos valores
+      existente.descripcion = descripcion.trim();
+      existente.precioBase = precioBase;
+      existente.activo = true;
+      return await this.nomencladorRepo.save(existente);
+    }
+
     const nueva = this.nomencladorRepo.create({
-      codigo: codigo.toUpperCase().trim(),
+      codigo: codigoLimpio,
       descripcion: descripcion.trim(),
       precioBase,
       activo: true,
     });
     return await this.nomencladorRepo.save(nueva);
+  }
+
+  async actualizarPrestacion(
+    id: number,
+    codigo: string,
+    descripcion: string,
+    precioBase: number
+  ): Promise<NomencladorPrestacion> {
+    const prestacion = await this.obtenerPrestacionPorId(id);
+    const codigoLimpio = codigo.toUpperCase().trim();
+
+    if (codigoLimpio !== prestacion.codigo) {
+      const duplicado = await this.nomencladorRepo.findOne({
+        where: { codigo: codigoLimpio },
+      });
+      if (duplicado && duplicado.id !== id) {
+        throw new Error(`Ya existe otra prestación con el código "${codigoLimpio}".`);
+      }
+    }
+
+    prestacion.codigo = codigoLimpio;
+    prestacion.descripcion = descripcion.trim();
+    prestacion.precioBase = precioBase;
+
+    return await this.nomencladorRepo.save(prestacion);
+  }
+
+  async eliminarPrestacion(id: number): Promise<void> {
+    const prestacion = await this.obtenerPrestacionPorId(id);
+    prestacion.activo = false;
+    await this.nomencladorRepo.save(prestacion);
   }
 
   async registrarCargo(datos: RegistrarCargoDTO): Promise<CargoFacturacion> {
@@ -86,6 +137,56 @@ export class FacturacionService {
       where: { pacienteId },
       order: { fechaCarga: 'DESC' },
     });
+  }
+
+  async obtenerCargoPorId(id: number): Promise<CargoFacturacion> {
+    const cargo = await this.cargoRepo.findOne({ where: { id } });
+    if (!cargo) {
+      throw new Error(`No se encontró el cargo #${id}.`);
+    }
+    return cargo;
+  }
+
+  async actualizarCargo(
+    id: number,
+    tipoCobertura: 'PUBLICA' | 'PREPAGA' | 'PARTICULAR',
+    copagoFijo?: number,
+    entidadNombre?: string
+  ): Promise<CargoFacturacion> {
+    const cargo = await this.obtenerCargoPorId(id);
+
+    if (cargo.estado === 'FACTURADO') {
+      throw new Error('No se puede modificar un cargo que ya ha sido facturado o liquidado.');
+    }
+
+    const prestacion = await this.nomencladorRepo.findOne({
+      where: { descripcion: cargo.concepto, activo: true },
+    });
+    const valorBase = prestacion ? Number(prestacion.precioBase) : Number(cargo.valorBase);
+
+    const calculo = this.calculador.calcular(
+      tipoCobertura,
+      valorBase,
+      copagoFijo,
+      entidadNombre
+    );
+
+    cargo.tipoCobertura = calculo.tipoCobertura;
+    cargo.cargoPaciente = calculo.cargoPaciente;
+    cargo.cargoTercero = calculo.cargoTercero;
+    cargo.enteAFacturar = calculo.enteAFacturar;
+
+    return await this.cargoRepo.save(cargo);
+  }
+
+  async eliminarCargo(id: number): Promise<void> {
+    const cargo = await this.obtenerCargoPorId(id);
+
+    if (cargo.estado === 'FACTURADO') {
+      throw new Error('No se puede eliminar un cargo que ya forma parte de un comprobante emitido.');
+    }
+
+    await this.cargoRepo.remove(cargo);
   }
 
   async liquidarCuentaPaciente(pacienteId: number, nombrePaciente?: string): Promise<Factura[]> {

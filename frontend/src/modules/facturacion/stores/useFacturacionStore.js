@@ -52,6 +52,22 @@ export const useFacturacionStore = defineStore('facturacion', () => {
     }
   }
 
+  async function obtenerPrestacionDetalle(id) {
+    cargando.value = true;
+    error.value = null;
+    try {
+      const resp = await fetch(`${API_URL}/nomenclador/${id}`);
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Error al obtener el detalle de la prestación.');
+      return data;
+    } catch (err) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      cargando.value = false;
+    }
+  }
+
   async function agregarPrestacion(codigo, descripcion, precioBase) {
     cargando.value = true;
     error.value = null;
@@ -64,6 +80,51 @@ export const useFacturacionStore = defineStore('facturacion', () => {
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || 'Error al registrar la prestación.');
       nomenclador.value.push(data);
+      nomenclador.value.sort((a, b) => a.codigo.localeCompare(b.codigo));
+      return data;
+    } catch (err) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      cargando.value = false;
+    }
+  }
+
+  async function actualizarPrestacion(id, codigo, descripcion, precioBase) {
+    cargando.value = true;
+    error.value = null;
+    try {
+      const resp = await fetch(`${API_URL}/nomenclador/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo, descripcion, precioBase }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Error al actualizar la prestación.');
+      const index = nomenclador.value.findIndex((item) => item.id === id);
+      if (index !== -1) {
+        nomenclador.value[index] = data;
+        nomenclador.value.sort((a, b) => a.codigo.localeCompare(b.codigo));
+      }
+      return data;
+    } catch (err) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      cargando.value = false;
+    }
+  }
+
+  async function eliminarPrestacion(id) {
+    cargando.value = true;
+    error.value = null;
+    try {
+      const resp = await fetch(`${API_URL}/nomenclador/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Error al eliminar la prestación.');
+      nomenclador.value = nomenclador.value.filter((item) => item.id !== id);
       return data;
     } catch (err) {
       error.value = err.message;
@@ -106,6 +167,62 @@ export const useFacturacionStore = defineStore('facturacion', () => {
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || 'Error al registrar el cargo.');
       await consultarCuentaPaciente(payload.pacienteId);
+      return data;
+    } catch (err) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      cargando.value = false;
+    }
+  }
+
+  async function obtenerCargoDetalle(id) {
+    cargando.value = true;
+    error.value = null;
+    try {
+      const resp = await fetch(`${API_URL}/cargos/${id}`);
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Error al obtener el detalle del cargo.');
+      return data;
+    } catch (err) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      cargando.value = false;
+    }
+  }
+
+  async function actualizarCargo(id, payload, pacienteId) {
+    cargando.value = true;
+    error.value = null;
+    try {
+      const resp = await fetch(`${API_URL}/cargos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Error al actualizar el cargo.');
+      await consultarCuentaPaciente(pacienteId);
+      return data;
+    } catch (err) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      cargando.value = false;
+    }
+  }
+
+  async function eliminarCargo(id, pacienteId) {
+    cargando.value = true;
+    error.value = null;
+    try {
+      const resp = await fetch(`${API_URL}/cargos/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Error al eliminar el cargo.');
+      await consultarCuentaPaciente(pacienteId);
       return data;
     } catch (err) {
       error.value = err.message;
@@ -181,9 +298,15 @@ export const useFacturacionStore = defineStore('facturacion', () => {
     totalFacturadoGeneral,
     cargarPacientes,
     cargarNomenclador,
+    obtenerPrestacionDetalle,
     agregarPrestacion,
+    actualizarPrestacion,
+    eliminarPrestacion,
     simularCalculo,
     registrarCargo,
+    obtenerCargoDetalle,
+    actualizarCargo,
+    eliminarCargo,
     consultarCuentaPaciente,
     liquidarCuentaPaciente,
     cargarFacturas,

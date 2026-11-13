@@ -25,6 +25,7 @@ export class InsumoService implements IInsumoService {
       nombre: insumo.nombre,
       stock_actual: insumo.stock_actual,
       unidad_medida: insumo.unidad_medida,
+      precio: Number(insumo.precio),
     };
   }
 
@@ -58,6 +59,13 @@ export class InsumoService implements IInsumoService {
       throw new BadRequestError('El stock_actual debe ser un entero mayor o igual a 0');
     }
     return valor;
+  }
+
+  private exigirPrecio(valor: unknown): number {
+    if (typeof valor !== 'number' || Number.isNaN(valor) || !Number.isFinite(valor) || valor < 0) {
+      throw new BadRequestError('El precio debe ser un número mayor o igual a 0');
+    }
+    return Math.round(valor * 100) / 100;
   }
 
   private exigirEntero(valor: unknown, campo: string, minimo: number): number {
@@ -104,26 +112,26 @@ export class InsumoService implements IInsumoService {
       nombre: this.exigirTexto(dto?.nombre, 'nombre'),
       stock_actual: this.exigirStock(dto?.stock_actual),
       unidad_medida: this.exigirTexto(dto?.unidad_medida, 'unidad_medida'),
+      precio: this.exigirPrecio(dto?.precio),
     };
     const insumo = await this.insumoRepository.create(data);
     return this.toDto(insumo);
   }
 
   async update(id: number, dto: UpdateInsumoDto): Promise<ResponseInsumoDto> {
-    const cuerpo = dto as UpdateInsumoDto & { stock_actual?: unknown };
-    if (cuerpo?.stock_actual !== undefined) {
-      throw new BadRequestError(
-        'El stock_actual se modifica con un ingreso o un descuento',
-      );
-    }
-
     const existente = await this.insumoRepository.findById(id);
     if (!existente) throw new NotFoundError('Insumo no encontrado');
 
     const changes: Partial<InsumoData> = {};
     if (dto?.nombre !== undefined) changes.nombre = this.exigirTexto(dto.nombre, 'nombre');
+    if (dto?.stock_actual !== undefined) {
+      changes.stock_actual = this.exigirStock(dto.stock_actual);
+    }
     if (dto?.unidad_medida !== undefined) {
       changes.unidad_medida = this.exigirTexto(dto.unidad_medida, 'unidad_medida');
+    }
+    if (dto?.precio !== undefined) {
+      changes.precio = this.exigirPrecio(dto.precio);
     }
 
     const actualizado = await this.insumoRepository.update(id, changes);

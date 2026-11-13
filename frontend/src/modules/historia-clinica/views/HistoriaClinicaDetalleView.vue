@@ -1,4 +1,5 @@
 
+
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
@@ -83,9 +84,12 @@ onMounted(cargarPaciente)
         </RouterLink>
 
         <!-- Antecedentes Familiares -->
-        <div class="tarjeta">
-          Antecedentes familiares
-        </div>
+        <RouterLink
+          :to="`/historia-clinica/${route.params.id}/antecedentes-familiares`"
+          class="tarjeta tarjeta-enlace"
+        >
+          Antecedentes Familiares
+        </RouterLink>
 
       </section>
     </template>

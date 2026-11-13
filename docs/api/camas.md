@@ -4,7 +4,7 @@
 **Responsable Asignado:** Agus  
 **URL Base:** `http://localhost:3000`  
 
-No hay login en esta entrega. `usuario_id`, `paciente_id` y `referencia_id` llegan como números. Los errores responden `{ "error": "mensaje" }`.
+`usuario_id`, `paciente_id` y `referencia_id` llegan como números. Los errores responden `{ "error": "mensaje" }`.
 
 ---
 
@@ -26,6 +26,7 @@ No hay login en esta entrega. `usuario_id`, `paciente_id` y `referencia_id` lleg
 | `PUT` | `/insumos/:id` | Actualizar nombre o unidad de medida | `200` / `400` / `404` |
 | `DELETE` | `/insumos/:id` | Eliminar un insumo | `204` / `400` / `404` |
 | `GET` | `/camas` | Mapa de camas, filtrable por estado y sector | `200` / `400` |
+| `GET` | `/camas/eventos/stream` | Stream SSE de cambios de cama en tiempo real | `200` |
 | `GET` | `/camas/:id` | Obtener una cama | `200` / `400` / `404` |
 | `POST` | `/camas` | Crear una cama en estado Libre y version 0 | `201` / `400` / `404` |
 | `POST` | `/camas/:id/asignaciones` | Asignar un paciente si la cama está Libre | `201` / `400` / `404` / `409` |
@@ -43,6 +44,25 @@ No hay login en esta entrega. `usuario_id`, `paciente_id` y `referencia_id` lleg
 | `piso` | string | Sí | Texto, no vacío |
 | `sector` | string | Sí | Texto, no vacío. El mapa de camas filtra por este campo |
 
+### Crear habitación (`POST /habitaciones`)
+
+```bash
+curl -X POST http://localhost:3000/habitaciones \
+  -H "Content-Type: application/json" \
+  -d '{"numero":"101","piso":"1","sector":"Clinica"}'
+```
+
+Respuesta `201`:
+
+```json
+{
+  "id": 1,
+  "numero": "101",
+  "piso": "1",
+  "sector": "Clinica"
+}
+```
+
 ---
 
 ## Insumo
@@ -55,6 +75,43 @@ No hay login en esta entrega. `usuario_id`, `paciente_id` y `referencia_id` lleg
 | `unidad_medida` | string | Sí | Texto, no vacío |
 
 `PUT /insumos/:id` acepta `nombre` y `unidad_medida`. Si el cuerpo trae `stock_actual`, responde `400`.
+
+### Crear insumo (`POST /insumos`)
+
+```bash
+curl -X POST http://localhost:3000/insumos \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Gasa esteril","stock_actual":20,"unidad_medida":"unidad"}'
+```
+
+### Ingresar stock (`POST /insumos/:id/ingresos`)
+
+```bash
+curl -X POST http://localhost:3000/insumos/1/ingresos \
+  -H "Content-Type: application/json" \
+  -d '{"cantidad":10,"referencia_id":50}'
+```
+
+Respuesta `201`:
+
+```json
+{
+  "insumo": {
+    "id": 1,
+    "nombre": "Gasa esteril",
+    "stock_actual": 30,
+    "unidad_medida": "unidad"
+  },
+  "movimiento": {
+    "id": 1,
+    "insumo_id": 1,
+    "tipo": "Ingreso",
+    "cantidad": 10,
+    "referencia_id": 50,
+    "fecha_hora": "2026-11-12T21:00:00.000Z"
+  }
+}
+```
 
 ---
 
@@ -84,11 +141,81 @@ Cualquier otra transición responde `409`. `Libre` → `Ocupada` se hace solo co
 
 Cada cambio guarda una fila en `historial_estados_cama`: `id`, `cama_id`, `estado_anterior`, `estado_nuevo`, `fecha_cambio`, `usuario_id`.
 
-La asignación guarda `asignaciones_cama`: `id`, `cama_id`, `paciente_id`, `fecha_asignacion`, `fecha_liberacion`. Solo se asigna si la cama está `Libre`. Si ya hay una asignación abierta, responde `409`. La operación lee la cama, compara `version`, pasa a `Ocupada`, incrementa `version` y crea la asignación en una transacción. Si la `version` no coincide, responde `409` y no escribe nada. Al pasar a `En limpieza`, la asignación abierta recibe `fecha_liberacion`.
+La asignación guarda `asignaciones_cama`: `id`, `cama_id`, `paciente_id`, `fecha_asignacion`, `fecha_liberacion`. Solo se asigna si la cama está `Libre`. Si ya hay una asignación abierta, responde `409`.
+
+La operación de asignar lee la cama, compara `version`, pasa a `Ocupada`, incrementa `version` y crea la asignación en una transacción. Si la `version` no coincide, responde `409` y no escribe nada.
+
+Si el módulo tiene conectado el verificador de ingreso, también exige que el paciente tenga una **internación activa**. Si no la tiene, responde `409`.
+
+Al pasar a `En limpieza`, la asignación abierta recibe `fecha_liberacion`.
 
 `GET /camas` une cama y habitación. Filtros opcionales: `estado` y `sector`. La respuesta incluye `sector`.
 
-`pasarAEnLimpieza` es el caso de uso que puede llamar el alta de internación. La ruta HTTP equivalente es `POST /camas/:id/limpieza`.
+`pasarAEnLimpieza` es el caso de uso HTTP (`POST /camas/:id/limpieza`). Ante el evento `PACIENTE_DADO_DE_ALTA`, el módulo llama `liberarPorAlta` y deja la cama en `En limpieza`.
+
+### Crear cama (`POST /camas`)
+
+```bash
+curl -X POST http://localhost:3000/camas \
+  -H "Content-Type: application/json" \
+  -d '{"numero":"A","habitacion_id":1}'
+```
+
+Respuesta `201`:
+
+```json
+{
+  "id": 1,
+  "numero": "A",
+  "habitacion_id": 1,
+  "estado": "Libre",
+  "version": 0
+}
+```
+
+### Mapa (`GET /camas?estado=Libre&sector=Clinica`)
+
+Respuesta `200`:
+
+```json
+[
+  {
+    "id": 1,
+    "numero": "A",
+    "habitacion_id": 1,
+    "estado": "Libre",
+    "version": 0,
+    "sector": "Clinica"
+  }
+]
+```
+
+### Asignar (`POST /camas/:id/asignaciones`)
+
+```bash
+curl -X POST http://localhost:3000/camas/1/asignaciones \
+  -H "Content-Type: application/json" \
+  -d '{"paciente_id":10,"usuario_id":3,"version":0}'
+```
+
+Respuesta `201`: la cama queda `Ocupada` con `version` 1, más el historial y la asignación con `fecha_liberacion` en `null`.
+
+### Pasar a limpieza (`POST /camas/:id/limpieza`)
+
+```bash
+curl -X POST http://localhost:3000/camas/1/limpieza \
+  -H "Content-Type: application/json" \
+  -d '{"usuario_id":3,"version":1}'
+```
+
+Respuesta `200`: la cama queda `En limpieza` y la asignación abierta tiene `fecha_liberacion`.
+
+### Stream en tiempo real (`GET /camas/eventos/stream`)
+
+Server-Sent Events. Emite:
+
+- `cama_estado` cuando cambia el estado de una cama
+- `cama_asignada` cuando se asigna un paciente
 
 ---
 
@@ -105,27 +232,85 @@ La asignación guarda `asignaciones_cama`: `id`, `cama_id`, `paciente_id`, `fech
 
 `POST /insumos/:id/ingresos` suma `stock_actual` y guarda un movimiento `Ingreso`.
 
-El descuento no tiene endpoint. Ocurre al recibir el evento `recursos-camas.medicacion.administrada`. Resta `stock_actual` de forma atómica. Si la cantidad deja el stock negativo, responde `409` y no guarda el movimiento. Si alcanza, guarda un movimiento `Descuento` con `referencia_id` igual al id de la administración.
+El descuento no tiene endpoint. Se dispara al recibir el evento de dominio `MEDICACION_ADMINISTRADA`. Resta `stock_actual` de forma atómica. Si la cantidad deja el stock negativo, responde `409` y no guarda el movimiento. Si alcanza, guarda un movimiento `Descuento` con `referencia_id` igual al id de la administración.
 
 ---
 
 ## Eventos
 
-El bus compartido todavía no existe. El módulo publica y consume por su propio puerto. Cuando el bus tenga `publicar(nombre, payload)` y `suscribir(nombre, handler)`, se enchufa con `recursosCamasModule.eventos.enchufar(bus)`.
+El módulo usa el bus compartido de dominio (`eventBus` / `DomainEvents`).
 
-| Nombre | Dirección | Cuándo |
-| :--- | :--- | :--- |
-| `recursos-camas.cama.estado-cambiado` | Se publica | Después de cada cambio de estado de cama |
-| `recursos-camas.medicacion.administrada` | Se consume | Descuenta el stock del insumo |
+Publica:
 
-Cambio de estado:
+| Evento | Cuándo |
+| :--- | :--- |
+| `CAMA_ESTADO_CAMBIADO` | Después de cada cambio de estado de cama |
+| `CAMA_ASIGNADA` | Después de asignar un paciente a una cama |
+
+Consume:
+
+| Evento | Qué hace |
+| :--- | :--- |
+| `MEDICACION_ADMINISTRADA` | Descuenta stock del insumo |
+| `PACIENTE_DADO_DE_ALTA` | Pasa la cama asociada a `En limpieza` |
+
+### Payload publicado: cambio de estado
 
 ```json
 {
-  "cama_id": 1,
-  "estado_anterior": "Libre",
-  "estado_nuevo": "Ocupada",
-  "usuario_id": 3,
-  "fecha_cambio": "2026-10-15T21:00:00.000Z",
-  "version": 1
+  "camaId": 1,
+  "estadoAnterior": "Libre",
+  "estadoNuevo": "Ocupada",
+  "usuarioId": 3,
+  "version": 1,
+  "timestamp": "2026-11-12T21:00:00.000Z"
 }
+```
+
+### Payload publicado: asignación
+
+```json
+{
+  "camaId": 1,
+  "pacienteId": 10,
+  "usuarioId": 3,
+  "timestamp": "2026-11-12T21:00:00.000Z"
+}
+```
+
+### Payload consumido: medicación administrada
+
+Campos usados por Recursos y Camas:
+
+```json
+{
+  "administracionId": 77,
+  "insumoId": 1,
+  "cantidad": 2
+}
+```
+
+### Payload consumido: paciente dado de alta
+
+```json
+{
+  "pacienteId": 10,
+  "internacionId": 5,
+  "camaId": 1,
+  "usuarioId": 3,
+  "timestamp": "2026-11-12T21:00:00.000Z"
+}
+```
+
+Si `camaId` no viene, el módulo no libera ninguna cama.
+
+---
+
+## Códigos de error
+
+| Código | Cuándo ocurre |
+| :---: | :--- |
+| `400` | Dato faltante o inválido, id que no es un entero positivo, estado desconocido o `stock_actual` mandado en el `PUT` de insumo |
+| `404` | Habitación, insumo o cama inexistente |
+| `409` | Transición no permitida, `version` distinta, asignación abierta, paciente sin internación activa, o descuento que dejaría el stock negativo |
+| `500` | Error interno del servidor |

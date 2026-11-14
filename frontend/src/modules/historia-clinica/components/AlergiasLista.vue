@@ -6,10 +6,6 @@ defineProps({
     type: Array,
     default: () => []
   },
-  modoPrueba: {
-    type: Boolean,
-    default: false
-  }
 })
 
 
@@ -67,7 +63,6 @@ function editarAlergia(alergia) {
 <button
   type="button"
   class="editar"
-  :disabled="!modoPrueba"
   @click="editarAlergia(alergia)"
 >
   Editar
@@ -78,7 +73,6 @@ function editarAlergia(alergia) {
 <button
   type="button"
   class="eliminar"
-  :disabled="!modoPrueba"
   @click="eliminarAlergia(alergia)"
 >
   Eliminar

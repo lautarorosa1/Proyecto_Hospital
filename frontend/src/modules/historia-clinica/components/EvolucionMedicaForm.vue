@@ -1,14 +1,13 @@
-
-
 <script setup>
 import { reactive, ref, watch } from 'vue'
 
 const props = defineProps({
-  evolucion: {
-    type: Object,
-    default: null
-  }
+  evolucion: { type: Object, default: null },
+  guardando: { type: Boolean, default: false },
+  error: { type: String, default: '' }
 })
+
+const emit = defineEmits(['guardar'])
 
 const formulario = reactive({
   fecha: '',
@@ -18,8 +17,14 @@ const formulario = reactive({
 })
 
 const mensaje = ref('')
-const formularioValido = ref(false)
-
+// Fecha de hoy en hora local, formato AAAA-MM-DD
+// (no se usa toISOString porque devuelve la fecha en UTC y de noche daría "mañana")
+function fechaDeHoy() {
+  const d = new Date()
+  const mes = String(d.getMonth() + 1).padStart(2, '0')
+  const dia = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${mes}-${dia}`
+}
 watch(
   () => props.evolucion,
   (nuevaEvolucion) => {
@@ -27,60 +32,65 @@ watch(
     formulario.motivoConsulta = nuevaEvolucion?.motivoConsulta ?? ''
     formulario.observaciones = nuevaEvolucion?.observaciones ?? ''
     formulario.indicaciones = nuevaEvolucion?.indicaciones ?? ''
-
     mensaje.value = ''
-    formularioValido.value = false
   },
   { immediate: true }
 )
 
-function validarFormulario() {
+function enviar() {
   mensaje.value = ''
-  formularioValido.value = false
 
-  if (
-    !formulario.fecha ||
-    !formulario.motivoConsulta.trim() ||
-    !formulario.observaciones.trim()
-  ) {
+  const motivoConsulta = formulario.motivoConsulta.trim()
+  const observaciones = formulario.observaciones.trim()
+  const indicaciones = formulario.indicaciones.trim()
+
+  if (!formulario.fecha || !motivoConsulta || !observaciones) {
     mensaje.value = 'Completá todos los campos obligatorios.'
     return
   }
+  if (formulario.fecha > fechaDeHoy()) {
+  mensaje.value = 'La fecha de la evolución no puede ser posterior a hoy.'
+  return
+}
 
-  if (formulario.motivoConsulta.trim().length > 200) {
+  if (motivoConsulta.length > 200) {
     mensaje.value = 'El motivo de consulta no puede superar los 200 caracteres.'
     return
   }
 
-  if (formulario.observaciones.trim().length > 2000) {
+  if (observaciones.length > 2000) {
     mensaje.value = 'Las observaciones no pueden superar los 2000 caracteres.'
     return
   }
 
-  formularioValido.value = true
+  if (indicaciones.length > 2000) {
+    mensaje.value = 'Las indicaciones no pueden superar los 2000 caracteres.'
+    return
+  }
 
-  mensaje.value = props.evolucion
-    ? 'Formulario válido. La edición todavía no está habilitada.'
-    : 'Formulario válido. El registro todavía no está habilitado.'
+  emit('guardar', {
+    fecha: formulario.fecha,
+    motivoConsulta,
+    observaciones,
+    indicaciones
+  })
 }
 </script>
 
-
 <template>
-  <form class="formulario" @submit.prevent="validarFormulario">
-    
-<h2>
-  {{ evolucion ? 'Editar evolución médica' : 'Registrar evolución médica' }}
-</h2>
-
+  <form class="formulario" @submit.prevent="enviar">
+    <h2>
+      {{ evolucion ? 'Editar evolución médica' : 'Registrar evolución médica' }}
+    </h2>
 
     <div class="campo">
       <label for="fecha">Fecha de evolución *</label>
       <input
-        id="fecha"
-        v-model="formulario.fecha"
-        type="date"
-      />
+  id="fecha"
+  v-model="formulario.fecha"
+  type="date"
+  :max="fechaDeHoy()"
+/>
     </div>
 
     <div class="campo">
@@ -89,6 +99,7 @@ function validarFormulario() {
         id="motivo"
         v-model="formulario.motivoConsulta"
         type="text"
+        maxlength="200"
         placeholder="Ingresá el motivo de consulta"
       />
     </div>
@@ -99,6 +110,7 @@ function validarFormulario() {
         id="observaciones"
         v-model="formulario.observaciones"
         rows="4"
+        maxlength="2000"
         placeholder="Describí la evolución del paciente"
       ></textarea>
     </div>
@@ -109,22 +121,23 @@ function validarFormulario() {
         id="indicaciones"
         v-model="formulario.indicaciones"
         rows="3"
+        maxlength="2000"
         placeholder="Indicaciones o recomendaciones"
       ></textarea>
     </div>
 
-    <button type="submit" class="boton-validar">
-      Validar formulario
+    <button type="submit" class="boton-guardar" :disabled="guardando">
+      {{
+        guardando
+          ? 'Guardando...'
+          : evolucion
+            ? 'Guardar cambios'
+            : 'Guardar evolución'
+      }}
     </button>
 
-    <p
-      v-if="mensaje"
-      class="mensaje"
-      :class="{ exito: formularioValido }"
-      role="status"
-    >
-      {{ mensaje }}
-    </p>
+    <p v-if="mensaje" class="mensaje" role="status">{{ mensaje }}</p>
+    <p v-if="error" class="mensaje" role="alert">{{ error }}</p>
   </form>
 </template>
 
@@ -171,7 +184,7 @@ textarea:focus {
   outline-offset: 1px;
 }
 
-.boton-validar {
+.boton-guardar {
   padding: 11px 20px;
   background: #2563eb;
   color: white;
@@ -181,17 +194,18 @@ textarea:focus {
   cursor: pointer;
 }
 
-.boton-validar:hover {
+.boton-guardar:hover {
   background: #1d4ed8;
+}
+
+.boton-guardar:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
 }
 
 .mensaje {
   margin-top: 15px;
   color: #b91c1c;
   font-weight: 500;
-}
-
-.mensaje.exito {
-  color: #15803d;
 }
 </style>

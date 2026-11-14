@@ -1,22 +1,55 @@
-
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
+import {
+  obtenerAntecedentesPorPaciente,
+  crearAntecedente,
+  actualizarAntecedente,
+  eliminarAntecedentePorId
+} from '../services/historiaClinicaService'
 import AntecedenteFamiliarForm from '../components/AntecedenteFamiliarForm.vue'
 
 const route = useRoute()
-const pacienteId = route.params.id
+const pacienteId = Number(route.params.id)
+
+const antecedentes = ref([])
+const cargando = ref(true)
+const error = ref('')
+const errorFormulario = ref('')
+const guardando = ref(false)
+const formKey = ref(0)
 
 const antecedenteSeleccionado = ref(null)
-
 const antecedenteEditar = ref(null)
+
+function mensajeDeError(err, porDefecto) {
+  return err.response?.data?.error || err.response?.data?.message || porDefecto
+}
+
+async function cargarAntecedentes() {
+  const respuesta = await obtenerAntecedentesPorPaciente(pacienteId)
+  antecedentes.value = respuesta.data
+}
+
+async function cargarDatos() {
+  try {
+    await cargarAntecedentes()
+  } catch (err) {
+    console.error(err)
+    error.value = mensajeDeError(err, 'No se pudieron cargar los antecedentes.')
+  } finally {
+    cargando.value = false
+  }
+}
 
 function editarAntecedente(antecedente) {
   antecedenteEditar.value = { ...antecedente }
+  errorFormulario.value = ''
 }
 
 function cancelarEdicion() {
   antecedenteEditar.value = null
+  errorFormulario.value = ''
 }
 
 function verDetalle(antecedente) {
@@ -27,58 +60,61 @@ function cerrarDetalle() {
   antecedenteSeleccionado.value = null
 }
 
-const antecedentes = ref([
-  {
-    id: 1,
-    parentesco: 'Madre',
-    enfermedad: 'Diabetes tipo 2',
-    observaciones: 'Diagnóstico a los 50 años'
-  },
-  {
-    id: 2,
-    parentesco: 'Padre',
-    enfermedad: 'Hipertensión arterial',
-    observaciones: 'Tratamiento farmacológico'
-  }
-])
+async function guardarAntecedente(datos) {
+  guardando.value = true
+  errorFormulario.value = ''
 
+  try {
+    if (antecedenteEditar.value) {
+      const id = antecedenteEditar.value.id
+      await actualizarAntecedente(id, datos)
 
-function guardarAntecedente(datos) {
-  if (antecedenteEditar.value) {
-    const id = antecedenteEditar.value.id
-
-    const indice = antecedentes.value.findIndex(
-      antecedente => antecedente.id === id
-    )
-
-    if (indice !== -1) {
-      antecedentes.value[indice] = {
-        id,
-        ...datos
+      if (antecedenteSeleccionado.value?.id === id) {
+        antecedenteSeleccionado.value = null
       }
+      antecedenteEditar.value = null
+    } else {
+      await crearAntecedente({ ...datos, pacienteId })
+      formKey.value++ // reinicia el formulario solo si se guardó bien
     }
 
-    antecedenteSeleccionado.value = null
-    antecedenteEditar.value = null
-  } else {
-    antecedentes.value.push({
-      id: Date.now(),
-      ...datos
-    })
+    await cargarAntecedentes()
+  } catch (err) {
+    console.error(err)
+    errorFormulario.value = mensajeDeError(
+      err,
+      'No se pudo guardar el antecedente.'
+    )
+  } finally {
+    guardando.value = false
   }
 }
 
-function eliminarAntecedente(id) {
+async function eliminarAntecedente(id) {
   const confirmar = window.confirm(
     '¿Estás seguro de eliminar este antecedente familiar?'
   )
 
   if (!confirmar) return
 
-  antecedentes.value = antecedentes.value.filter(
-    antecedente => antecedente.id !== id
-  )
+  try {
+    await eliminarAntecedentePorId(id)
+
+    if (antecedenteSeleccionado.value?.id === id) {
+      antecedenteSeleccionado.value = null
+    }
+    if (antecedenteEditar.value?.id === id) {
+      antecedenteEditar.value = null
+    }
+
+    await cargarAntecedentes()
+  } catch (err) {
+    console.error(err)
+    error.value = mensajeDeError(err, 'No se pudo eliminar el antecedente.')
+  }
 }
+
+onMounted(cargarDatos)
 </script>
 
 <template>
@@ -98,65 +134,72 @@ function eliminarAntecedente(id) {
 
     
 <AntecedenteFamiliarForm
+  :key="formKey"
   :antecedente-editar="antecedenteEditar"
+  :guardando="guardando"
+  :error="errorFormulario"
   @guardar="guardarAntecedente"
   @cancelar="cancelarEdicion"
 />
+<section class="contenido">
+  <h2>Antecedentes registrados</h2>
 
+  <p v-if="cargando">Cargando antecedentes...</p>
 
-    <section class="contenido">
-      <h2>Antecedentes registrados</h2>
+  <p v-else-if="error" class="error">{{ error }}</p>
 
-      <p v-if="antecedentes.length === 0">
-        No hay antecedentes familiares registrados.
-      </p>
+  <p v-else-if="antecedentes.length === 0">
+    No hay antecedentes familiares registrados.
+  </p>
 
-      <div
-        v-for="antecedente in antecedentes"
-        :key="antecedente.id"
-        class="tarjeta"
-      >
-        <div>
-          <h3>{{ antecedente.parentesco }}</h3>
+  <template v-else>
+    <div
+      v-for="antecedente in antecedentes"
+      :key="antecedente.id"
+      class="tarjeta"
+    >
+      <div>
+        <h3>{{ antecedente.parentesco }}</h3>
 
-          <p>
-            <strong>Enfermedad:</strong>
-            {{ antecedente.enfermedad }}
-          </p>
+        <p>
+          <strong>Enfermedad:</strong>
+          {{ antecedente.enfermedad }}
+        </p>
 
-          <p>
-            <strong>Observaciones:</strong>
-            {{ antecedente.observaciones || 'Sin observaciones' }}
-          </p>
-        </div>
-
-        
-<div class="acciones">
-  <button
-    class="detalle-btn"
-    @click="verDetalle(antecedente)"
-  >
-    Ver detalle
-  </button>
-
-  <button
-    class="eliminar"
-    @click="eliminarAntecedente(antecedente.id)"
-  >
-    Eliminar
-  </button>
-  
-<button
-  class="editar-btn"
-  @click="editarAntecedente(antecedente)"
->
-  Editar
-</button>
-
-</div>
-
+        <p>
+          <strong>Observaciones:</strong>
+          {{ antecedente.observaciones || 'Sin observaciones' }}
+        </p>
       </div>
-    </section>
+
+      <div class="acciones">
+        <button
+          type="button"
+          class="detalle-btn"
+          @click="verDetalle(antecedente)"
+        >
+          Ver detalle
+        </button>
+
+        <button
+          type="button"
+          class="eliminar"
+          @click="eliminarAntecedente(antecedente.id)"
+        >
+          Eliminar
+        </button>
+
+        <button
+          type="button"
+          class="editar-btn"
+          @click="editarAntecedente(antecedente)"
+        >
+          Editar
+        </button>
+      </div>
+    </div>
+  </template>
+</section>
     
 <section
   v-if="antecedenteSeleccionado"
@@ -184,11 +227,6 @@ function eliminarAntecedente(id) {
   </button
 >
 </section>
-
-    <p class="aviso">
-      Datos ficticios de prueba. Los registros se almacenan
-      temporalmente en memoria y se perderán al recargar la página.
-    </p>
   </main>
 </template>
 
@@ -327,5 +365,9 @@ h2 {
 
 .editar-btn:hover {
   background: #b45309;
+}
+.error {
+  color: #dc2626;
+  margin-bottom: 20px;
 }
 </style>

@@ -1,96 +1,119 @@
-
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
-import { obtenerPacientePorId } from '../services/historiaClinicaService'
+import {
+  obtenerPacientePorId,
+  obtenerAlergiasPorPaciente,
+  crearAlergia,
+  actualizarAlergia,
+  eliminarAlergiaPorId
+} from '../services/historiaClinicaService'
 import AlergiaForm from '../components/AlergiaForm.vue'
-
 import AlergiasLista from '../components/AlergiasLista.vue'
 
-
 const route = useRoute()
-const pacienteId = route.params.id
+const pacienteId = Number(route.params.id)
 
 const paciente = ref(null)
+const alergias = ref([])
 const cargando = ref(true)
 const error = ref('')
+const errorFormulario = ref('')
+const guardando = ref(false)
 const mostrarFormulario = ref(false)
-
 const alergiaSeleccionada = ref(null)
+
+function mensajeDeError(err, porDefecto) {
+  return (
+    err.response?.data?.error ||
+    err.response?.data?.message ||
+    porDefecto
+  )
+}
+
+async function cargarAlergias() {
+  const respuesta = await obtenerAlergiasPorPaciente(pacienteId)
+  alergias.value = respuesta.data
+}
+
+async function cargarDatos() {
+  try {
+    const respuesta = await obtenerPacientePorId(pacienteId)
+    paciente.value = respuesta.data
+    await cargarAlergias()
+  } catch (err) {
+    console.error(err)
+    error.value = mensajeDeError(err, 'No se pudo cargar la información.')
+  } finally {
+    cargando.value = false
+  }
+}
+
+function cerrarFormulario() {
+  mostrarFormulario.value = false
+  alergiaSeleccionada.value = null
+  errorFormulario.value = ''
+}
+
+function alternarFormulario() {
+  if (mostrarFormulario.value) {
+    cerrarFormulario()
+  } else {
+    alergiaSeleccionada.value = null
+    errorFormulario.value = ''
+    mostrarFormulario.value = true
+  }
+}
 
 function editarAlergia(alergia) {
   alergiaSeleccionada.value = { ...alergia }
+  errorFormulario.value = ''
   mostrarFormulario.value = true
 }
 
-function eliminarAlergia(alergia) {
+async function guardarAlergia(datos) {
+  guardando.value = true
+  errorFormulario.value = ''
+
+  try {
+    if (alergiaSeleccionada.value) {
+      await actualizarAlergia(alergiaSeleccionada.value.id, datos)
+    } else {
+      await crearAlergia({ ...datos, pacienteId })
+    }
+
+    await cargarAlergias()
+    cerrarFormulario()
+  } catch (err) {
+    console.error(err)
+    errorFormulario.value = mensajeDeError(err, 'No se pudo guardar la alergia.')
+  } finally {
+    guardando.value = false
+  }
+}
+
+async function eliminarAlergia(alergia) {
   const confirmar = window.confirm(
     `¿Estás seguro de eliminar la alergia a ${alergia.alergeno}?`
   )
 
   if (!confirmar) return
 
-  alergiasPrueba.value = alergiasPrueba.value.filter(
-    item => item.id !== alergia.id
-  )
-
-  if (alergiaSeleccionada.value?.id === alergia.id) {
-    alergiaSeleccionada.value = null
-    mostrarFormulario.value = false
-  }
-}
-
-
-
-const alergiasPrueba = ref([
-  {
-    id: 1,
-    alergeno: 'Penicilina',
-    reaccion: 'Erupción cutánea',
-    severidad: 'alta'
-  },
-  {
-    id: 2,
-    alergeno: 'Polen',
-    reaccion: 'Estornudos',
-    severidad: 'leve'
-  },
-  {
-    id: 3,
-    alergeno: 'Mariscos',
-    reaccion: 'Hinchazón',
-    severidad: 'moderada'
-  }
-])
-
-
-async function cargarPaciente() {
   try {
-    const respuesta = await obtenerPacientePorId(pacienteId)
-    paciente.value = respuesta.data
+    await eliminarAlergiaPorId(alergia.id)
+    await cargarAlergias()
+
+    if (alergiaSeleccionada.value?.id === alergia.id) {
+      cerrarFormulario()
+    }
   } catch (err) {
     console.error(err)
-    error.value = 'No se pudo cargar la información del paciente.'
-  } finally {
-    cargando.value = false
+    error.value = mensajeDeError(err, 'No se pudo eliminar la alergia.')
   }
 }
 
-
-function alternarFormulario() {
-  if (mostrarFormulario.value) {
-    mostrarFormulario.value = false
-    alergiaSeleccionada.value = null
-  } else {
-    alergiaSeleccionada.value = null
-    mostrarFormulario.value = true
-  }
-}
-
-
-onMounted(cargarPaciente)
+onMounted(cargarDatos)
 </script>
-
 
 <template>
   <main class="alergias">
@@ -100,12 +123,8 @@ onMounted(cargarPaciente)
 
     <h1>Alergias del Paciente</h1>
     
-<p class="aviso-prueba">
-  Modo de prueba: los datos de alergias son ficticios
-  y los cambios no se guardan.
-</p>
 
-    
+  
 <p v-if="cargando">Cargando paciente...</p>
 
 <p v-else-if="error" class="error">
@@ -143,31 +162,21 @@ onMounted(cargarPaciente)
 
 </button>
       </div>
-
-      <p class="mensaje">
-        La consulta de alergias todavía no está habilitada.
-      </p>
-
       
 <AlergiaForm
   v-if="mostrarFormulario"
   :alergia="alergiaSeleccionada"
+  :guardando="guardando"
+  :error="errorFormulario"
+  @guardar="guardarAlergia"
+  @cancelar="cerrarFormulario"
 />
- 
-      
-<p class="mensaje">
-  Datos ficticios para probar el diseño del listado.
-</p>
-
-
 <AlergiasLista
-  :alergias="alergiasPrueba"
-  :modo-prueba="true"
+  v-if="paciente"
+  :alergias="alergias"
   @editar="editarAlergia"
   @eliminar="eliminarAlergia"
 />
-
-
     </section>
   </main>
 </template>
@@ -250,15 +259,4 @@ button:disabled {
   background: #94a3b8;
   cursor: not-allowed;
 }
-
-.aviso-prueba {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fcd34d;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 14px;
-}
-
 </style>

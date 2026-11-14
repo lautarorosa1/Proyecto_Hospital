@@ -1,13 +1,13 @@
-
 <script setup>
 import { reactive, ref, watch } from 'vue'
 
 const props = defineProps({
-  estudio: {
-    type: Object,
-    default: null
-  }
+  estudio: { type: Object, default: null },
+  guardando: { type: Boolean, default: false },
+  error: { type: String, default: '' }
 })
+
+const emit = defineEmits(['guardar'])
 
 const formulario = reactive({
   fecha: '',
@@ -17,7 +17,14 @@ const formulario = reactive({
 })
 
 const mensaje = ref('')
-const formularioValido = ref(false)
+
+// Fecha de hoy en hora local, formato AAAA-MM-DD
+function fechaDeHoy() {
+  const d = new Date()
+  const mes = String(d.getMonth() + 1).padStart(2, '0')
+  const dia = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${mes}-${dia}`
+}
 
 watch(
   () => props.estudio,
@@ -26,53 +33,57 @@ watch(
     formulario.tipoEstudio = nuevoEstudio?.tipoEstudio ?? ''
     formulario.descripcion = nuevoEstudio?.descripcion ?? ''
     formulario.resultado = nuevoEstudio?.resultado ?? ''
-
     mensaje.value = ''
-    formularioValido.value = false
   },
   { immediate: true }
 )
 
-function validarFormulario() {
+function enviar() {
   mensaje.value = ''
-  formularioValido.value = false
 
-  if (
-    !formulario.fecha ||
-    !formulario.tipoEstudio.trim() ||
-    !formulario.descripcion.trim()
-  ) {
+  const tipoEstudio = formulario.tipoEstudio.trim()
+  const descripcion = formulario.descripcion.trim()
+  const resultado = formulario.resultado.trim()
+
+  if (!formulario.fecha || !tipoEstudio || !descripcion) {
     mensaje.value = 'Completá todos los campos obligatorios.'
     return
   }
 
-  if (formulario.tipoEstudio.trim().length > 150) {
-    mensaje.value =
-      'El tipo de estudio no puede superar los 150 caracteres.'
+  if (formulario.fecha > fechaDeHoy()) {
+    mensaje.value = 'La fecha del estudio no puede ser posterior a hoy.'
     return
   }
 
-  if (formulario.descripcion.trim().length > 2000) {
-    mensaje.value =
-      'La descripción no puede superar los 2000 caracteres.'
+  if (tipoEstudio.length > 150) {
+    mensaje.value = 'El tipo de estudio no puede superar los 150 caracteres.'
     return
   }
 
-  formularioValido.value = true
+  if (descripcion.length > 2000) {
+    mensaje.value = 'La descripción no puede superar los 2000 caracteres.'
+    return
+  }
 
-  mensaje.value = props.estudio
-    ? 'Formulario válido. La edición todavía no está habilitada.'
-    : 'Formulario válido. El registro todavía no está habilitado.'
+  if (resultado.length > 2000) {
+    mensaje.value = 'El resultado no puede superar los 2000 caracteres.'
+    return
+  }
+
+  emit('guardar', {
+    fecha: formulario.fecha,
+    tipoEstudio,
+    descripcion,
+    resultado
+  })
 }
 </script>
 
 <template>
-  <form class="formulario" @submit.prevent="validarFormulario">
-    
-<h2>
-  {{ estudio ? 'Editar estudio médico' : 'Registrar estudio médico' }}
-</h2>
-
+  <form class="formulario" @submit.prevent="enviar">
+    <h2>
+      {{ estudio ? 'Editar estudio médico' : 'Registrar estudio médico' }}
+    </h2>
 
     <div class="campo">
       <label for="fecha">Fecha del estudio *</label>
@@ -80,6 +91,7 @@ function validarFormulario() {
         id="fecha"
         v-model="formulario.fecha"
         type="date"
+        :max="fechaDeHoy()"
       />
     </div>
 
@@ -89,6 +101,7 @@ function validarFormulario() {
         id="tipoEstudio"
         v-model="formulario.tipoEstudio"
         type="text"
+        maxlength="150"
         placeholder="Ej: Radiografía, análisis de sangre..."
       />
     </div>
@@ -99,6 +112,7 @@ function validarFormulario() {
         id="descripcion"
         v-model="formulario.descripcion"
         rows="4"
+        maxlength="2000"
         placeholder="Descripción del estudio..."
       ></textarea>
     </div>
@@ -109,19 +123,22 @@ function validarFormulario() {
         id="resultado"
         v-model="formulario.resultado"
         rows="4"
+        maxlength="2000"
         placeholder="Resultado del estudio..."
       ></textarea>
     </div>
 
-    <p
-      v-if="mensaje"
-      :class="formularioValido ? 'exito' : 'error'"
-    >
-      {{ mensaje }}
-    </p>
+    <p v-if="mensaje" class="error" role="status">{{ mensaje }}</p>
+    <p v-if="error" class="error" role="alert">{{ error }}</p>
 
-    <button type="submit">
-      Validar formulario
+    <button type="submit" :disabled="guardando">
+      {{
+        guardando
+          ? 'Guardando...'
+          : estudio
+            ? 'Guardar cambios'
+            : 'Guardar estudio'
+      }}
     </button>
   </form>
 </template>
@@ -174,13 +191,13 @@ button:hover {
   background: #1d4ed8;
 }
 
-.error {
-  color: #b91c1c;
-  margin-bottom: 15px;
+button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
 }
 
-.exito {
-  color: #15803d;
+.error {
+  color: #b91c1c;
   margin-bottom: 15px;
 }
 </style>

@@ -1,13 +1,10 @@
-
 <script setup>
-
 import { reactive, watch } from 'vue'
 
 const props = defineProps({
-  antecedenteEditar: {
-    type: Object,
-    default: null
-  }
+  antecedenteEditar: { type: Object, default: null },
+  guardando: { type: Boolean, default: false },
+  error: { type: String, default: '' }
 })
 
 const emit = defineEmits(['guardar', 'cancelar'])
@@ -49,10 +46,6 @@ function guardar() {
     enfermedad: formulario.enfermedad.trim(),
     observaciones: formulario.observaciones.trim()
   })
-
-  if (!props.antecedenteEditar) {
-    limpiarFormulario()
-  }
 }
 
 function cancelar() {
@@ -63,13 +56,13 @@ function cancelar() {
 
 <template>
   <form class="formulario" @submit.prevent="guardar">
-    
-<h2>
-  {{ antecedenteEditar
-    ? 'Editar antecedente familiar'
-    : 'Registrar antecedente familiar'
-  }}
-</h2>
+    <h2>
+      {{
+        antecedenteEditar
+          ? 'Editar antecedente familiar'
+          : 'Registrar antecedente familiar'
+      }}
+    </h2>
 
     <label for="parentesco">Parentesco *</label>
     <select id="parentesco" v-model="formulario.parentesco" required>
@@ -86,6 +79,7 @@ function cancelar() {
       id="enfermedad"
       v-model="formulario.enfermedad"
       type="text"
+      maxlength="150"
       placeholder="Ej: Diabetes"
       required
     />
@@ -94,26 +88,34 @@ function cancelar() {
     <textarea
       id="observaciones"
       v-model="formulario.observaciones"
+      maxlength="500"
       placeholder="Información adicional"
       rows="4"
     ></textarea>
 
-    
-<div class="acciones-formulario">
-  <button type="submit">
-    {{ antecedenteEditar ? 'Guardar cambios' : 'Guardar antecedente' }}
-  </button>
+    <p v-if="error" class="error-form">{{ error }}</p>
 
-  <button
-    v-if="antecedenteEditar"
-    type="button"
-    class="cancelar"
-    @click="cancelar"
-  >
-    Cancelar edición
-  </button>
-</div>
+    <div class="acciones-formulario">
+      <button type="submit" :disabled="guardando">
+        {{
+          guardando
+            ? 'Guardando...'
+            : antecedenteEditar
+              ? 'Guardar cambios'
+              : 'Guardar antecedente'
+        }}
+      </button>
 
+      <button
+        v-if="antecedenteEditar"
+        type="button"
+        class="cancelar"
+        :disabled="guardando"
+        @click="cancelar"
+      >
+        Cancelar edición
+      </button>
+    </div>
   </form>
 </template>
 
@@ -162,6 +164,11 @@ button:hover {
   background: #1d4ed8;
 }
 
+button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
 .acciones-formulario {
   display: flex;
   gap: 12px;
@@ -176,4 +183,7 @@ button:hover {
   background: #475569;
 }
 
+.error-form {
+  color: #dc2626;
+}
 </style>

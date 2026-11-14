@@ -8,6 +8,7 @@ import recursosCamasRoutes from '@/modules/recursos-camas/routes'
 import atencionEnfermeriaRoutes from '@/modules/atencion-enfermeria/routes'
 
 import facturacionRoutes from '@/modules/facturacion/routes'
+import consultorioRoutes from '@/modules/consultorio/routes'
 
 
 const routes = [
@@ -42,6 +43,7 @@ const routes = [
   ...recursosCamasRoutes,
   ...atencionEnfermeriaRoutes,
   ...facturacionRoutes,
+  ...consultorioRoutes,
 
   // Siempre al final: captura cualquier ruta que no coincida con las anteriores
   {

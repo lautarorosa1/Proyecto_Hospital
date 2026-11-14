@@ -43,7 +43,8 @@ const form = reactive({ habitacion_id: 0 })
 onMounted(async () => {
   try {
     const res = await getHabitaciones()
-    habitaciones.value = res.data
+    // los consultorios no admiten camas (el backend lo rechaza)
+    habitaciones.value = res.data.filter((h) => h.tipo !== 'CONSULTORIO')
   } catch (e) {
     error.value = 'No se pudieron cargar las habitaciones'
   }

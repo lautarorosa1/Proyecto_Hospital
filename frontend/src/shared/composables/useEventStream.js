@@ -16,6 +16,7 @@ export function useEventStream(url, handlers = {}) {
 
   const abrir = () => {
     cerrar()
+    if (!unref(url)) return // nada que escuchar todavía
     fuente = new EventSource(unref(url))
     fuente.onopen = () => {
       conectado.value = true

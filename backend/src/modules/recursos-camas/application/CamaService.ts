@@ -113,6 +113,10 @@ export class CamaService implements ICamaService {
     const habitacionId = this.exigirEntero(dto?.habitacion_id, 'habitacion_id', 1);
     const habitacion = await this.habitacionRepository.findById(habitacionId);
     if (!habitacion) throw new NotFoundError('Habitación no encontrada');
+    // Un consultorio lo ocupa un profesional para atender turnos: no tiene camas de internación.
+    if (habitacion.tipo === 'CONSULTORIO') {
+      throw new ConflictError('Un consultorio no admite camas: elegí una habitación de internación');
+    }
 
     const cama = await this.camaRepository.crear({
       habitacion_id: habitacionId,
@@ -130,6 +134,9 @@ export class CamaService implements ICamaService {
     const habitacionId = this.exigirEntero(dto?.habitacion_id, 'habitacion_id', 1);
     const habitacion = await this.habitacionRepository.findById(habitacionId);
     if (!habitacion) throw new NotFoundError('Habitación no encontrada');
+    if (habitacion.tipo === 'CONSULTORIO') {
+      throw new ConflictError('Un consultorio no admite camas: elegí una habitación de internación');
+    }
 
     const existente = await this.camaRepository.buscarPorId(id);
     if (!existente) throw new NotFoundError('Cama no encontrada');

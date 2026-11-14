@@ -38,6 +38,14 @@
             class="mt-2 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
           />
         </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-gray-700">Tipo de habitación</label>
+          <select v-model="form.tipo" class="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
+            <option value="INTERNACION">Internación (tiene camas)</option>
+            <option value="CONSULTORIO">Consultorio (lo ocupa un profesional al atender turnos)</option>
+          </select>
+          <p class="text-xs text-gray-500">Un consultorio no admite camas y no aparece en el mapa de camas.</p>
+        </div>
 
         <p v-if="error" class="text-sm text-red-500">{{ error }}</p>
 
@@ -70,7 +78,7 @@ const error = ref('')
 const sectoresComunes = ['Clinica', 'Cirugia', 'Pediatria', 'UTI', 'Guardia']
 const sectorSeleccionado = ref('')
 const sectorOtro = ref('')
-const form = reactive({ numero: '', piso: '' })
+const form = reactive({ numero: '', piso: '', tipo: 'INTERNACION' })
 
 const guardar = async () => {
   error.value = ''
@@ -89,6 +97,7 @@ const guardar = async () => {
       numero: form.numero,
       piso: form.piso,
       sector,
+      tipo: form.tipo,
     })
     router.push('/habitaciones')
   } catch (e) {

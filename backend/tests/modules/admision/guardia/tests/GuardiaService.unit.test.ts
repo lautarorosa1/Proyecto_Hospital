@@ -25,8 +25,7 @@ test('registra ingreso con prioridad y posición calculadas', async () => {
     findAll: async () => [],
     findById: async (id: number) => ({
       id,
-      usuarioId: id,
-      especialidadId: 1,
+      usuarioId: null,
       nombre: 'Enfermero',
       apellido: 'Prueba',
       dni: '12345678',

@@ -13,4 +13,7 @@ export class HabitacionEntity {
 
   @Column({ type: 'varchar' })
   sector: string;
+
+  @Column({ type: 'varchar', default: 'INTERNACION' })
+  tipo: 'INTERNACION' | 'CONSULTORIO';
 }

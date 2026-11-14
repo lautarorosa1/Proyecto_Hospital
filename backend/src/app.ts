@@ -75,6 +75,9 @@ export function createApp() {
   app.use('/alergias', container.historiaClinicaModule.routes);
   app.use('/historia-clinica', container.historiaClinicaModule.eventosRoutes);
 
+  // Consultorio: agenda, sala de espera y notificaciones del profesional + ocupación de salas
+  app.use('/consultorio', container.consultorioModule.routes);
+
   // Facturación y Administración (Back-Office)
   app.use('/api/facturacion', container.facturacionModule.routes);
 

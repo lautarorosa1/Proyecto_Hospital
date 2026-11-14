@@ -1,8 +1,8 @@
 import type { EstadoProfesional, TipoProfesional } from '../../domain/Profesional';
 
 export interface UpdateProfesionalDto {
-  usuarioId?: number;
-  especialidadId?: number;
+  /** string = vincular a ese usuario; null = desvincular. */
+  usuarioId?: string | null;
   nombre?: string;
   apellido?: string;
   dni?: string;

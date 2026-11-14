@@ -7,7 +7,6 @@ import type {
 export interface FiltrosProfesional {
   estado?: EstadoProfesional;
   tipoProfesional?: TipoProfesional;
-  especialidadId?: number;
 }
 
 export interface IProfesionalRepository {
@@ -16,7 +15,7 @@ export interface IProfesionalRepository {
   findByDni(dni: string): Promise<Profesional | null>;
   findByEmail(email: string): Promise<Profesional | null>;
   findByMatricula(matricula: string): Promise<Profesional | null>;
-  findByUsuarioId(usuarioId: number): Promise<Profesional | null>;
+  findByUsuarioId(usuarioId: string): Promise<Profesional | null>;
   create(data: Omit<Profesional, 'id'>): Promise<Profesional>;
   update(
     id: number,

@@ -17,7 +17,7 @@
             class="rounded-lg border border-gray-300 px-3 py-2 text-sm"
           >
             <option :value="0" disabled>Elegí habitación…</option>
-            <option v-for="h in habitaciones" :key="h.id" :value="h.id">
+            <option v-for="h in habitaciones.filter((x) => x.tipo !== 'CONSULTORIO')" :key="h.id" :value="h.id">
               #{{ h.id }} — {{ h.numero }} ({{ h.sector }})
             </option>
           </select>

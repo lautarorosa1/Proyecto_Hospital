@@ -77,6 +77,7 @@ export function suscribirTurnos(bus: IEventBus): void {
 }
 
 export const turnoModule = {
+  turnoService,
   controller: turnoController,
   routes: createTurnoRoutes(turnoController, recepcionStream),
   recepcionStream,

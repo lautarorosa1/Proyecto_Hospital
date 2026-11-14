@@ -30,6 +30,19 @@ export function createApp() {
   app.use('/profesionales', container.horarioModule.routes);
   app.use('/turnos', container.turnoModule.routes);
   app.use('/guardia', container.guardiaModule.routes);
+  app.use('/alergias', container.historiaClinicaModule.routes);
+  app.use(
+  '/antecedentes-familiares',
+  container.historiaClinicaModule.antecedenteFamiliarRoutes
+);
+app.use(
+  '/evoluciones-medicas',
+  container.historiaClinicaModule.evolucionMedicaRoutes
+);
+app.use(
+  '/estudios-medicos',
+  container.historiaClinicaModule.estudioMedicoRoutes
+);
 
   app.use('/habitaciones', container.recursosCamasModule.habitacionRoutes);
   app.use('/insumos', container.recursosCamasModule.insumoRoutes);

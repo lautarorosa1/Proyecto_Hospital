@@ -89,7 +89,15 @@ if (!paciente) {
 
     return alergia;
   }
+async eliminar(id: number): Promise<void> {
+  this.validarId(id);
 
+  const eliminada = await this.alergiaRepository.delete(id);
+
+  if (!eliminada) {
+    throw new NotFoundError('Alergia no encontrada');
+  }
+}
   private validarId(id: number): void {
     if (!Number.isSafeInteger(id) || id <= 0) {
       throw new BadRequestError('El id debe ser un entero positivo');

@@ -54,12 +54,16 @@ const router = createRouter({
 router.beforeEach((to) => {
   const authStore = useAuthStore()
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return { path: '/login' }
+  if (to.meta.guestOnly) {
+    return authStore.isAuthenticated ? { path: '/' } : true
   }
 
-  if (to.meta.guestOnly && authStore.isAuthenticated) {
-    return { path: '/pacientes' }
+  if (!authStore.isAuthenticated) {
+    return { path: '/login', query: { redirect: to.fullPath } }
+  }
+
+  if (!authStore.puedeAcceder(to.path)) {
+    return { path: '/', query: { forbidden: '1' } }
   }
 
   if (

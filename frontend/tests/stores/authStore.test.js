@@ -48,6 +48,27 @@ describe('store de autenticación', () => {
     expect(store.loading).toBe(false)
   })
 
+  it('permite cada ruta solo a los roles definidos para ella', () => {
+    localStorage.setItem('token', 'token-de-prueba')
+    localStorage.setItem('usuario', JSON.stringify({ id: 1, roles: ['Enfermero'] }))
+    const store = useAuthStore()
+
+    expect(store.puedeAcceder('/historia-clinica/3/alergias')).toBe(true)
+    expect(store.puedeAcceder('/pacientes')).toBe(true)
+    expect(store.puedeAcceder('/pacientes/create')).toBe(false)
+    expect(store.puedeAcceder('/admin/usuarios')).toBe(false)
+    expect(store.puedeAcceder('/')).toBe(true)
+  })
+
+  it('el Administrador accede a todas las rutas', () => {
+    localStorage.setItem('token', 'token-de-prueba')
+    localStorage.setItem('usuario', JSON.stringify({ id: 1, roles: ['Administrador'] }))
+    const store = useAuthStore()
+
+    expect(store.puedeAcceder('/admin/roles')).toBe(true)
+    expect(store.puedeAcceder('/camas/create')).toBe(true)
+  })
+
   it('cierra sesión y elimina las credenciales locales', () => {
     localStorage.setItem('token', 'token-de-prueba')
     localStorage.setItem('usuario', JSON.stringify({ id: 5 }))

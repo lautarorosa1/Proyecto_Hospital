@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <header class="border-b border-gray-200 bg-white shadow-xs">
+    <header v-if="authStore.isAuthenticated && !route.meta.guestOnly" class="border-b border-gray-200 bg-white shadow-xs">
       <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3">
         <div class="flex flex-wrap items-center gap-6">
           <router-link to="/" class="text-lg font-bold text-indigo-600">
@@ -10,13 +10,25 @@
             <router-link to="/" class="transition hover:text-indigo-600">
               Inicio
             </router-link>
-            <router-link to="/pacientes" class="transition hover:text-indigo-600">
+            <router-link
+              v-if="authStore.puedeAcceder('/pacientes')"
+              to="/pacientes"
+              class="transition hover:text-indigo-600"
+            >
               Pacientes
             </router-link>
-            <router-link to="/admision" class="transition hover:text-indigo-600">
+            <router-link
+              v-if="authStore.puedeAcceder('/admision')"
+              to="/admision"
+              class="transition hover:text-indigo-600"
+            >
               Admisión
             </router-link>
-            <router-link to="/recursos-camas" class="transition hover:text-indigo-600">
+            <router-link
+              v-if="authStore.puedeAcceder('/recursos-camas')"
+              to="/recursos-camas"
+              class="transition hover:text-indigo-600"
+            >
               Recursos y Camas
             </router-link>
             <router-link

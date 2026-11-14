@@ -144,6 +144,43 @@ Desvincula el `rolId` indicado de la tabla intermedia `usuario_roles` y devuelve
 
 ---
 
+## 🖥️ 4. Vista de Login y Acceso por Rol en el Frontend
+
+### Vista de Login (`/login`)
+- Consume `POST /auth/login` y guarda `token` y `usuario` en `localStorage` (store `useAuthStore`).
+- Se muestra a pantalla completa, sin la barra de navegación.
+- Si el usuario intentó abrir una ruta sin sesión, después del login vuelve a esa ruta (`/login?redirect=/ruta`). Si no, va al inicio (`/`).
+- Si el backend responde `401` en cualquier petición, la sesión se cierra y se redirige a `/login?sesion=expirada`, donde se muestra el aviso correspondiente.
+
+### Qué puede ver y tocar cada rol
+Todas las rutas exigen sesión iniciada, salvo `/login` y `/register`. Además, el guard del router consulta `authStore.puedeAcceder(ruta)`, que busca la ruta en la tabla `ROLES_POR_RUTA` de `frontend/src/stores/authStore.js`. El rol `Administrador` accede a todo. Las rutas que no figuran en la tabla (por ejemplo `/`) quedan habilitadas para cualquier usuario logueado.
+
+| Ruta (y sus subrutas) | Roles permitidos (además de `Administrador`) |
+| :--- | :--- |
+| `/admin/*` | Solo `Administrador` |
+| `/admision` | Médico, Enfermero, Recepcionista, Administrativo |
+| `/pacientes` | Médico, Enfermero, Recepcionista, Administrativo |
+| `/pacientes/create`, `/pacientes/edit/:id` | Recepcionista, Administrativo |
+| `/profesionales` | Médico, Enfermero, Recepcionista, Administrativo |
+| `/profesionales/create`, `/profesionales/edit/:id` | Administrativo |
+| `/turnos` | Médico, Recepcionista, Administrativo |
+| `/turnos/generar` | Recepcionista |
+| `/guardia` | Médico, Enfermero, Recepcionista |
+| `/historia-clinica` | Médico, Enfermero |
+| `/atencion-enfermeria` | Médico, Enfermero |
+| `/recursos-camas` | Médico, Enfermero, Recepcionista, Administrativo, Maestranza |
+| `/camas` | Médico, Enfermero, Recepcionista, Administrativo, Maestranza |
+| `/camas/create` | Administrativo |
+| `/habitaciones` | Administrativo, Maestranza |
+| `/habitaciones/create`, `/habitaciones/edit/:id` | Administrativo |
+| `/insumos` | Médico, Enfermero, Administrativo |
+
+Si un usuario entra a una ruta que su rol no tiene permitida, se lo redirige al inicio con el aviso *"No poseés los permisos o roles necesarios..."*.
+
+> Esta tabla controla la **navegación del frontend**. Para proteger los endpoints, cada módulo usa en su router los middlewares `authenticateJWT` y `authorizeRoles(...)` de `modules/iam/adapters/middlewares/authMiddleware`, y para ocultar botones dentro de una vista se usa `v-if="authStore.hasRole('Médico', ...)"`.
+
+---
+
 ## ⚠️ Códigos de Respuesta y Errores
 
 | Código | Cuándo ocurre |

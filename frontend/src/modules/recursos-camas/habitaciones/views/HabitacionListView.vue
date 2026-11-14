@@ -24,6 +24,7 @@
               <th class="px-4 py-3 font-medium">Número</th>
               <th class="px-4 py-3 font-medium">Piso</th>
               <th class="px-4 py-3 font-medium">Sector</th>
+              <th class="px-4 py-3 font-medium">Tipo</th>
               <th class="px-4 py-3 font-medium">Acciones</th>
             </tr>
           </thead>
@@ -37,6 +38,14 @@
               <td class="px-4 py-3">{{ h.numero }}</td>
               <td class="px-4 py-3">{{ h.piso }}</td>
               <td class="px-4 py-3">{{ h.sector }}</td>
+              <td class="px-4 py-3">
+                <span
+                  class="rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
+                  :class="h.tipo === 'CONSULTORIO' ? 'bg-sky-50 text-sky-700 ring-sky-200' : 'bg-gray-50 text-gray-600 ring-gray-200'"
+                >
+                  {{ h.tipo === 'CONSULTORIO' ? 'Consultorio' : 'Internación' }}
+                </span>
+              </td>
               <td class="px-4 py-3">
                 <div class="flex flex-wrap gap-2">
                   <router-link :to="`/habitaciones/edit/${h.id}`">

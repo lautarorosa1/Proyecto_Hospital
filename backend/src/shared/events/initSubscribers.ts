@@ -10,6 +10,7 @@ import {
   verificadorIngreso,
 } from '../../modules/atencion-enfermeria/atencion-enfermeria.module';
 import { suscribirHistoriaClinica } from '../../modules/historia-clinica/historiaClinica.module';
+import { suscribirConsultorio } from '../../modules/consultorio/consultorio.module';
 
 /**
  * Raíz de composición de las interacciones entre módulos. Cada módulo expone
@@ -19,6 +20,9 @@ export function initSubscribers(): void {
   // Admisión (consultorios, recepción y monitores de guardia)
   suscribirTurnos(eventBus);
   suscribirGuardia(eventBus);
+
+  // Admisión → Consultorio (avisos al profesional) y ocupación de salas
+  suscribirConsultorio(eventBus);
 
   // Admisión → Enfermería (ingreso) · Recursos → Enfermería (cama)
   suscribirEnfermeria(eventBus);

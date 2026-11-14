@@ -11,8 +11,7 @@ export class ProfesionalRepository implements IProfesionalRepository {
 
   private toDomain = (entity: ProfesionalEntity): Profesional => ({
     id: entity.id,
-    usuarioId: entity.usuarioId,
-    especialidadId: entity.especialidadId,
+    usuarioId: entity.usuarioId ?? null,
     nombre: entity.nombre,
     apellido: entity.apellido,
     dni: entity.dni,
@@ -29,9 +28,6 @@ export class ProfesionalRepository implements IProfesionalRepository {
     if (filtros.estado !== undefined) where.estado = filtros.estado;
     if (filtros.tipoProfesional !== undefined) {
       where.tipoProfesional = filtros.tipoProfesional;
-    }
-    if (filtros.especialidadId !== undefined) {
-      where.especialidadId = filtros.especialidadId;
     }
 
     const entities = await this.repo.find({
@@ -61,7 +57,7 @@ export class ProfesionalRepository implements IProfesionalRepository {
     return entity ? this.toDomain(entity) : null;
   }
 
-  async findByUsuarioId(usuarioId: number): Promise<Profesional | null> {
+  async findByUsuarioId(usuarioId: string): Promise<Profesional | null> {
     const entity = await this.repo.findOneBy({ usuarioId });
     return entity ? this.toDomain(entity) : null;
   }

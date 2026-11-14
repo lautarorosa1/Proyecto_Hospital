@@ -8,6 +8,7 @@ import { ingresoInternacionModule } from './modules/admision/ingresos-internacio
 import { recursosCamasModule } from './modules/recursos-camas/recursos-camas.module';
 import { historiaClinicaModule } from './modules/historia-clinica/historiaClinica.module';
 import { atencionEnfermeriaModule } from './modules/atencion-enfermeria/atencion-enfermeria.module';
+import { consultorioModule } from './modules/consultorio/consultorio.module';
 import { facturacionModule } from './modules/facturacion/facturacion.module';
 
 export const container = {
@@ -22,4 +23,5 @@ export const container = {
   historiaClinicaModule,
   atencionEnfermeriaModule,
   facturacionModule,
+  consultorioModule,
 };

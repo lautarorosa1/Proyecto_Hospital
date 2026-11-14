@@ -24,14 +24,9 @@ export class ProfesionalController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const especialidadId = this.queryString(req.query.especialidadId);
       const filtros: FiltrosProfesionalDto = {
         estado: this.queryString(req.query.estado),
         tipoProfesional: this.queryString(req.query.tipoProfesional),
-        especialidadId:
-          especialidadId !== undefined
-            ? this.parseId(especialidadId, 'especialidadId')
-            : undefined,
       };
       const profesionales = await this.profesionalService.getAll(filtros);
       res.json(profesionales);

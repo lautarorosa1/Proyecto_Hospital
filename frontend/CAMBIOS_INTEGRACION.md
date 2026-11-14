@@ -14,3 +14,12 @@ El backend ahora conecta los módulos por eventos (ver `backend/INTERACCIONES.md
 | Historia Clínica | Nueva **línea de tiempo** (ingresos, signos vitales, medicación, altas) y **alergias conectadas al backend** (antes eran datos de prueba). |
 
 Compartido: `shared/composables/useEventStream.js` (SSE), `mensajeError` entiende `{ error }` y `{ mensaje }`, y `usuarioIdActual()`.
+
+## Módulo Consultorio (`/consultorio`)
+
+| Pantalla | Qué hace |
+|---|---|
+| Consultorio › Mi consultorio | El profesional se elige (queda guardado), **abre un consultorio libre** (ocupa esa habitación) y lo cierra al terminar. Ve su **sala de espera** (botón *Atender*, solo con consultorio abierto), su **agenda del día** (con entreturnos y turnos con tiempo reducido) y su bandeja de **notificaciones**, todo en vivo por SSE. |
+| Recursos › Habitaciones | Nuevo campo **Tipo** (Internación / Consultorio) al crear/editar y en el listado. |
+| Recursos › Crear cama | Solo ofrece habitaciones de internación (un consultorio no admite camas). |
+| Inicio | Nueva tarjeta **Consultorio**. |

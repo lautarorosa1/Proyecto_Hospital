@@ -8,6 +8,9 @@
         :errores="errores"
         :error-general="errorGeneral"
         :guardando="guardando"
+        :usuarios="usuarios"
+        :error-usuarios="errorUsuarios"
+        sugerir-por-email
         texto-boton="Guardar"
         @submit="guardarProfesional"
       />
@@ -16,10 +19,11 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ProfesionalForm from '../components/ProfesionalForm.vue'
 import { createProfesional } from '../services/profesionalService'
+import { useUsuariosDisponibles } from '../composables/useUsuariosDisponibles'
 import {
   profesionalVacio,
   erroresVacios,
@@ -34,6 +38,9 @@ const profesional = ref(profesionalVacio())
 const errores = reactive(erroresVacios())
 const errorGeneral = ref('')
 const guardando = ref(false)
+const { usuarios, errorUsuarios, cargarUsuarios } = useUsuariosDisponibles()
+
+onMounted(() => cargarUsuarios())
 
 const guardarProfesional = async () => {
   errorGeneral.value = ''

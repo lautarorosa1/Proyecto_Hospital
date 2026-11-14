@@ -3,4 +3,5 @@ export interface ResponseHabitacionDto {
   numero: string;
   piso: string;
   sector: string;
+  tipo: 'INTERNACION' | 'CONSULTORIO';
 }

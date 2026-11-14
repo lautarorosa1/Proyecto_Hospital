@@ -24,6 +24,10 @@ export enum DomainEvents {
   TURNOS_REDUCIDOS = 'TURNOS_REDUCIDOS',
   ALERTA_RIESGO_VITAL = 'ALERTA_RIESGO_VITAL',
 
+  // Consultorio
+  CONSULTORIO_OCUPADO = 'CONSULTORIO_OCUPADO',
+  CONSULTORIO_LIBERADO = 'CONSULTORIO_LIBERADO',
+
   // Atención y Enfermería
   INTERNACION_REGISTRADA = 'INTERNACION_REGISTRADA',
   MEDICACION_ADMINISTRADA = 'MEDICACION_ADMINISTRADA',
@@ -175,6 +179,15 @@ export interface PacienteDadoDeAltaPayload {
   timestamp: Date;
 }
 
+// ---------- Consultorio ----------
+
+export interface ConsultorioOcupacionPayload {
+  ocupacionId: number;
+  habitacionId: number;
+  profesionalId: number;
+  timestamp: Date;
+}
+
 // ---------- Recursos y Camas ----------
 
 export interface CamaAsignadaPayload {
@@ -193,6 +206,8 @@ export interface CamaEstadoCambiadoPayload {
 }
 
 export interface EventPayloads {
+  [DomainEvents.CONSULTORIO_OCUPADO]: ConsultorioOcupacionPayload;
+  [DomainEvents.CONSULTORIO_LIBERADO]: ConsultorioOcupacionPayload;
   [DomainEvents.PACIENTE_INGRESADO]: PacienteIngresadoPayload;
   [DomainEvents.TURNO_CANCELADO]: TurnoCanceladoPayload;
   [DomainEvents.LISTA_ESPERA_PROMOVIDA]: ListaEsperaPromovidaPayload;

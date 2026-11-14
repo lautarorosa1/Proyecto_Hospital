@@ -15,8 +15,7 @@ const profesionalValido = () => ({
   email: 'persona@example.test',
   matricula: ' MP-1 ',
   tipoProfesional: 'medico',
-  especialidadId: '2',
-  usuarioId: '3'
+  usuarioId: 'uuid-1'
 })
 
 describe('formulario de profesionales', () => {
@@ -29,21 +28,28 @@ describe('formulario de profesionales', () => {
       nombre: 'Persona',
       apellido: 'Prueba',
       matricula: 'MP-1',
-      especialidadId: 2,
-      usuarioId: 3,
+      usuarioId: 'uuid-1',
       duracionTurnoMin: 30,
       telefono: undefined
     })
   })
 
-  it('valida identificadores y límites de duración', () => {
+  it('no exige especialidad ni usuario: sin usuario no se envía al crear y desvincula al editar', () => {
+    const sinUsuario = { ...profesionalValido(), usuarioId: '' }
+    const errores = erroresVacios()
+
+    expect(validarProfesional(sinUsuario, errores)).toBe(true)
+    expect(armarPayload(sinUsuario)).not.toHaveProperty('especialidadId')
+    expect(armarPayload(sinUsuario).usuarioId).toBeUndefined()
+    expect(armarPayload(sinUsuario, { edicion: true }).usuarioId).toBeNull()
+  })
+
+  it('valida formato y límites de duración', () => {
     const errores = erroresVacios()
     const profesional = {
       ...profesionalValido(),
       dni: '123',
       email: 'invalido',
-      especialidadId: '1.5',
-      usuarioId: '',
       duracionTurnoMin: '241'
     }
 
@@ -51,8 +57,6 @@ describe('formulario de profesionales', () => {
     expect(errores).toMatchObject({
       dni: 'Ingrese de 7 a 9 dígitos, sin puntos',
       email: 'Ingrese un email válido',
-      especialidadId: 'Ingrese un ID de especialidad válido',
-      usuarioId: 'Ingrese un ID de usuario válido',
       duracionTurnoMin: 'Ingrese un entero entre 5 y 240'
     })
   })

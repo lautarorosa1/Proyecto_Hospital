@@ -9,6 +9,8 @@
         :errores="errores"
         :error-general="errorGeneral"
         :guardando="guardando"
+        :usuarios="usuarios"
+        :error-usuarios="errorUsuarios"
         mostrar-estado
         texto-boton="Actualizar"
         @submit="editarProfesional"
@@ -27,6 +29,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ProfesionalForm from '../components/ProfesionalForm.vue'
 import { getProfesionalById, updateProfesional } from '../services/profesionalService'
+import { useUsuariosDisponibles } from '../composables/useUsuariosDisponibles'
 import {
   erroresVacios,
   validarProfesional,
@@ -41,12 +44,14 @@ const profesional = ref(null)
 const errores = reactive(erroresVacios())
 const errorGeneral = ref('')
 const guardando = ref(false)
+const { usuarios, errorUsuarios, cargarUsuarios } = useUsuariosDisponibles()
 
 const cargarProfesional = async () => {
   try {
     const { data } = await getProfesionalById(route.params.id)
     // el backend omite telefono si no tiene valor
-    profesional.value = { ...data, telefono: data.telefono ?? '' }
+    profesional.value = { ...data, telefono: data.telefono ?? '', usuarioId: data.usuarioId ?? '' }
+    await cargarUsuarios(data.usuarioId ?? null)
   } catch (error) {
     console.error('Error cargando profesional:', error)
     errorGeneral.value = procesarErrorServidor(error, errores)

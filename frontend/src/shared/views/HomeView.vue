@@ -89,6 +89,11 @@ const modulos = [
     ruta: '/recursos-camas'
   },
   {
+    titulo: 'Consultorio',
+    descripcion: 'Agenda del profesional, sala de espera y notificaciones',
+    ruta: '/consultorio'
+  },
+  {
     titulo: 'Historia Clínica',
     descripcion: 'Alergias, evoluciones y estudios médicos',
     ruta: '/historia-clinica'

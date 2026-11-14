@@ -2,8 +2,7 @@ import type { EstadoProfesional, TipoProfesional } from '../../domain/Profesiona
 
 export interface ResponseProfesionalDto {
   id: number;
-  usuarioId: number;
-  especialidadId: number;
+  usuarioId: string | null;
   nombre: string;
   apellido: string;
   dni: string;

@@ -1,6 +1,6 @@
 import api from '@/shared/services/api'
 
-// params opcionales: { estado, tipoProfesional, especialidadId }
+// params opcionales: { estado, tipoProfesional }
 export const getProfesionales = (params) => api.get('/profesionales', { params })
 
 export const getProfesionalById = (id) => api.get(`/profesionales/${id}`)

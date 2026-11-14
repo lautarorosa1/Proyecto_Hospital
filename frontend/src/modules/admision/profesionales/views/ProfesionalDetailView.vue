@@ -45,13 +45,10 @@
         </div>
 
         <div class="flex items-center justify-between py-3">
-          <span class="text-sm font-medium text-gray-500">ID de especialidad</span>
-          <span class="text-sm text-gray-900">{{ profesional.especialidadId }}</span>
-        </div>
-
-        <div class="flex items-center justify-between py-3">
-          <span class="text-sm font-medium text-gray-500">ID de usuario</span>
-          <span class="text-sm text-gray-900">{{ profesional.usuarioId }}</span>
+          <span class="text-sm font-medium text-gray-500">Usuario de acceso</span>
+          <span class="text-sm text-gray-900">
+            {{ profesional.usuarioId ? 'Vinculado' : 'Sin usuario vinculado' }}
+          </span>
         </div>
 
         <div class="flex items-center justify-between py-3">

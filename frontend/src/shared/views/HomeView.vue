@@ -97,6 +97,11 @@ const modulos = [
     titulo: 'Historia Clínica',
     descripcion: 'Alergias, evoluciones y estudios médicos',
     ruta: '/historia-clinica'
+  },
+  {
+    titulo: 'Facturación',
+    descripcion: 'Comprobantes, cobros y obras sociales',
+    ruta: '/facturacion'
   }
 ]
 </script>

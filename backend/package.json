@@ -8,9 +8,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "tsx --test \"tests/**/*.unit.test.ts\" && tsc -p tsconfig.tests.json --noEmit",
-    "migration:run": "tsx ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
-    "migration:revert": "tsx ./node_modules/typeorm/cli.js migration:revert -d src/data-source.ts"
+    "test": "tsx --test \"tests/**/*.unit.test.ts\" && tsc -p tsconfig.tests.json --noEmit"
   },
   "keywords": [],
   "author": "",

@@ -41,6 +41,11 @@
 }
 ```
 
+El sistema es solo para el personal del hospital, por eso el registro no acepta el rol `Paciente`.
+- `roles` es obligatorio y debe tener al menos un rol. Si falta o está vacío → `400` *"Debe seleccionar al menos un rol"*.
+- Solo se aceptan los roles de personal: `Administrador`, `Médico`, `Enfermero`, `Recepcionista`, `Administrativo` y `Maestranza` (constante `ROLES_REGISTRO` en `domain/Rol.ts`). Cualquier otro, incluido `Paciente` → `400` *"Rol no permitido para el registro"*.
+- La vista `/register` muestra solo esos 6 roles y no trae ninguno marcado de entrada.
+
 ### Iniciar Sesión (`POST /auth/login`)
 ```json
 {
@@ -186,7 +191,7 @@ Si un usuario entra a una ruta que su rol no tiene permitida, se lo redirige al 
 | Código | Cuándo ocurre |
 | :---: | :--- |
 | `200` / `201` | Operación exitosa |
-| `400` | Datos inválidos, campos vacíos o intento de eliminar un rol esencial del hospital |
+| `400` | Datos inválidos, campos vacíos, registro sin roles o con un rol no permitido (por ejemplo `Paciente`), o intento de eliminar un rol esencial del hospital |
 | `401` | Credenciales inválidas o token JWT ausente/expirado |
 | `403` | Usuario inactivo o sin el rol `Administrador` |
 | `404` | Usuario o rol no encontrado |

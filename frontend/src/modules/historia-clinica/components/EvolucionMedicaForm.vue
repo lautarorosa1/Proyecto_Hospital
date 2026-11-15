@@ -132,15 +132,15 @@ function validarFormulario() {
 .formulario {
   margin-top: 25px;
   padding: 25px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
 }
 
 h2 {
   margin-bottom: 20px;
-  font-size: 20px;
-  color: #1e293b;
+  font-size: var(--font-heading-2);
+  color: var(--color-neutral-900);
 }
 
 .campo {
@@ -152,14 +152,14 @@ h2 {
 
 label {
   font-weight: 600;
-  color: #334155;
+  color: var(--color-neutral-700);
 }
 
 input,
 textarea {
   padding: 11px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-control);
   font: inherit;
   width: 100%;
   box-sizing: border-box;
@@ -167,31 +167,17 @@ textarea {
 
 input:focus,
 textarea:focus {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--color-brand-700);
   outline-offset: 1px;
-}
-
-.boton-validar {
-  padding: 11px 20px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.boton-validar:hover {
-  background: #1d4ed8;
 }
 
 .mensaje {
   margin-top: 15px;
-  color: #b91c1c;
+  color: var(--color-danger-hover);
   font-weight: 500;
 }
 
 .mensaje.exito {
-  color: #15803d;
+  color: var(--color-success);
 }
 </style>

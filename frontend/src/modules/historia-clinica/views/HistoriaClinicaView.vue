@@ -116,8 +116,8 @@ onMounted(cargarPacientes)
 }
 
 h1 {
-  font-size: 28px;
-  font-weight: bold;
+  font-size: var(--font-heading-1);
+  font-weight: 600;
 }
 
 .buscador {
@@ -129,13 +129,13 @@ h1 {
 
 input {
   padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-control);
 }
 
 h2 {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: var(--font-heading-2);
+  font-weight: 600;
   margin-bottom: 15px;
 }
 
@@ -145,25 +145,13 @@ table {
 }
 
 th, td {
-  border: 1px solid #ddd;
-  padding: 12px;
+  border: 1px solid var(--color-border);
+  padding: .75rem 1rem;
   text-align: left;
 }
 
 th {
-  background: #f1f5f9;
-}
-
-button {
-  background: #2563eb;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #1d4ed8;
+  background: var(--color-neutral-100);
 }
 
 .error {
@@ -173,7 +161,7 @@ button:hover {
 .volver-menu {
   display: inline-block;
   margin-bottom: 20px;
-  color: #2563eb;
+  color: var(--color-brand-700);
   text-decoration: none;
   font-weight: 600;
 }

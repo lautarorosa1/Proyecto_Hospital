@@ -14,4 +14,8 @@ export class ConsultarProtocolos {
   async consultarPorId(id: number): Promise<Protocolo | null> {
     return await this.protocoloRepository.findById(id);
   }
+
+  async consultarPorInternacion(internacionId: number): Promise<Protocolo[]> {
+    return await this.protocoloRepository.findByInternacionId(internacionId);
+  }
 }

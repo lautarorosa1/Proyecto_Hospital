@@ -4,8 +4,6 @@ import { container } from './container';
 import { errorHandler } from './shared/errorHandler';
 
 export function createApp() {
-  console.log('ENTRANDO EN CREATE APP');
-
   const app = express();
 
   app.use(cors());
@@ -44,6 +42,9 @@ app.use(
   container.historiaClinicaModule.estudioMedicoRoutes
 );
 
+  // Admisión confirma el traslado a internación (publica PACIENTE_INGRESADO)
+  app.use('/ingresos-internacion', container.ingresoInternacionModule.routes);
+
   app.use('/habitaciones', container.recursosCamasModule.habitacionRoutes);
   app.use('/insumos', container.recursosCamasModule.insumoRoutes);
   app.use('/camas', container.recursosCamasModule.camaRoutes);
@@ -77,6 +78,21 @@ app.use(
     '/atencion-enfermeria/signos-vitales',
     container.atencionEnfermeriaModule.signosVitalesRoutes
   );
+
+  app.use(
+    '/atencion-enfermeria/administraciones',
+    container.atencionEnfermeriaModule.administracionesRoutes
+  );
+
+  // Historia clínica: alergias y línea de tiempo del paciente
+  app.use('/alergias', container.historiaClinicaModule.routes);
+  app.use('/historia-clinica', container.historiaClinicaModule.eventosRoutes);
+
+  // Consultorio: agenda, sala de espera y notificaciones del profesional + ocupación de salas
+  app.use('/consultorio', container.consultorioModule.routes);
+
+  // Facturación y Administración (Back-Office)
+  app.use('/api/facturacion', container.facturacionModule.routes);
 
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: 'Not found' });

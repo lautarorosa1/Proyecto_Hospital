@@ -30,3 +30,15 @@ export const atenderTurno = (id) => api.post(`/turnos/${id}/atender`)
 
 // programado | confirmado -> cancelado (libera el horario)
 export const cancelarTurno = (id) => api.post(`/turnos/${id}/cancelar`)
+
+// ---------- Lista de espera / standby (HU 1.3) ----------
+
+// Cola de entreturnos. params opcionales: { profesionalId, fecha }. Cada item trae su `posicion`.
+export const getListaEspera = (params) => api.get('/turnos/espera', { params })
+
+// { profesionalId, pacienteId, fecha } — solo si la agenda de ese día está completa.
+// Si alguien cancela, el backend asigna el horario al primero de la cola.
+export const agregarAListaEspera = (datos) => api.post('/turnos/espera', datos)
+
+// Canal SSE para recepción: avisa cuando un paciente de la lista de espera recibe un horario
+export const urlAlertasRecepcionStream = () => `${api.defaults.baseURL}/turnos/espera/alertas/stream`

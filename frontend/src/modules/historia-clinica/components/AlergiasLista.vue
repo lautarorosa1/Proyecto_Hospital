@@ -94,8 +94,8 @@ function editarAlergia(alergia) {
 }
 
 h2 {
-  font-size: 22px;
-  font-weight: bold;
+  font-size: var(--font-heading-2);
+  font-weight: 600;
   margin-bottom: 20px;
 }
 
@@ -110,41 +110,41 @@ table {
 
 th,
 td {
-  padding: 14px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
   text-align: left;
 }
 
 th {
-  background: #f1f5f9;
+  background: var(--color-neutral-100);
   font-weight: 600;
 }
 
 .severidad {
   display: inline-block;
   padding: 5px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   font-weight: 600;
   text-transform: capitalize;
 }
 
 .leve {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .moderada {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .alta {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
 .mensaje {
-  color: #64748b;
+  color: var(--color-neutral-600);
   text-align: center;
   padding: 20px;
 }
@@ -152,28 +152,6 @@ th {
 .acciones {
   display: flex;
   gap: 10px;
-}
-
-.acciones button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.editar {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.eliminar {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.acciones button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 </style>

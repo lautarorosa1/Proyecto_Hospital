@@ -12,6 +12,8 @@ export interface SignosVitales {
   saturacionOxigeno: number;
 
   observaciones?: string;
+  /** true si algún valor está fuera de rango (temperatura > 39 °C): el front lo muestra en rojo. */
+  alerta?: boolean;
 }
 
 export function requiereAlertaTemperatura(

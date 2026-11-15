@@ -2,5 +2,4 @@
 export interface FiltrosProfesionalDto {
   estado?: string;
   tipoProfesional?: string;
-  especialidadId?: number;
 }

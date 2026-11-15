@@ -3,6 +3,7 @@ import {
   FiltrosProfesional,
   IProfesionalRepository,
 } from '../domain/IProfesionalRepository';
+import type { IUsuarioDirectorio } from '../domain/IUsuarioDirectorio';
 import {
   DURACION_TURNO_DEFAULT,
   DURACION_TURNO_MAX,
@@ -29,15 +30,18 @@ const DNI_REGEX = /^\d{7,9}$/;
 type ProfesionalData = Omit<Profesional, 'id'>;
 
 export class ProfesionalService implements IProfesionalService {
-  constructor(private readonly profesionalRepository: IProfesionalRepository) {}
+  constructor(
+    private readonly profesionalRepository: IProfesionalRepository,
+    // Opcional: sin él no se valida ni se autovincula el usuario de acceso.
+    private readonly usuarioDirectorio?: IUsuarioDirectorio,
+  ) {}
 
   // ---------- Mapeos ----------
 
   private toDto(profesional: Profesional): ResponseProfesionalDto {
     return {
       id: profesional.id,
-      usuarioId: profesional.usuarioId,
-      especialidadId: profesional.especialidadId,
+      usuarioId: profesional.usuarioId ?? null,
       nombre: profesional.nombre,
       apellido: profesional.apellido,
       dni: profesional.dni,
@@ -50,10 +54,12 @@ export class ProfesionalService implements IProfesionalService {
     };
   }
 
-  private toNewProfesional(dto: CreateProfesionalDto): ProfesionalData {
+  private toNewProfesional(
+    dto: CreateProfesionalDto,
+    usuarioId: string | null,
+  ): ProfesionalData {
     return {
-      usuarioId: dto.usuarioId,
-      especialidadId: dto.especialidadId,
+      usuarioId,
       nombre: dto.nombre.trim(),
       apellido: dto.apellido.trim(),
       dni: dto.dni.trim(),
@@ -72,9 +78,6 @@ export class ProfesionalService implements IProfesionalService {
     const changes: Partial<ProfesionalData> = {};
 
     if (dto.usuarioId !== undefined) changes.usuarioId = dto.usuarioId;
-    if (dto.especialidadId !== undefined) {
-      changes.especialidadId = dto.especialidadId;
-    }
     if (dto.nombre !== undefined) changes.nombre = dto.nombre.trim();
     if (dto.apellido !== undefined) changes.apellido = dto.apellido.trim();
     if (dto.dni !== undefined) changes.dni = dto.dni.trim();
@@ -120,10 +123,36 @@ export class ProfesionalService implements IProfesionalService {
     }
   }
 
-  private validarIdReferencia(valor: unknown, campo: string): void {
-    if (typeof valor !== 'number' || !Number.isInteger(valor) || valor <= 0) {
-      throw new BadRequestError(`${campo} debe ser un entero positivo`);
+  /** El usuario vinculado debe ser un id de IAM existente. */
+  private async validarUsuario(valor: unknown): Promise<string> {
+    if (typeof valor !== 'string' || !valor.trim()) {
+      throw new BadRequestError('usuarioId debe ser un texto no vacío');
     }
+    const usuarioId = valor.trim();
+    if (this.usuarioDirectorio) {
+      const usuario = await this.usuarioDirectorio.findById(usuarioId);
+      if (!usuario) throw new BadRequestError('El usuario seleccionado no existe');
+    }
+    return usuarioId;
+  }
+
+  /**
+   * Decide con qué usuario queda vinculado un profesional nuevo: el elegido, o
+   * (si no eligió ninguno) el usuario libre que tenga el mismo email.
+   */
+  private async resolverUsuarioAlCrear(
+    usuarioId: unknown,
+    email: string,
+  ): Promise<string | null> {
+    if (usuarioId !== undefined && usuarioId !== null && usuarioId !== '') {
+      return this.validarUsuario(usuarioId);
+    }
+    if (!this.usuarioDirectorio) return null;
+
+    const usuario = await this.usuarioDirectorio.findByEmail(email.trim().toLowerCase());
+    if (!usuario) return null;
+    const yaVinculado = await this.profesionalRepository.findByUsuarioId(usuario.id);
+    return yaVinculado ? null : usuario.id;
   }
 
   private validarDuracionTurno(valor: unknown): void {
@@ -164,7 +193,7 @@ export class ProfesionalService implements IProfesionalService {
       dni?: string;
       email?: string;
       matricula?: string;
-      usuarioId?: number;
+      usuarioId?: string | null;
     },
     idActual?: number,
   ): Promise<void> {
@@ -192,7 +221,7 @@ export class ProfesionalService implements IProfesionalService {
         throw new ConflictError('Ya existe un profesional con esa matrícula');
       }
     }
-    if (datos.usuarioId !== undefined) {
+    if (datos.usuarioId !== undefined && datos.usuarioId !== null) {
       const existente = await this.profesionalRepository.findByUsuarioId(
         datos.usuarioId,
       );
@@ -220,10 +249,6 @@ export class ProfesionalService implements IProfesionalService {
       where.tipoProfesional =
         filtros.tipoProfesional as FiltrosProfesional['tipoProfesional'];
     }
-    if (filtros.especialidadId !== undefined) {
-      this.validarIdReferencia(filtros.especialidadId, 'especialidadId');
-      where.especialidadId = filtros.especialidadId;
-    }
 
     const profesionales = await this.profesionalRepository.findAll(where);
     return profesionales.map((p) => this.toDto(p));
@@ -236,12 +261,6 @@ export class ProfesionalService implements IProfesionalService {
   }
 
   async create(dto: CreateProfesionalDto): Promise<ResponseProfesionalDto> {
-    if (dto.usuarioId === undefined || dto.usuarioId === null) {
-      throw new BadRequestError('El usuario es obligatorio');
-    }
-    if (dto.especialidadId === undefined || dto.especialidadId === null) {
-      throw new BadRequestError('La especialidad es obligatoria');
-    }
     this.validarTextoObligatorio(dto.nombre, 'El nombre es obligatorio');
     this.validarTextoObligatorio(dto.apellido, 'El apellido es obligatorio');
     this.validarTextoObligatorio(dto.dni, 'El DNI es obligatorio');
@@ -252,8 +271,6 @@ export class ProfesionalService implements IProfesionalService {
       throw new BadRequestError('El tipo de profesional es obligatorio');
     }
 
-    this.validarIdReferencia(dto.usuarioId, 'usuarioId');
-    this.validarIdReferencia(dto.especialidadId, 'especialidadId');
     this.validarDni(dto.dni);
     this.validarEmail(dto.email);
     this.validarTipo(dto.tipoProfesional);
@@ -262,15 +279,17 @@ export class ProfesionalService implements IProfesionalService {
     }
     if (dto.estado !== undefined) this.validarEstado(dto.estado);
 
+    const usuarioId = await this.resolverUsuarioAlCrear(dto.usuarioId, dto.email);
+
     await this.validarUnicidad({
       dni: dto.dni,
       email: dto.email,
       matricula: dto.matricula,
-      usuarioId: dto.usuarioId,
+      usuarioId,
     });
 
     const profesional = await this.profesionalRepository.create(
-      this.toNewProfesional(dto),
+      this.toNewProfesional(dto, usuarioId),
     );
 
     return this.toDto(profesional);
@@ -280,11 +299,13 @@ export class ProfesionalService implements IProfesionalService {
     id: number,
     dto: UpdateProfesionalDto,
   ): Promise<ResponseProfesionalDto> {
+    // null (o "") desvincula al usuario; un texto lo vincula a ese usuario
+    let usuarioId: string | null | undefined = undefined;
     if (dto.usuarioId !== undefined) {
-      this.validarIdReferencia(dto.usuarioId, 'usuarioId');
-    }
-    if (dto.especialidadId !== undefined) {
-      this.validarIdReferencia(dto.especialidadId, 'especialidadId');
+      usuarioId =
+        dto.usuarioId === null || dto.usuarioId === ''
+          ? null
+          : await this.validarUsuario(dto.usuarioId);
     }
     if (dto.nombre !== undefined) {
       this.validarTextoObligatorio(dto.nombre, 'El nombre no puede estar vacío');
@@ -318,15 +339,15 @@ export class ProfesionalService implements IProfesionalService {
         dni: dto.dni,
         email: dto.email,
         matricula: dto.matricula,
-        usuarioId: dto.usuarioId,
+        usuarioId,
       },
       id,
     );
 
-    const updated = await this.profesionalRepository.update(
-      id,
-      this.toProfesionalChanges(dto),
-    );
+    const updated = await this.profesionalRepository.update(id, {
+      ...this.toProfesionalChanges({ ...dto, usuarioId: undefined }),
+      ...(usuarioId !== undefined ? { usuarioId } : {}),
+    });
 
     if (!updated) throw new NotFoundError('Profesional not found');
     return this.toDto(updated);

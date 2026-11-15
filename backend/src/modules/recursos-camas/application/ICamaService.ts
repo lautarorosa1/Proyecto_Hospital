@@ -2,6 +2,7 @@ import { AsignarCamaDto } from './dtos/AsignarCamaDto';
 import { CambiarEstadoCamaDto } from './dtos/CambiarEstadoCamaDto';
 import { CreateCamaDto } from './dtos/CreateCamaDto';
 import { FiltrosMapaCamaDto } from './dtos/FiltrosMapaCamaDto';
+import { MoverCamaDto } from './dtos/MoverCamaDto';
 import { PasarALimpiezaDto } from './dtos/PasarALimpiezaDto';
 import { ResponseAsignarCamaDto } from './dtos/ResponseAsignarCamaDto';
 import { ResponseCamaDto } from './dtos/ResponseCamaDto';
@@ -12,6 +13,7 @@ export interface ICamaService {
   crear(dto: CreateCamaDto): Promise<ResponseCamaDto>;
   obtener(id: number): Promise<ResponseCamaDto>;
   mapa(filtro: FiltrosMapaCamaDto): Promise<ResponseCamaMapaDto[]>;
+  mover(id: number, dto: MoverCamaDto): Promise<ResponseCamaMapaDto>;
   asignar(id: number, dto: AsignarCamaDto): Promise<ResponseAsignarCamaDto>;
   cambiarEstado(id: number, dto: CambiarEstadoCamaDto): Promise<ResponseCambioEstadoCamaDto>;
   pasarAEnLimpieza(id: number, dto: PasarALimpiezaDto): Promise<ResponseCambioEstadoCamaDto>;

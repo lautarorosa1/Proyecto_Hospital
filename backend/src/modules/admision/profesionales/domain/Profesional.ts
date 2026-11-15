@@ -28,8 +28,8 @@ export function esEstadoProfesional(valor: string): valor is EstadoProfesional {
 
 export interface Profesional {
   id: number;
-  usuarioId: number;
-  especialidadId: number;
+  /** Usuario del sistema (IAM, uuid) con el que el profesional inicia sesión; opcional. */
+  usuarioId: string | null;
 
   nombre: string;
   apellido: string;

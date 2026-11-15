@@ -13,4 +13,7 @@ export class InsumoEntity {
 
   @Column({ type: 'varchar' })
   unidad_medida: string;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  precio: number;
 }

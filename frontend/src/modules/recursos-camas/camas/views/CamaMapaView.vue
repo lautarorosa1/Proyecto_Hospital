@@ -8,7 +8,12 @@
         >
           ←
         </router-link>
-        <h1 class="text-2xl font-semibold text-gray-900">Mapa de camas</h1>
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-900">Mapa de camas</h1>
+          <p class="mt-1 text-xs" :class="conectado ? 'text-green-600' : 'text-amber-600'">
+            {{ conectado ? '● En vivo' : '● Reconectando…' }}
+          </p>
+        </div>
         <router-link to="/camas/create">
           <button class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700">
             Crear cama
@@ -43,11 +48,9 @@
           <thead>
             <tr class="border-b border-gray-200 text-gray-500">
               <th class="px-4 py-3 font-medium">ID</th>
-              <th class="px-4 py-3 font-medium">Número</th>
               <th class="px-4 py-3 font-medium">Habitación</th>
               <th class="px-4 py-3 font-medium">Sector</th>
               <th class="px-4 py-3 font-medium">Estado</th>
-              <th class="px-4 py-3 font-medium">Version</th>
               <th class="px-4 py-3 font-medium">Acciones</th>
             </tr>
           </thead>
@@ -58,11 +61,16 @@
               class="border-b border-gray-100 text-gray-700 transition hover:bg-gray-50"
             >
               <td class="px-4 py-3">{{ c.id }}</td>
-              <td class="px-4 py-3">{{ c.numero }}</td>
               <td class="px-4 py-3">{{ c.habitacion_id }}</td>
               <td class="px-4 py-3">{{ c.sector }}</td>
-              <td class="px-4 py-3">{{ c.estado }}</td>
-              <td class="px-4 py-3">{{ c.version }}</td>
+              <td class="px-4 py-3">
+                <span
+                  class="rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
+                  :class="claseEstado(c.estado)"
+                >
+                  {{ c.estado }}
+                </span>
+              </td>
               <td class="px-4 py-3">
                 <router-link :to="`/camas/${c.id}`">
                   <button class="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">
@@ -85,7 +93,8 @@
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import { getMapaCamas } from '../services/camaService'
+import { getMapaCamas, urlCamasStream } from '../services/camaService'
+import { useEventStream } from '@/shared/composables/useEventStream'
 
 const camas = ref([])
 const error = ref('')
@@ -105,4 +114,17 @@ const cargar = async () => {
 }
 
 onMounted(cargar)
+
+const { conectado } = useEventStream(urlCamasStream(), {
+  cama_estado: cargar,
+  cama_asignada: cargar
+})
+
+const claseEstado = (estado) =>
+  ({
+    Libre: 'bg-green-50 text-green-700 ring-green-200',
+    Ocupada: 'bg-red-50 text-red-700 ring-red-200',
+    'En limpieza': 'bg-amber-50 text-amber-700 ring-amber-200',
+    Bloqueada: 'bg-gray-100 text-gray-700 ring-gray-300'
+  })[estado] ?? 'bg-gray-50 text-gray-600 ring-gray-200'
 </script>

@@ -42,14 +42,21 @@ test('HabitacionService crea datos limpios y rechaza campos vacíos', async () =
   const repository = {
     findAll: async () => [],
     findById: async () => null,
-    create: async (data: { numero: string; piso: string; sector: string }) => ({ id: 1, ...data }),
+    create: async (data: { numero: string; piso: string; sector: string; tipo?: 'INTERNACION' | 'CONSULTORIO' }) => ({ id: 1, ...data }),
     update: async () => null,
     delete: async () => false,
   } as IHabitacionRepository;
   const service = new HabitacionService(repository);
 
   const result = await service.create({ numero: ' 10 ', piso: ' 2 ', sector: ' Norte ' });
-  assert.deepEqual(result, { id: 1, numero: '10', piso: '2', sector: 'Norte' });
+  assert.deepEqual(result, { id: 1, numero: '10', piso: '2', sector: 'Norte', tipo: 'INTERNACION' });
+
+  const consultorio = await service.create({ numero: 'C1', piso: '1', sector: 'Consultorios', tipo: 'CONSULTORIO' });
+  assert.equal(consultorio.tipo, 'CONSULTORIO');
+  await assert.rejects(
+    () => service.create({ numero: 'C2', piso: '1', sector: 'Consultorios', tipo: 'QUIROFANO' }),
+    BadRequestError,
+  );
   await assert.rejects(
     () => service.create({ numero: ' ', piso: '2', sector: 'Norte' }),
     BadRequestError,

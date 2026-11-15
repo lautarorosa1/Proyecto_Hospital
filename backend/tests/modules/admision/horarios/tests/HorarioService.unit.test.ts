@@ -20,8 +20,7 @@ test('guarda rangos sin superposición y rechaza rangos superpuestos', async () 
     findAll: async () => [],
     findById: async () => ({
       id: 1,
-      usuarioId: 1,
-      especialidadId: 1,
+      usuarioId: null,
       nombre: 'Profesional',
       apellido: 'Prueba',
       dni: '12345678',

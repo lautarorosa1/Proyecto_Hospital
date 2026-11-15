@@ -45,7 +45,6 @@ export const profesionalVacio = () => ({
   telefono: '',
   matricula: '',
   tipoProfesional: '',
-  especialidadId: '',
   usuarioId: '',
   duracionTurnoMin: DURACION_TURNO_DEFAULT,
   estado: 'activo'
@@ -58,15 +57,9 @@ export const erroresVacios = () => ({
   email: '',
   matricula: '',
   tipoProfesional: '',
-  especialidadId: '',
   usuarioId: '',
   duracionTurnoMin: ''
 })
-
-const esIdValido = (valor) => {
-  const n = Number(valor)
-  return valor !== '' && valor !== null && Number.isInteger(n) && n > 0
-}
 
 // Completa `errores` y devuelve true si el formulario es válido
 export const validarProfesional = (profesional, errores) => {
@@ -109,16 +102,6 @@ export const validarProfesional = (profesional, errores) => {
     valido = false
   }
 
-  if (!esIdValido(profesional.especialidadId)) {
-    errores.especialidadId = 'Ingrese un ID de especialidad válido'
-    valido = false
-  }
-
-  if (!esIdValido(profesional.usuarioId)) {
-    errores.usuarioId = 'Ingrese un ID de usuario válido'
-    valido = false
-  }
-
   const duracion = Number(profesional.duracionTurnoMin)
   if (
     profesional.duracionTurnoMin === '' ||
@@ -144,16 +127,18 @@ export const armarPayload = (profesional, { edicion = false } = {}) => {
     email: profesional.email.trim(),
     matricula: profesional.matricula.trim(),
     tipoProfesional: profesional.tipoProfesional,
-    especialidadId: Number(profesional.especialidadId),
-    usuarioId: Number(profesional.usuarioId),
     duracionTurnoMin: Number(profesional.duracionTurnoMin)
   }
 
+  // El usuario de acceso es opcional. Al crear, sin usuario no se envía (el backend
+  // lo vincula por email si existe). Al editar, "" desvincula (null).
   if (edicion) {
     payload.telefono = profesional.telefono.trim()
     payload.estado = profesional.estado
+    payload.usuarioId = profesional.usuarioId || null
   } else {
     payload.telefono = profesional.telefono.trim() || undefined
+    payload.usuarioId = profesional.usuarioId || undefined
   }
 
   return payload

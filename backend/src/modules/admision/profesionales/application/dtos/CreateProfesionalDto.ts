@@ -1,8 +1,8 @@
 import type { EstadoProfesional, TipoProfesional } from '../../domain/Profesional';
 
 export interface CreateProfesionalDto {
-  usuarioId: number;
-  especialidadId: number;
+  /** Opcional: si se omite, se vincula solo cuando existe un usuario con el mismo email. */
+  usuarioId?: string;
   nombre: string;
   apellido: string;
   dni: string;

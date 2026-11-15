@@ -11,6 +11,7 @@ export class InsumoRepository implements IInsumoRepository {
     nombre: entity.nombre,
     stock_actual: entity.stock_actual,
     unidad_medida: entity.unidad_medida,
+    precio: Number(entity.precio),
   });
 
   async findAll(): Promise<Insumo[]> {

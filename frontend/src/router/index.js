@@ -1,9 +1,15 @@
+
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
 import admisionRoutes from '@/modules/admision/routes'
 import historiaClinicaRoutes from '@/modules/historia-clinica/routes'
 import recursosCamasRoutes from '@/modules/recursos-camas/routes'
+import atencionEnfermeriaRoutes from '@/modules/atencion-enfermeria/routes'
+
+import facturacionRoutes from '@/modules/facturacion/routes'
+import consultorioRoutes from '@/modules/consultorio/routes'
+
 
 const routes = [
   {
@@ -30,11 +36,16 @@ const routes = [
     component: () => import('@/views/iam/RolesAdminView.vue'),
     meta: { requiresAuth: true, roles: ['Administrador'] }
   },
+
+  // Rutas de los módulos
   ...admisionRoutes,
   ...historiaClinicaRoutes,
   ...recursosCamasRoutes,
+  ...atencionEnfermeriaRoutes,
+  ...facturacionRoutes,
+  ...consultorioRoutes,
 
-// Siempre al final: captura cualquier ruta que no coincida con las anteriores
+  // Siempre al final: captura cualquier ruta que no coincida con las anteriores
   {
     path: '/:pathMatch(.*)*',
     component: () => import('@/shared/views/NotFoundView.vue')
@@ -49,12 +60,16 @@ const router = createRouter({
 router.beforeEach((to) => {
   const authStore = useAuthStore()
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return { path: '/login' }
+  if (to.meta.guestOnly) {
+    return authStore.isAuthenticated ? { path: '/' } : true
   }
 
-  if (to.meta.guestOnly && authStore.isAuthenticated) {
-    return { path: '/pacientes' }
+  if (!authStore.isAuthenticated) {
+    return { path: '/login', query: { redirect: to.fullPath } }
+  }
+
+  if (!authStore.puedeAcceder(to.path)) {
+    return { path: '/', query: { forbidden: '1' } }
   }
 
   if (

@@ -17,6 +17,15 @@ export const ROLES_VALIDOS: NombreRol[] = [
   'Maestranza',
 ];
 
+export const ROLES_REGISTRO: NombreRol[] = [
+  'Administrador',
+  'Médico',
+  'Enfermero',
+  'Recepcionista',
+  'Administrativo',
+  'Maestranza',
+];
+
 export interface Permiso {
   id: number;
   nombre: string;

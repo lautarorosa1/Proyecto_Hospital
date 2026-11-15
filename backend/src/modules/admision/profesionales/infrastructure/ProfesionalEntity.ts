@@ -6,14 +6,10 @@ export class ProfesionalEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  // Por ahora son columnas simples. Cuando existan las entidades Usuario y
-  // Especialidad se pueden transformar en relaciones (@ManyToOne) sin tocar
-  // el dominio ni los servicios.
-  @Column({ name: 'usuario_id', type: 'int', unique: true })
-  usuarioId: number;
-
-  @Column({ name: 'especialidad_id', type: 'int' })
-  especialidadId: number;
+  // Id (uuid) del usuario de IAM vinculado. Es opcional: un profesional puede
+  // existir sin cuenta de acceso. Columna simple (sin FK) para no acoplar módulos.
+  @Column({ name: 'usuario_id', type: 'varchar', nullable: true, unique: true })
+  usuarioId: string | null;
 
   @Column({ type: 'varchar' })
   nombre: string;

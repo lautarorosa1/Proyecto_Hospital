@@ -41,6 +41,11 @@
 }
 ```
 
+El sistema es solo para el personal del hospital, por eso el registro no acepta el rol `Paciente`.
+- `roles` es obligatorio y debe tener al menos un rol. Si falta o está vacío → `400` *"Debe seleccionar al menos un rol"*.
+- Solo se aceptan los roles de personal: `Administrador`, `Médico`, `Enfermero`, `Recepcionista`, `Administrativo` y `Maestranza` (constante `ROLES_REGISTRO` en `domain/Rol.ts`). Cualquier otro, incluido `Paciente` → `400` *"Rol no permitido para el registro"*.
+- La vista `/register` muestra solo esos 6 roles y no trae ninguno marcado de entrada.
+
 ### Iniciar Sesión (`POST /auth/login`)
 ```json
 {
@@ -144,12 +149,49 @@ Desvincula el `rolId` indicado de la tabla intermedia `usuario_roles` y devuelve
 
 ---
 
+## 🖥️ 4. Vista de Login y Acceso por Rol en el Frontend
+
+### Vista de Login (`/login`)
+- Consume `POST /auth/login` y guarda `token` y `usuario` en `localStorage` (store `useAuthStore`).
+- Se muestra a pantalla completa, sin la barra de navegación.
+- Si el usuario intentó abrir una ruta sin sesión, después del login vuelve a esa ruta (`/login?redirect=/ruta`). Si no, va al inicio (`/`).
+- Si el backend responde `401` en cualquier petición, la sesión se cierra y se redirige a `/login?sesion=expirada`, donde se muestra el aviso correspondiente.
+
+### Qué puede ver y tocar cada rol
+Todas las rutas exigen sesión iniciada, salvo `/login` y `/register`. Además, el guard del router consulta `authStore.puedeAcceder(ruta)`, que busca la ruta en la tabla `ROLES_POR_RUTA` de `frontend/src/stores/authStore.js`. El rol `Administrador` accede a todo. Las rutas que no figuran en la tabla (por ejemplo `/`) quedan habilitadas para cualquier usuario logueado.
+
+| Ruta (y sus subrutas) | Roles permitidos (además de `Administrador`) |
+| :--- | :--- |
+| `/admin/*` | Solo `Administrador` |
+| `/admision` | Médico, Enfermero, Recepcionista, Administrativo |
+| `/pacientes` | Médico, Enfermero, Recepcionista, Administrativo |
+| `/pacientes/create`, `/pacientes/edit/:id` | Recepcionista, Administrativo |
+| `/profesionales` | Médico, Enfermero, Recepcionista, Administrativo |
+| `/profesionales/create`, `/profesionales/edit/:id` | Administrativo |
+| `/turnos` | Médico, Recepcionista, Administrativo |
+| `/turnos/generar` | Recepcionista |
+| `/guardia` | Médico, Enfermero, Recepcionista |
+| `/historia-clinica` | Médico, Enfermero |
+| `/atencion-enfermeria` | Médico, Enfermero |
+| `/recursos-camas` | Médico, Enfermero, Recepcionista, Administrativo, Maestranza |
+| `/camas` | Médico, Enfermero, Recepcionista, Administrativo, Maestranza |
+| `/camas/create` | Administrativo |
+| `/habitaciones` | Administrativo, Maestranza |
+| `/habitaciones/create`, `/habitaciones/edit/:id` | Administrativo |
+| `/insumos` | Médico, Enfermero, Administrativo |
+
+Si un usuario entra a una ruta que su rol no tiene permitida, se lo redirige al inicio con el aviso *"No poseés los permisos o roles necesarios..."*.
+
+> Esta tabla controla la **navegación del frontend**. Para proteger los endpoints, cada módulo usa en su router los middlewares `authenticateJWT` y `authorizeRoles(...)` de `modules/iam/adapters/middlewares/authMiddleware`, y para ocultar botones dentro de una vista se usa `v-if="authStore.hasRole('Médico', ...)"`.
+
+---
+
 ## ⚠️ Códigos de Respuesta y Errores
 
 | Código | Cuándo ocurre |
 | :---: | :--- |
 | `200` / `201` | Operación exitosa |
-| `400` | Datos inválidos, campos vacíos o intento de eliminar un rol esencial del hospital |
+| `400` | Datos inválidos, campos vacíos, registro sin roles o con un rol no permitido (por ejemplo `Paciente`), o intento de eliminar un rol esencial del hospital |
 | `401` | Credenciales inválidas o token JWT ausente/expirado |
 | `403` | Usuario inactivo o sin el rol `Administrador` |
 | `404` | Usuario o rol no encontrado |

@@ -1,3 +1,4 @@
+
 import { AppDataSource } from '../../data-source';
 
 import { PacienteEntity } from '../admision/pacientes/infrastructure/PacienteEntity';
@@ -9,33 +10,38 @@ import { AlergiaService } from './application/AlergiaService';
 import { AlergiaController } from './adapters/AlergiaController';
 import { createAlergiaRoutes } from './adapters/alergiaRoutes';
 
+
 import { AntecedenteFamiliarEntity } from './infrastructure/AntecedenteFamiliarEntity';
 import { AntecedenteFamiliarRepository } from './infrastructure/AntecedenteFamiliarRepository';
 import { AntecedenteFamiliarService } from './application/AntecedenteFamiliarService';
 import { AntecedenteFamiliarController } from './adapters/AntecedenteFamiliarController';
 import { createAntecedenteFamiliarRoutes } from './adapters/antecedenteFamiliarRoutes';
 
+// Evoluciones médicas
 import { EvolucionMedicaEntity } from './infrastructure/EvolucionMedicaEntity';
 import { EvolucionMedicaRepository } from './infrastructure/EvolucionMedicaRepository';
 import { EvolucionMedicaService } from './application/EvolucionMedicaService';
 import { EvolucionMedicaController } from './adapters/EvolucionMedicaController';
 import { createEvolucionMedicaRoutes } from './adapters/evolucionMedicaRoutes';
 
+// Estudios médicos
 import { EstudioMedicoEntity } from './infrastructure/EstudioMedicoEntity';
 import { EstudioMedicoRepository } from './infrastructure/EstudioMedicoRepository';
 import { EstudioMedicoService } from './application/EstudioMedicoService';
 import { EstudioMedicoController } from './adapters/EstudioMedicoController';
 import { createEstudioMedicoRoutes } from './adapters/estudioMedicoRoutes';
 
+// Eventos clínicos
 import { EventoClinicoEntity } from './infrastructure/EventoClinicoEntity';
 import { EventoClinicoRepository } from './infrastructure/EventoClinicoRepository';
 import { EventoClinicoService } from './application/EventoClinicoService';
 import { EventoClinicoController } from './adapters/EventoClinicoController';
 import { createEventoClinicoRoutes } from './adapters/eventoClinicoRoutes';
+
 import type { IEventBus } from '../../shared/domain/events/IEventBus';
 import { DomainEvents } from '../../shared/domain/events/DomainEvents';
 
-// Repositorio de pacientes (para verificar su existencia)
+// Repositorio de pacientes
 const pacienteRepository = new PacienteRepository(
   AppDataSource.getRepository(PacienteEntity)
 );
@@ -94,12 +100,16 @@ const eventoClinicoService = new EventoClinicoService(
   eventoClinicoRepository,
   pacienteRepository
 );
-const eventoClinicoController = new EventoClinicoController(eventoClinicoService);
+const eventoClinicoController = new EventoClinicoController(
+  eventoClinicoService
+);
 
 /**
  * La HCE recibe los hechos clínicos de los demás módulos:
- *  - PACIENTE_INGRESADO (Admisión), PACIENTE_DADO_DE_ALTA, SIGNOS_VITALES_REGISTRADO
- *    y MEDICACION_ADMINISTRADA (Enfermería).
+ * - PACIENTE_INGRESADO (Admisión)
+ * - PACIENTE_DADO_DE_ALTA (Enfermería)
+ * - SIGNOS_VITALES_REGISTRADO (Enfermería)
+ * - MEDICACION_ADMINISTRADA (Enfermería)
  */
 export function suscribirHistoriaClinica(bus: IEventBus): void {
   bus.subscribe(DomainEvents.PACIENTE_INGRESADO, async (e) => {
@@ -150,18 +160,29 @@ export function suscribirHistoriaClinica(bus: IEventBus): void {
   });
 }
 
-// Módulo de Historia Clínica
+ // Módulo de Historia Clínica
 export const historiaClinicaModule = {
+  // Alergias
   controller: alergiaController,
   routes: createAlergiaRoutes(alergiaController),
+  alergiaService,
+  // Antecedentes familiares
   antecedenteFamiliarRoutes: createAntecedenteFamiliarRoutes(
     antecedenteFamiliarController
   ),
+
+  // Evoluciones médicas
   evolucionMedicaRoutes: createEvolucionMedicaRoutes(
     evolucionMedicaController
   ),
-  estudioMedicoRoutes: createEstudioMedicoRoutes(estudioMedicoController),
-  alergiaService,
-  eventoClinicoService,
-  eventosRoutes: createEventoClinicoRoutes(eventoClinicoController),
+
+  // Estudios médicos
+  estudioMedicoRoutes: createEstudioMedicoRoutes(
+    estudioMedicoController
+  ),
+
+  // Eventos clínicos (línea de tiempo)
+  eventosRoutes: createEventoClinicoRoutes(
+    eventoClinicoController
+  ),
 };

@@ -1,3 +1,4 @@
+
 <script setup>
 import { reactive, ref, watch } from 'vue'
 
@@ -17,14 +18,15 @@ const formulario = reactive({
 })
 
 const mensaje = ref('')
+
 // Fecha de hoy en hora local, formato AAAA-MM-DD
-// (no se usa toISOString porque devuelve la fecha en UTC y de noche daría "mañana")
 function fechaDeHoy() {
   const d = new Date()
   const mes = String(d.getMonth() + 1).padStart(2, '0')
   const dia = String(d.getDate()).padStart(2, '0')
   return `${d.getFullYear()}-${mes}-${dia}`
 }
+
 watch(
   () => props.evolucion,
   (nuevaEvolucion) => {
@@ -48,10 +50,11 @@ function enviar() {
     mensaje.value = 'Completá todos los campos obligatorios.'
     return
   }
+
   if (formulario.fecha > fechaDeHoy()) {
-  mensaje.value = 'La fecha de la evolución no puede ser posterior a hoy.'
-  return
-}
+    mensaje.value = 'La fecha de la evolución no puede ser posterior a hoy.'
+    return
+  }
 
   if (motivoConsulta.length > 200) {
     mensaje.value = 'El motivo de consulta no puede superar los 200 caracteres.'
@@ -86,11 +89,11 @@ function enviar() {
     <div class="campo">
       <label for="fecha">Fecha de evolución *</label>
       <input
-  id="fecha"
-  v-model="formulario.fecha"
-  type="date"
-  :max="fechaDeHoy()"
-/>
+        id="fecha"
+        v-model="formulario.fecha"
+        type="date"
+        :max="fechaDeHoy()"
+      />
     </div>
 
     <div class="campo">
@@ -184,6 +187,24 @@ textarea:focus {
   outline-offset: 1px;
 }
 
+.boton-guardar {
+  padding: 11px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton-guardar:hover {
+  background: #1d4ed8;
+}
+
+.boton-guardar:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
 .mensaje {
   margin-top: 15px;
   color: var(--color-danger-hover);

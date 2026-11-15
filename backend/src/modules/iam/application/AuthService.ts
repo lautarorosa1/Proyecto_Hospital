@@ -2,7 +2,13 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { IAuthService } from './IAuthService';
 import { IUsuarioRepository } from '../domain/IUsuarioRepository';
-import { Rol, ROLES_VALIDOS, Usuario } from '../domain/Rol';
+import {
+  NombreRol,
+  Rol,
+  ROLES_REGISTRO,
+  ROLES_VALIDOS,
+  Usuario,
+} from '../domain/Rol';
 import { LoginDto } from './dtos/LoginDto';
 import { RegisterUsuarioDto } from './dtos/RegisterUsuarioDto';
 import {
@@ -151,10 +157,16 @@ export class AuthService implements IAuthService {
       throw new ConflictError('Ya existe un usuario con ese email');
     }
 
-    const nombresRoles =
-      Array.isArray(dto.roles) && dto.roles.length > 0
-        ? dto.roles.map((r) => String(r).trim()).filter(Boolean)
-        : ['Paciente'];
+    const nombresRoles = Array.isArray(dto.roles)
+      ? dto.roles.map((r) => String(r).trim()).filter(Boolean)
+      : [];
+
+    if (nombresRoles.length === 0) {
+      throw new BadRequestError('Debe seleccionar al menos un rol');
+    }
+    if (nombresRoles.some((r) => !ROLES_REGISTRO.includes(r as NombreRol))) {
+      throw new BadRequestError('Rol no permitido para el registro');
+    }
 
     const roles = await this.usuarioRepository.findOrCreateRoles(nombresRoles);
     const passwordHash = await this.hashPassword(dto.password);

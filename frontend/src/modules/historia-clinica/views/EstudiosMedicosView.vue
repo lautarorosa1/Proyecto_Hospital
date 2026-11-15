@@ -1,12 +1,15 @@
+
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
+
 import {
   obtenerEstudiosPorPaciente,
   crearEstudio,
   actualizarEstudio,
   eliminarEstudioPorId
 } from '../services/historiaClinicaService'
+
 import EstudioMedicoForm from '../components/EstudioMedicoForm.vue'
 import EstudiosMedicosLista from '../components/EstudiosMedicosLista.vue'
 
@@ -23,13 +26,21 @@ const estudioEditar = ref(null)
 const estudioSeleccionado = ref(null)
 
 function mensajeDeError(err, porDefecto) {
-  return err.response?.data?.error || err.response?.data?.message || porDefecto
+  return (
+    err.response?.data?.error ||
+    err.response?.data?.message ||
+    porDefecto
+  )
 }
 
 function formatearFecha(fecha) {
   if (!fecha) return '-'
+
   const partes = fecha.split('-')
-  return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : fecha
+
+  return partes.length === 3
+    ? `${partes[2]}/${partes[1]}/${partes[0]}`
+    : fecha
 }
 
 async function cargarEstudios() {
@@ -42,7 +53,10 @@ async function cargarDatos() {
     await cargarEstudios()
   } catch (err) {
     console.error(err)
-    error.value = mensajeDeError(err, 'No se pudieron cargar los estudios.')
+    error.value = mensajeDeError(
+      err,
+      'No se pudieron cargar los estudios.'
+    )
   } finally {
     cargando.value = false
   }
@@ -120,6 +134,7 @@ async function eliminarEstudio(estudio) {
     if (estudioSeleccionado.value?.id === estudio.id) {
       estudioSeleccionado.value = null
     }
+
     if (estudioEditar.value?.id === estudio.id) {
       cerrarFormulario()
     }
@@ -127,7 +142,10 @@ async function eliminarEstudio(estudio) {
     await cargarEstudios()
   } catch (err) {
     console.error(err)
-    error.value = mensajeDeError(err, 'No se pudo eliminar el estudio.')
+    error.value = mensajeDeError(
+      err,
+      'No se pudo eliminar el estudio.'
+    )
   }
 }
 
@@ -166,9 +184,13 @@ onMounted(cargarDatos)
         @guardar="guardarEstudio"
       />
 
-      <p v-if="cargando" class="mensaje">Cargando estudios...</p>
+      <p v-if="cargando" class="mensaje">
+        Cargando estudios...
+      </p>
 
-      <p v-else-if="error" class="error">{{ error }}</p>
+      <p v-else-if="error" class="error">
+        {{ error }}
+      </p>
 
       <EstudiosMedicosLista
         v-else
@@ -185,7 +207,9 @@ onMounted(cargarDatos)
         <div class="detalle-encabezado">
           <h2>Detalle del estudio médico</h2>
 
-          <button type="button" @click="cerrarDetalle">Cerrar</button>
+          <button type="button" @click="cerrarDetalle">
+            Cerrar
+          </button>
         </div>
 
         <p>
@@ -296,5 +320,8 @@ h2 {
   margin-bottom: 12px;
   color: var(--color-neutral-700);
 }
-
+.detalle-estudio p {
+  margin-bottom: 12px;
+  color: var(--color-neutral-700);
+}
 </style>

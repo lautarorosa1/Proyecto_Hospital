@@ -1,3 +1,4 @@
+
 <script setup>
 import { reactive, watch } from 'vue'
 
@@ -25,8 +26,8 @@ watch(
   () => props.antecedenteEditar,
   (antecedente) => {
     if (antecedente) {
-      formulario.parentesco = antecedente.parentesco
-      formulario.enfermedad = antecedente.enfermedad
+      formulario.parentesco = antecedente.parentesco || ''
+      formulario.enfermedad = antecedente.enfermedad || ''
       formulario.observaciones = antecedente.observaciones || ''
     } else {
       limpiarFormulario()
@@ -150,13 +151,41 @@ textarea {
   font: inherit;
 }
 
+button {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
 .acciones-formulario {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
 
+.cancelar {
+  background: #64748b;
+}
+
+.cancelar:hover {
+  background: #475569;
+}
+
 .error-form {
   color: var(--color-danger);
 }
 </style>
+

@@ -1,3 +1,4 @@
+
 <script setup>
 import { reactive, ref, watch } from 'vue'
 
@@ -175,6 +176,26 @@ textarea {
   border: 1px solid var(--color-neutral-300);
   border-radius: var(--radius-control);
   font: inherit;
+}
+
+
+button {
+  padding: 12px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
 }
 
 .error {

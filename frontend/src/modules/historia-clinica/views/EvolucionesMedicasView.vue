@@ -2,12 +2,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
+
 import {
   obtenerEvolucionesPorPaciente,
   crearEvolucion,
   actualizarEvolucion,
   eliminarEvolucionPorId
 } from '../services/historiaClinicaService'
+
 import EvolucionMedicaForm from '../components/EvolucionMedicaForm.vue'
 import EvolucionesMedicasLista from '../components/EvolucionesMedicasLista.vue'
 
@@ -24,13 +26,21 @@ const evolucionEditar = ref(null)
 const evolucionSeleccionada = ref(null)
 
 function mensajeDeError(err, porDefecto) {
-  return err.response?.data?.error || err.response?.data?.message || porDefecto
+  return (
+    err.response?.data?.error ||
+    err.response?.data?.message ||
+    porDefecto
+  )
 }
 
 function formatearFecha(fecha) {
   if (!fecha) return '-'
+
   const partes = fecha.split('-')
-  return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : fecha
+
+  return partes.length === 3
+    ? `${partes[2]}/${partes[1]}/${partes[0]}`
+    : fecha
 }
 
 async function cargarEvoluciones() {
@@ -43,7 +53,10 @@ async function cargarDatos() {
     await cargarEvoluciones()
   } catch (err) {
     console.error(err)
-    error.value = mensajeDeError(err, 'No se pudieron cargar las evoluciones.')
+    error.value = mensajeDeError(
+      err,
+      'No se pudieron cargar las evoluciones.'
+    )
   } finally {
     cargando.value = false
   }
@@ -121,6 +134,7 @@ async function eliminarEvolucion(evolucion) {
     if (evolucionSeleccionada.value?.id === evolucion.id) {
       evolucionSeleccionada.value = null
     }
+
     if (evolucionEditar.value?.id === evolucion.id) {
       cerrarFormulario()
     }
@@ -128,7 +142,10 @@ async function eliminarEvolucion(evolucion) {
     await cargarEvoluciones()
   } catch (err) {
     console.error(err)
-    error.value = mensajeDeError(err, 'No se pudo eliminar la evolución.')
+    error.value = mensajeDeError(
+      err,
+      'No se pudo eliminar la evolución.'
+    )
   }
 }
 
@@ -154,7 +171,11 @@ onMounted(cargarDatos)
       <div class="encabezado">
         <h2>Registro de evoluciones</h2>
 
-        <button type="button" @click="alternarFormulario">
+        <button
+          type="button"
+          :disabled="guardando"
+          @click="alternarFormulario"
+        >
           {{ mostrarFormulario ? 'Cancelar' : '+ Nueva evolución' }}
         </button>
       </div>
@@ -167,9 +188,13 @@ onMounted(cargarDatos)
         @guardar="guardarEvolucion"
       />
 
-      <p v-if="cargando" class="mensaje">Cargando evoluciones...</p>
+      <p v-if="cargando" class="mensaje">
+        Cargando evoluciones...
+      </p>
 
-      <p v-else-if="error" class="error">{{ error }}</p>
+      <p v-else-if="error" class="error">
+        {{ error }}
+      </p>
 
       <EvolucionesMedicasLista
         v-else
@@ -186,7 +211,9 @@ onMounted(cargarDatos)
         <div class="detalle-encabezado">
           <h2>Detalle de evolución médica</h2>
 
-          <button type="button" @click="cerrarDetalle">Cerrar</button>
+          <button type="button" @click="cerrarDetalle">
+            Cerrar
+          </button>
         </div>
 
         <p>
@@ -263,6 +290,21 @@ h2 {
   color: var(--color-neutral-900);
 }
 
+button {
+  padding: 10px 18px;
+  background: var(--color-brand-700);
+  color: white;
+  border: none;
+  border-radius: var(--radius-control);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .mensaje {
   margin-top: 25px;
   color: var(--color-neutral-600);
@@ -270,7 +312,7 @@ h2 {
 
 .error {
   margin-top: 25px;
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 .detalle-evolucion {

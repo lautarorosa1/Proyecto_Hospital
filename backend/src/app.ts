@@ -28,6 +28,19 @@ export function createApp() {
   app.use('/profesionales', container.horarioModule.routes);
   app.use('/turnos', container.turnoModule.routes);
   app.use('/guardia', container.guardiaModule.routes);
+  app.use('/alergias', container.historiaClinicaModule.routes);
+  app.use(
+  '/antecedentes-familiares',
+  container.historiaClinicaModule.antecedenteFamiliarRoutes
+);
+app.use(
+  '/evoluciones-medicas',
+  container.historiaClinicaModule.evolucionMedicaRoutes
+);
+app.use(
+  '/estudios-medicos',
+  container.historiaClinicaModule.estudioMedicoRoutes
+);
 
   // Admisión confirma el traslado a internación (publica PACIENTE_INGRESADO)
   app.use('/ingresos-internacion', container.ingresoInternacionModule.routes);

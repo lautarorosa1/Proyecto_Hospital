@@ -1,47 +1,88 @@
 
-
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
-import EvolucionMedicaForm from '../components/EvolucionMedicaForm.vue'
 
+import {
+  obtenerEvolucionesPorPaciente,
+  crearEvolucion,
+  actualizarEvolucion,
+  eliminarEvolucionPorId
+} from '../services/historiaClinicaService'
+
+import EvolucionMedicaForm from '../components/EvolucionMedicaForm.vue'
 import EvolucionesMedicasLista from '../components/EvolucionesMedicasLista.vue'
 
-
 const route = useRoute()
-const pacienteId = route.params.id
+const pacienteId = Number(route.params.id)
 
+const evoluciones = ref([])
+const cargando = ref(true)
+const error = ref('')
+const errorFormulario = ref('')
+const guardando = ref(false)
 const mostrarFormulario = ref(false)
-
 const evolucionEditar = ref(null)
+const evolucionSeleccionada = ref(null)
+
+function mensajeDeError(err, porDefecto) {
+  return (
+    err.response?.data?.error ||
+    err.response?.data?.message ||
+    porDefecto
+  )
+}
+
+function formatearFecha(fecha) {
+  if (!fecha) return '-'
+
+  const partes = fecha.split('-')
+
+  return partes.length === 3
+    ? `${partes[2]}/${partes[1]}/${partes[0]}`
+    : fecha
+}
+
+async function cargarEvoluciones() {
+  const respuesta = await obtenerEvolucionesPorPaciente(pacienteId)
+  evoluciones.value = respuesta.data
+}
+
+async function cargarDatos() {
+  try {
+    await cargarEvoluciones()
+  } catch (err) {
+    console.error(err)
+    error.value = mensajeDeError(
+      err,
+      'No se pudieron cargar las evoluciones.'
+    )
+  } finally {
+    cargando.value = false
+  }
+}
+
+function cerrarFormulario() {
+  mostrarFormulario.value = false
+  evolucionEditar.value = null
+  errorFormulario.value = ''
+}
+
+function alternarFormulario() {
+  if (mostrarFormulario.value) {
+    cerrarFormulario()
+  } else {
+    evolucionEditar.value = null
+    errorFormulario.value = ''
+    mostrarFormulario.value = true
+  }
+}
 
 function editarEvolucion(evolucion) {
   evolucionEditar.value = { ...evolucion }
+  errorFormulario.value = ''
   mostrarFormulario.value = true
 }
-
-function eliminarEvolucion(evolucion) {
-  const confirmar = window.confirm(
-    `¿Estás seguro de eliminar la evolución "${evolucion.motivoConsulta}"?`
-  )
-
-  if (!confirmar) return
-
-  evolucionesPrueba.value = evolucionesPrueba.value.filter(
-    item => item.id !== evolucion.id
-  )
-
-  if (evolucionSeleccionada.value?.id === evolucion.id) {
-    evolucionSeleccionada.value = null
-  }
-
-  if (evolucionEditar.value?.id === evolucion.id) {
-    evolucionEditar.value = null
-    mostrarFormulario.value = false
-  }
-}
-
-const evolucionSeleccionada = ref(null)
 
 function verDetalleEvolucion(evolucion) {
   evolucionSeleccionada.value = evolucion
@@ -51,45 +92,65 @@ function cerrarDetalle() {
   evolucionSeleccionada.value = null
 }
 
+async function guardarEvolucion(datos) {
+  guardando.value = true
+  errorFormulario.value = ''
 
-const evolucionesPrueba = ref([
-  {
-    id: 1,
-    fecha: '2026-11-03',
-    motivoConsulta: 'Control general',
-    observaciones: 'Paciente estable, sin molestias actuales.',
-    indicaciones: 'Continuar con controles periódicos.'
-  },
-  {
-    id: 2,
-    fecha: '2026-11-02',
-    motivoConsulta: 'Dolor de cabeza',
-    observaciones: 'Paciente refiere cefalea leve.',
-    indicaciones: 'Seguimiento de síntomas.'
-  },
-  {
-    id: 3,
-    fecha: '2026-11-01',
-    motivoConsulta: 'Consulta de seguimiento',
-    observaciones: 'Evolución favorable respecto al control anterior.',
-    indicaciones: ''
-  }
-])
+  try {
+    if (evolucionEditar.value) {
+      const id = evolucionEditar.value.id
+      await actualizarEvolucion(id, datos)
 
+      if (evolucionSeleccionada.value?.id === id) {
+        evolucionSeleccionada.value = null
+      }
+    } else {
+      await crearEvolucion({ ...datos, pacienteId })
+    }
 
-
-function alternarFormulario() {
-  if (mostrarFormulario.value) {
-    mostrarFormulario.value = false
-    evolucionEditar.value = null
-  } else {
-    evolucionEditar.value = null
-    mostrarFormulario.value = true
+    await cargarEvoluciones()
+    cerrarFormulario()
+  } catch (err) {
+    console.error(err)
+    errorFormulario.value = mensajeDeError(
+      err,
+      'No se pudo guardar la evolución.'
+    )
+  } finally {
+    guardando.value = false
   }
 }
 
-</script>
+async function eliminarEvolucion(evolucion) {
+  const confirmar = window.confirm(
+    `¿Estás seguro de eliminar la evolución "${evolucion.motivoConsulta}"?`
+  )
 
+  if (!confirmar) return
+
+  try {
+    await eliminarEvolucionPorId(evolucion.id)
+
+    if (evolucionSeleccionada.value?.id === evolucion.id) {
+      evolucionSeleccionada.value = null
+    }
+
+    if (evolucionEditar.value?.id === evolucion.id) {
+      cerrarFormulario()
+    }
+
+    await cargarEvoluciones()
+  } catch (err) {
+    console.error(err)
+    error.value = mensajeDeError(
+      err,
+      'No se pudo eliminar la evolución.'
+    )
+  }
+}
+
+onMounted(cargarDatos)
+</script>
 
 <template>
   <main class="evoluciones-container">
@@ -103,92 +164,78 @@ function alternarFormulario() {
     <h1>Evoluciones Médicas</h1>
 
     <p class="descripcion">
-      En esta sección se podrán consultar y registrar
-      las evoluciones médicas del paciente.
+      Consulta y registro de las evoluciones médicas del paciente.
     </p>
 
     <section class="contenido">
       <div class="encabezado">
         <h2>Registro de evoluciones</h2>
 
-        
-     <button
-       type="button"
-      @click="alternarFormulario"
-     >
-      {{ mostrarFormulario ? 'Cancelar' : '+ Nueva evolución' }}
-    </button>
-
+        <button
+          type="button"
+          :disabled="guardando"
+          @click="alternarFormulario"
+        >
+          {{ mostrarFormulario ? 'Cancelar' : '+ Nueva evolución' }}
+        </button>
       </div>
 
-      <p class="mensaje">
-        El registro de evoluciones médicas todavía
-        no está habilitado.
+      <EvolucionMedicaForm
+        v-if="mostrarFormulario"
+        :evolucion="evolucionEditar"
+        :guardando="guardando"
+        :error="errorFormulario"
+        @guardar="guardarEvolucion"
+      />
+
+      <p v-if="cargando" class="mensaje">
+        Cargando evoluciones...
       </p>
-      
-    
-<EvolucionMedicaForm
-  v-if="mostrarFormulario"
-  :evolucion="evolucionEditar"
-/>
 
-     
-    <p class="mensaje">
-        Datos ficticios utilizados para probar el listado.
-    </p>
+      <p v-else-if="error" class="error">
+        {{ error }}
+      </p>
 
-    
+      <EvolucionesMedicasLista
+        v-else
+        :evoluciones="evoluciones"
+        @ver-detalle="verDetalleEvolucion"
+        @editar="editarEvolucion"
+        @eliminar="eliminarEvolucion"
+      />
 
-<EvolucionesMedicasLista
-  :evoluciones="evolucionesPrueba"
-  @ver-detalle="verDetalleEvolucion"
-  @editar="editarEvolucion"
-  @eliminar="eliminarEvolucion"
-/>
+      <section
+        v-if="evolucionSeleccionada"
+        class="detalle-evolucion"
+      >
+        <div class="detalle-encabezado">
+          <h2>Detalle de evolución médica</h2>
 
+          <button type="button" @click="cerrarDetalle">
+            Cerrar
+          </button>
+        </div>
 
-     
-<section
-  v-if="evolucionSeleccionada"
-  class="detalle-evolucion"
->
-  <div class="detalle-encabezado">
-    <h2>Detalle de evolución médica</h2>
+        <p>
+          <strong>Fecha:</strong>
+          {{ formatearFecha(evolucionSeleccionada.fecha) }}
+        </p>
 
-    <button
-      type="button"
-      @click="cerrarDetalle"
-    >
-      Cerrar
-    </button>
-  </div>
+        <p>
+          <strong>Motivo de consulta:</strong>
+          {{ evolucionSeleccionada.motivoConsulta }}
+        </p>
 
-  <p>
-    <strong>Fecha:</strong>
-    {{ evolucionSeleccionada.fecha }}
-  </p>
+        <p>
+          <strong>Observaciones:</strong>
+          {{ evolucionSeleccionada.observaciones }}
+        </p>
 
-  <p>
-    <strong>Motivo de consulta:</strong>
-    {{ evolucionSeleccionada.motivoConsulta }}
-  </p>
-
-  <p>
-    <strong>Observaciones:</strong>
-    {{ evolucionSeleccionada.observaciones }}
-  </p>
-
-  <p>
-    <strong>Indicaciones:</strong>
-    {{ evolucionSeleccionada.indicaciones || 'Sin indicaciones' }}
-  </p>
-
-  <p class="aviso-prueba">
-    Datos ficticios utilizados únicamente para pruebas.
-  </p>
-</section>
-
-
+        <p>
+          <strong>Indicaciones:</strong>
+          {{ evolucionSeleccionada.indicaciones || 'Sin indicaciones' }}
+        </p>
+      </section>
     </section>
   </main>
 </template>
@@ -243,9 +290,29 @@ h2 {
   color: var(--color-neutral-900);
 }
 
+button {
+  padding: 10px 18px;
+  background: var(--color-brand-700);
+  color: white;
+  border: none;
+  border-radius: var(--radius-control);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .mensaje {
   margin-top: 25px;
   color: var(--color-neutral-600);
+}
+
+.error {
+  margin-top: 25px;
+  color: var(--color-danger);
 }
 
 .detalle-evolucion {
@@ -268,13 +335,4 @@ h2 {
   margin-bottom: 12px;
   color: var(--color-neutral-700);
 }
-
-.aviso-prueba {
-  margin-top: 20px;
-  padding: 12px;
-  background: var(--color-warning-bg);
-  color: var(--color-warning) !important;
-  border-radius: var(--radius-control);
-}
-
 </style>

@@ -14,5 +14,7 @@ export function createAlergiaRoutes(
 
   router.put('/:id', alergiaController.update);
 
+  router.delete('/:id', alergiaController.delete);
+  
   return router;
 }

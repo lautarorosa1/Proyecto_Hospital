@@ -98,4 +98,16 @@ export class AlergiaController {
       next(err);
     }
   };
+  delete = async (
+  req: Request<IdParams>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    await this.alergiaService.eliminar(this.parseId(req.params.id));
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+};
 }

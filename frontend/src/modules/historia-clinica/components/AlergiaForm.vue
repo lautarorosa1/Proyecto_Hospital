@@ -1,15 +1,13 @@
 
-
 <script setup>
 import { reactive, ref, watch } from 'vue'
 
-const emit = defineEmits(['guardar'])
+const emit = defineEmits(['guardar', 'cancelar'])
 
 const props = defineProps({
-  alergia: {
-    type: Object,
-    default: null
-  }
+  alergia: { type: Object, default: null },
+  guardando: { type: Boolean, default: false },
+  error: { type: String, default: '' }
 })
 
 const formulario = reactive({
@@ -57,18 +55,19 @@ function validarFormulario() {
     return
   }
 
-  
-emit('guardar', { alergeno, reaccion, severidad: formulario.severidad })
-
+  emit('guardar', {
+    alergeno,
+    reaccion,
+    severidad: formulario.severidad
+  })
 }
 </script>
-
 
 <template>
   <form class="formulario" @submit.prevent="validarFormulario">
     <h2>
-  {{ alergia ? 'Editar alergia' : 'Registrar nueva alergia' }}
-</h2>
+      {{ alergia ? 'Editar alergia' : 'Registrar nueva alergia' }}
+    </h2>
 
     <div class="campo">
       <label for="alergeno">Alérgeno</label>
@@ -103,8 +102,11 @@ emit('guardar', { alergeno, reaccion, severidad: formulario.severidad })
     </div>
 
     <p v-if="mensaje" class="mensaje">{{ mensaje }}</p>
+    <p v-if="error" class="mensaje">{{ error }}</p>
 
-    <button type="submit">Validar formulario</button>
+    <button type="submit" :disabled="guardando">
+      {{ guardando ? 'Guardando...' : 'Guardar' }}
+    </button>
   </form>
 </template>
 

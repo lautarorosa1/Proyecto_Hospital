@@ -196,7 +196,7 @@ function eliminarEstudio(estudio) {
 .volver {
   display: inline-block;
   margin-bottom: 20px;
-  color: #2563eb;
+  color: var(--color-brand-700);
   text-decoration: none;
   font-weight: 600;
 }
@@ -206,39 +206,39 @@ function eliminarEstudio(estudio) {
 }
 
 h1 {
-  font-size: 30px;
+  font-size: var(--font-heading-1);
   margin-bottom: 12px;
-  color: #1e293b;
+  color: var(--color-neutral-900);
 }
 
 .descripcion {
-  color: #64748b;
+  color: var(--color-neutral-600);
   margin-bottom: 25px;
 }
 
 .contenido {
   background: white;
   padding: 25px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--color-border);
 }
 
 h2 {
-  font-size: 22px;
+  font-size: var(--font-heading-2);
   margin-bottom: 15px;
-  color: #1e293b;
+  color: var(--color-neutral-900);
 }
 
 .mensaje {
-  color: #64748b;
+  color: var(--color-neutral-600);
   margin-bottom: 15px;
 }
 
 .aviso {
   padding: 12px;
-  background: #fef3c7;
-  color: #92400e;
-  border-radius: 8px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border-radius: var(--radius-control);
 }
 
 .encabezado {
@@ -253,26 +253,12 @@ h2 {
   margin-bottom: 0;
 }
 
-.encabezado button {
-  padding: 12px 18px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.encabezado button:hover {
-  background: #1d4ed8;
-}
-
 .detalle-estudio {
   margin-top: 25px;
   padding: 25px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-panel);
 }
 
 .detalle-encabezado {
@@ -287,26 +273,17 @@ h2 {
   margin-bottom: 0;
 }
 
-.detalle-encabezado button {
-  padding: 10px 16px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
 .detalle-estudio p {
   margin-bottom: 12px;
-  color: #334155;
+  color: var(--color-neutral-700);
 }
 
 .aviso-detalle {
   margin-top: 20px;
   padding: 12px;
-  background: #fef3c7;
-  color: #92400e !important;
-  border-radius: 8px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning) !important;
+  border-radius: var(--radius-control);
 }
 
 </style>

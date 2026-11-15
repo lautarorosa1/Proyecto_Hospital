@@ -202,18 +202,18 @@ function eliminarAntecedente(id) {
 .volver {
   display: inline-block;
   margin-bottom: 25px;
-  color: #2563eb;
+  color: var(--color-brand-700);
   text-decoration: none;
   font-weight: 600;
 }
 
 h1 {
-  font-size: 32px;
-  color: #1e293b;
+  font-size: var(--font-heading-1);
+  color: var(--color-neutral-900);
 }
 
 .descripcion {
-  color: #64748b;
+  color: var(--color-neutral-600);
   margin-bottom: 30px;
 }
 
@@ -221,12 +221,12 @@ h1 {
   margin-top: 30px;
   padding: 24px;
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
 }
 
 h2 {
-  color: #334155;
+  color: var(--color-neutral-700);
   margin-bottom: 20px;
 }
 
@@ -237,9 +237,9 @@ h2 {
   gap: 20px;
   padding: 20px;
   margin-bottom: 15px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
 }
 
 .tarjeta h3 {
@@ -250,25 +250,12 @@ h2 {
   margin: 6px 0;
 }
 
-.eliminar {
-  padding: 10px 16px;
-  background: #dc2626;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.eliminar:hover {
-  background: #b91c1c;
-}
-
 .aviso {
   margin-top: 25px;
   padding: 15px;
-  background: #fef3c7;
-  color: #92400e;
-  border-radius: 8px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border-radius: var(--radius-control);
 }
 
 .acciones {
@@ -277,25 +264,12 @@ h2 {
   flex-wrap: wrap;
 }
 
-.detalle-btn {
-  padding: 10px 16px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.detalle-btn:hover {
-  background: #1d4ed8;
-}
-
 .detalle-antecedente {
   margin-top: 25px;
   padding: 24px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 12px;
+  background: var(--color-brand-50);
+  border: 1px solid var(--color-brand-200);
+  border-radius: var(--radius-panel);
 }
 
 .detalle-antecedente p {
@@ -304,28 +278,5 @@ h2 {
 
 .cerrar-btn {
   margin-top: 15px;
-  padding: 10px 16px;
-  background: #475569;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.cerrar-btn:hover {
-  background: #334155;
-}
-
-.editar-btn {
-  padding: 10px 16px;
-  background: #d97706;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.editar-btn:hover {
-  background: #b45309;
 }
 </style>

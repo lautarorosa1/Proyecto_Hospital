@@ -155,15 +155,15 @@ onMounted(cargarPaciente)
 }
 
 h1 {
-  font-size: 28px;
-  font-weight: bold;
+  font-size: var(--font-heading-1);
+  font-weight: 600;
   margin: 25px 0;
 }
 
 .contenido {
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
   padding: 25px;
 }
 
@@ -175,40 +175,26 @@ h1 {
 }
 
 h2 {
-  font-size: 22px;
-  font-weight: bold;
-}
-
-button {
-  background: #2563eb;
-  color: white;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
+  font-size: var(--font-heading-2);
   font-weight: 600;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #1d4ed8;
 }
 
 .mensaje {
   margin-top: 30px;
-  color: #64748b;
+  color: var(--color-neutral-600);
   text-align: center;
 }
 
 .datos-paciente {
-  background: #f1f5f9;
+  background: var(--color-neutral-100);
   padding: 20px;
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
   margin-bottom: 25px;
 }
 
 .datos-paciente h2 {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: var(--font-heading-2);
+  font-weight: 600;
   margin-bottom: 12px;
 }
 
@@ -217,21 +203,16 @@ button:hover {
 }
 
 .error {
-  color: #dc2626;
+  color: var(--color-danger);
   margin-bottom: 20px;
 }
 
-button:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-}
-
 .aviso-prueba {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fcd34d;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   margin-bottom: 20px;
   font-size: 14px;
 }

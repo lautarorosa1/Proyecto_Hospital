@@ -1,36 +1,86 @@
-import { createRouter, createWebHistory } from 'vue-router'
 
-import PacienteListView from '../views/PacienteListView.vue'
-import PacienteCreateView from '../views/PacienteCreateView.vue'
-import PacienteEditView from '../views/PacienteEditView.vue'
-import PacienteDetailView from '../views/PacienteDetailView.vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
+
+import admisionRoutes from '@/modules/admision/routes'
+import historiaClinicaRoutes from '@/modules/historia-clinica/routes'
+import recursosCamasRoutes from '@/modules/recursos-camas/routes'
+import atencionEnfermeriaRoutes from '@/modules/atencion-enfermeria/routes'
+
+import facturacionRoutes from '@/modules/facturacion/routes'
+import consultorioRoutes from '@/modules/consultorio/routes'
+
 
 const routes = [
   {
     path: '/',
-    redirect: '/pacientes'
+    component: () => import('@/shared/views/HomeView.vue')
   },
   {
-    path: '/pacientes',
-    component: PacienteListView
+    path: '/login',
+    component: () => import('@/views/LoginView.vue'),
+    meta: { guestOnly: true }
   },
   {
-    path: '/pacientes/create',
-    component: PacienteCreateView
+    path: '/register',
+    component: () => import('@/views/RegisterView.vue'),
+    meta: { guestOnly: true }
   },
   {
-    path: '/pacientes/:id',
-    component: PacienteDetailView
+    path: '/admin/usuarios',
+    component: () => import('@/views/iam/UsuariosAdminView.vue'),
+    meta: { requiresAuth: true, roles: ['Administrador'] }
   },
   {
-    path: '/pacientes/edit/:id',
-    component: PacienteEditView
+    path: '/admin/roles',
+    component: () => import('@/views/iam/RolesAdminView.vue'),
+    meta: { requiresAuth: true, roles: ['Administrador'] }
+  },
+
+  // Rutas de los módulos
+  ...admisionRoutes,
+  ...historiaClinicaRoutes,
+  ...recursosCamasRoutes,
+  ...atencionEnfermeriaRoutes,
+  ...facturacionRoutes,
+  ...consultorioRoutes,
+
+  // Siempre al final: captura cualquier ruta que no coincida con las anteriores
+  {
+    path: '/:pathMatch(.*)*',
+    component: () => import('@/shared/views/NotFoundView.vue')
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+router.beforeEach((to) => {
+  const authStore = useAuthStore()
+
+  if (to.meta.guestOnly) {
+    return authStore.isAuthenticated ? { path: '/' } : true
+  }
+
+  if (!authStore.isAuthenticated) {
+    return { path: '/login', query: { redirect: to.fullPath } }
+  }
+
+  if (!authStore.puedeAcceder(to.path)) {
+    return { path: '/', query: { forbidden: '1' } }
+  }
+
+  if (
+    Array.isArray(to.meta.roles) &&
+    to.meta.roles.length > 0 &&
+    !authStore.hasRole(...to.meta.roles)
+  ) {
+    return { path: '/', query: { forbidden: '1' } }
+  }
+
+  return true
 })
 
 export default router

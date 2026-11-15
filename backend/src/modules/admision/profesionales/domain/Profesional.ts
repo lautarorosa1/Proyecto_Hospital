@@ -1,0 +1,44 @@
+export const TIPOS_PROFESIONAL = [
+  'medico',
+  'enfermero',
+  'kinesiologo',
+  'psicologo',
+  'bioquimico',
+  'odontologo',
+  'otro',
+] as const;
+
+export const ESTADOS_PROFESIONAL = ['activo', 'inactivo', 'licencia'] as const;
+
+// Duración de los turnos de un profesional, en minutos (la define cada profesional)
+export const DURACION_TURNO_MIN = 5;
+export const DURACION_TURNO_MAX = 240;
+export const DURACION_TURNO_DEFAULT = 30;
+
+export type TipoProfesional = (typeof TIPOS_PROFESIONAL)[number];
+export type EstadoProfesional = (typeof ESTADOS_PROFESIONAL)[number];
+
+export function esTipoProfesional(valor: string): valor is TipoProfesional {
+  return (TIPOS_PROFESIONAL as readonly string[]).includes(valor);
+}
+
+export function esEstadoProfesional(valor: string): valor is EstadoProfesional {
+  return (ESTADOS_PROFESIONAL as readonly string[]).includes(valor);
+}
+
+export interface Profesional {
+  id: number;
+  /** Usuario del sistema (IAM, uuid) con el que el profesional inicia sesión; opcional. */
+  usuarioId: string | null;
+
+  nombre: string;
+  apellido: string;
+  dni: string;
+  email: string;
+  telefono?: string;
+
+  matricula: string;
+  tipoProfesional: TipoProfesional;
+  duracionTurnoMin: number;
+  estado: EstadoProfesional;
+}

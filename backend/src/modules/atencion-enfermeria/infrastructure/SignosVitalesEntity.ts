@@ -45,4 +45,7 @@ export class SignosVitalesEntity {
 
   @Column({ type: 'text', nullable: true })
   observaciones?: string;
+
+  @Column({ type: 'boolean', default: false })
+  alerta!: boolean;
 }

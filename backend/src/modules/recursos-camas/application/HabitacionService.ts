@@ -1,6 +1,6 @@
 import { IHabitacionService } from './IHabitacionService';
 import { IHabitacionRepository } from '../domain/IHabitacionRepository';
-import { Habitacion } from '../domain/Habitacion';
+import { Habitacion, TIPOS_HABITACION, esTipoHabitacion } from '../domain/Habitacion';
 import { CreateHabitacionDto } from './dtos/CreateHabitacionDto';
 import { UpdateHabitacionDto } from './dtos/UpdateHabitacionDto';
 import { ResponseHabitacionDto } from './dtos/ResponseHabitacionDto';
@@ -17,7 +17,15 @@ export class HabitacionService implements IHabitacionService {
       numero: habitacion.numero,
       piso: habitacion.piso,
       sector: habitacion.sector,
+      tipo: habitacion.tipo ?? 'INTERNACION',
     };
+  }
+
+  private exigirTipo(valor: unknown) {
+    if (!esTipoHabitacion(valor)) {
+      throw new BadRequestError(`El tipo debe ser ${TIPOS_HABITACION.join(' o ')}`);
+    }
+    return valor;
   }
 
   private exigirTexto(valor: unknown, campo: string): string {
@@ -43,6 +51,7 @@ export class HabitacionService implements IHabitacionService {
       numero: this.exigirTexto(dto?.numero, 'número'),
       piso: this.exigirTexto(dto?.piso, 'piso'),
       sector: this.exigirTexto(dto?.sector, 'sector'),
+      tipo: dto?.tipo === undefined ? 'INTERNACION' : this.exigirTipo(dto.tipo),
     };
     const habitacion = await this.habitacionRepository.create(data);
     return this.toDto(habitacion);
@@ -56,6 +65,7 @@ export class HabitacionService implements IHabitacionService {
     if (dto?.numero !== undefined) changes.numero = this.exigirTexto(dto.numero, 'número');
     if (dto?.piso !== undefined) changes.piso = this.exigirTexto(dto.piso, 'piso');
     if (dto?.sector !== undefined) changes.sector = this.exigirTexto(dto.sector, 'sector');
+    if (dto?.tipo !== undefined) changes.tipo = this.exigirTipo(dto.tipo);
 
     const actualizada = await this.habitacionRepository.update(id, changes);
     if (!actualizada) throw new NotFoundError('Habitación no encontrada');

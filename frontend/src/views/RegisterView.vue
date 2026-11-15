@@ -145,7 +145,7 @@ const handleRegister = async () => {
     })
 
     if (data?.token) {
-      router.push('/pacientes')
+      router.push('/')
     } else {
       router.push('/login')
     }

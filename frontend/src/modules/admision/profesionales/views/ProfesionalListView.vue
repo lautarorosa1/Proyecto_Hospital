@@ -15,7 +15,7 @@
         </router-link>
       </div>
 
-      <div class="mb-6 grid gap-3 sm:grid-cols-3">
+      <div class="mb-6 grid gap-3 sm:grid-cols-2">
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-medium text-gray-500">Estado</label>
           <select v-model="filtros.estado" :class="inputClass" @change="cargarProfesionales">
@@ -35,19 +35,6 @@
             </option>
           </select>
         </div>
-
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-gray-500">ID de especialidad</label>
-          <input
-            v-model.number="filtros.especialidadId"
-            type="number"
-            min="1"
-            step="1"
-            placeholder="Todas"
-            :class="inputClass"
-            @change="cargarProfesionales"
-          />
-        </div>
       </div>
 
       <div class="overflow-x-auto">
@@ -59,7 +46,6 @@
               <th class="px-4 py-3 font-medium">Apellido</th>
               <th class="px-4 py-3 font-medium">Matrícula</th>
               <th class="px-4 py-3 font-medium">Tipo</th>
-              <th class="px-4 py-3 font-medium">Especialidad</th>
               <th class="px-4 py-3 font-medium">Estado</th>
               <th class="px-4 py-3 font-medium">Acciones</th>
             </tr>
@@ -76,7 +62,6 @@
               <td class="px-4 py-3">{{ profesional.apellido }}</td>
               <td class="px-4 py-3">{{ profesional.matricula }}</td>
               <td class="px-4 py-3">{{ etiquetaTipo(profesional.tipoProfesional) }}</td>
-              <td class="px-4 py-3">{{ profesional.especialidadId }}</td>
               <td class="px-4 py-3">
                 <span
                   class="rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
@@ -164,10 +149,10 @@ const profesionales = ref([])
 const errorLista = ref('')
 const errorAccion = ref('')
 
-const filtros = reactive({ estado: '', tipoProfesional: '', especialidadId: '' })
+const filtros = reactive({ estado: '', tipoProfesional: '' })
 
 const hayFiltros = computed(
-  () => filtros.estado !== '' || filtros.tipoProfesional !== '' || filtros.especialidadId !== ''
+  () => filtros.estado !== '' || filtros.tipoProfesional !== ''
 )
 
 const cargarProfesionales = async () => {
@@ -177,7 +162,6 @@ const cargarProfesionales = async () => {
   const params = {}
   if (filtros.estado) params.estado = filtros.estado
   if (filtros.tipoProfesional) params.tipoProfesional = filtros.tipoProfesional
-  if (filtros.especialidadId !== '') params.especialidadId = filtros.especialidadId
 
   try {
     const response = await getProfesionales(params)

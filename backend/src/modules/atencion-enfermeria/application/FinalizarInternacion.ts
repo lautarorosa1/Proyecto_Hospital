@@ -1,12 +1,14 @@
 import type { Internacion } from '../domain/Internaciones';
 import type { IInternacionRepository } from '../domain/InternacionRepository';
+import type { IEventosEnfermeria } from '../domain/IEventosEnfermeria';
 
 export class FinalizarInternacion {
   constructor(
-    private readonly repositorio: IInternacionRepository
+    private readonly repositorio: IInternacionRepository,
+    private readonly eventos?: IEventosEnfermeria
   ) {}
 
-  async ejecutar(id: number): Promise<Internacion> {
+  async ejecutar(id: number, usuarioId?: number): Promise<Internacion> {
     const internacion = await this.repositorio.findById(id);
 
     if (!internacion) {
@@ -27,6 +29,15 @@ export class FinalizarInternacion {
     if (!internacionActualizada) {
       throw new Error('No se pudo finalizar la internación.');
     }
+
+    // Alta médica: Recursos y Camas pasa la cama a "En limpieza" y la bloquea.
+    this.eventos?.pacienteDadoDeAlta({
+      pacienteId: internacionActualizada.pacienteId,
+      internacionId: internacionActualizada.id,
+      camaId: internacionActualizada.camaId ?? internacion.camaId,
+      usuarioId,
+      timestamp: new Date(),
+    });
 
     return internacionActualizada;
   }

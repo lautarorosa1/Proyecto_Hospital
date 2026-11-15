@@ -223,7 +223,7 @@ onMounted(cargarDatos)
 .volver {
   display: inline-block;
   margin-bottom: 20px;
-  color: #2563eb;
+  color: var(--color-brand-700);
   text-decoration: none;
   font-weight: 600;
 }
@@ -233,21 +233,21 @@ onMounted(cargarDatos)
 }
 
 h1 {
-  font-size: 30px;
+  font-size: var(--font-heading-1);
   margin-bottom: 15px;
-  color: #1e293b;
+  color: var(--color-neutral-900);
 }
 
 .descripcion {
-  color: #64748b;
+  color: var(--color-neutral-600);
   margin-bottom: 30px;
 }
 
 .contenido {
   background: white;
   padding: 25px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--color-border);
 }
 
 .encabezado {
@@ -259,28 +259,13 @@ h1 {
 }
 
 h2 {
-  font-size: 20px;
-  color: #1e293b;
-}
-
-button {
-  padding: 10px 18px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  font-size: var(--font-heading-2);
+  color: var(--color-neutral-900);
 }
 
 .mensaje {
   margin-top: 25px;
-  color: #64748b;
+  color: var(--color-neutral-600);
 }
 
 .error {
@@ -291,9 +276,9 @@ button:disabled {
 .detalle-evolucion {
   margin-top: 25px;
   padding: 25px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-panel);
 }
 
 .detalle-encabezado {
@@ -306,6 +291,6 @@ button:disabled {
 
 .detalle-evolucion p {
   margin-bottom: 12px;
-  color: #334155;
+  color: var(--color-neutral-700);
 }
 </style>

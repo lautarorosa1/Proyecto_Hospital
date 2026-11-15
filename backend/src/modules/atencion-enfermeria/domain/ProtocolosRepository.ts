@@ -8,6 +8,8 @@ export interface IProtocoloRepository {
 
   findAll(): Promise<Protocolo[]>;
 
+  findByInternacionId(internacionId: number): Promise<Protocolo[]>;
+
   update(
     id: number,
     datos: Partial<Omit<Protocolo, 'id'>>

@@ -30,7 +30,7 @@
 <script setup>
 const opciones = [
   { titulo: 'Habitaciones', descripcion: 'Alta y listado de habitaciones', ruta: '/habitaciones' },
-  { titulo: 'Insumos', descripcion: 'Stock e ingresos', ruta: '/insumos' },
+  { titulo: 'Insumos', descripcion: 'Stock y edición de inventario', ruta: '/insumos' },
   { titulo: 'Camas', descripcion: 'Mapa, asignación y estados', ruta: '/camas' }
 ]
 </script>

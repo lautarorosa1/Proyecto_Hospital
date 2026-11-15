@@ -2,6 +2,29 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import authService from '@/services/authService'
 
+const ROLES_POR_RUTA = [
+  { ruta: '/admin', roles: [] },
+  { ruta: '/pacientes/create', roles: ['Recepcionista', 'Administrativo'] },
+  { ruta: '/pacientes/edit', roles: ['Recepcionista', 'Administrativo'] },
+  { ruta: '/pacientes', roles: ['Médico', 'Enfermero', 'Recepcionista', 'Administrativo'] },
+  { ruta: '/profesionales/create', roles: ['Administrativo'] },
+  { ruta: '/profesionales/edit', roles: ['Administrativo'] },
+  { ruta: '/profesionales', roles: ['Médico', 'Enfermero', 'Recepcionista', 'Administrativo'] },
+  { ruta: '/turnos/generar', roles: ['Recepcionista'] },
+  { ruta: '/turnos', roles: ['Médico', 'Recepcionista', 'Administrativo'] },
+  { ruta: '/guardia', roles: ['Médico', 'Enfermero', 'Recepcionista'] },
+  { ruta: '/admision', roles: ['Médico', 'Enfermero', 'Recepcionista', 'Administrativo'] },
+  { ruta: '/historia-clinica', roles: ['Médico', 'Enfermero'] },
+  { ruta: '/atencion-enfermeria', roles: ['Médico', 'Enfermero'] },
+  { ruta: '/camas/create', roles: ['Administrativo'] },
+  { ruta: '/camas', roles: ['Médico', 'Enfermero', 'Recepcionista', 'Administrativo', 'Maestranza'] },
+  { ruta: '/habitaciones/create', roles: ['Administrativo'] },
+  { ruta: '/habitaciones/edit', roles: ['Administrativo'] },
+  { ruta: '/habitaciones', roles: ['Administrativo', 'Maestranza'] },
+  { ruta: '/insumos', roles: ['Médico', 'Enfermero', 'Administrativo'] },
+  { ruta: '/recursos-camas', roles: ['Médico', 'Enfermero', 'Recepcionista', 'Administrativo', 'Maestranza'] }
+]
+
 function parseStoredUser() {
   const raw = localStorage.getItem('usuario')
   if (!raw) return null
@@ -30,6 +53,12 @@ export const useAuthStore = defineStore('auth', () => {
   function hasPermission(permiso) {
     if (!usuario.value || !Array.isArray(usuario.value.permisos)) return false
     return usuario.value.permisos.includes(permiso)
+  }
+
+  function puedeAcceder(path) {
+    const regla = ROLES_POR_RUTA.find((r) => path === r.ruta || path.startsWith(`${r.ruta}/`))
+    if (!regla) return true
+    return hasRole('Administrador', ...regla.roles)
   }
 
   function setSession(newToken, newUsuario) {
@@ -108,6 +137,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     hasRole,
     hasPermission,
+    puedeAcceder,
     login,
     register,
     logout,

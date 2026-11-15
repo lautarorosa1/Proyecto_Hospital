@@ -24,7 +24,7 @@ export default [
     component: () => import('./insumos/views/InsumoCreateView.vue')
   },
   {
-    path: '/insumos/:id/ingresos',
+    path: '/insumos/:id/editar-stock',
     component: () => import('./insumos/views/InsumoIngresoView.vue')
   },
   {

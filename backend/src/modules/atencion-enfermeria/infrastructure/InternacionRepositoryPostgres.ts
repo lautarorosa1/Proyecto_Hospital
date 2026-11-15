@@ -23,6 +23,8 @@ export class InternacionRepositoryPostgres
       motivoIngreso: datos.motivoIngreso,
       estado: datos.estado,
       observaciones: datos.observaciones,
+      tipoIngreso: datos.tipoIngreso ?? 'GENERAL',
+      camaId: datos.camaId ?? null,
     });
 
     const guardada = await this.repository.save(internacion);
@@ -35,6 +37,8 @@ export class InternacionRepositoryPostgres
       motivoIngreso: guardada.motivoIngreso,
       estado: guardada.estado,
       observaciones: guardada.observaciones,
+      tipoIngreso: guardada.tipoIngreso,
+      camaId: guardada.camaId ?? undefined,
     };
   }
 
@@ -108,6 +112,14 @@ export class InternacionRepositoryPostgres
       internacion.observaciones = datos.observaciones;
     }
 
+    if (datos.tipoIngreso !== undefined) {
+      internacion.tipoIngreso = datos.tipoIngreso;
+    }
+
+    if (datos.camaId !== undefined) {
+      internacion.camaId = datos.camaId;
+    }
+
     await this.repository.save(internacion);
 
     const actualizada = await this.repository.findOne({
@@ -130,6 +142,8 @@ export class InternacionRepositoryPostgres
       motivoIngreso: internacion.motivoIngreso,
       estado: internacion.estado,
       observaciones: internacion.observaciones,
+      tipoIngreso: internacion.tipoIngreso,
+      camaId: internacion.camaId ?? undefined,
     };
   }
 }

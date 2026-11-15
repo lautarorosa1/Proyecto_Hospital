@@ -51,6 +51,14 @@ onMounted(cargarPaciente)
 
       <section class="modulos">
 
+        <!-- Línea de tiempo: ingresos, signos vitales, medicación y altas -->
+        <RouterLink
+          :to="`/historia-clinica/${route.params.id}/linea-tiempo`"
+          class="tarjeta tarjeta-enlace"
+        >
+          Línea de tiempo clínica
+        </RouterLink>
+
         <!-- Alergias -->
         <RouterLink
           :to="`/historia-clinica/${route.params.id}/alergias`"
@@ -96,20 +104,20 @@ onMounted(cargarPaciente)
 }
 
 h1 {
-  font-size: 28px;
-  font-weight: bold;
+  font-size: var(--font-heading-1);
+  font-weight: 600;
   margin: 25px 0;
 }
 
 .paciente {
-  background: #f1f5f9;
+  background: var(--color-neutral-100);
   padding: 20px;
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
 }
 
 .paciente h2 {
-  font-size: 22px;
-  font-weight: bold;
+  font-size: var(--font-heading-2);
+  font-weight: 600;
 }
 
 .modulos {
@@ -122,8 +130,8 @@ h1 {
 .tarjeta {
   padding: 25px;
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
   font-weight: 600;
 }
 
@@ -136,7 +144,7 @@ h1 {
 }
 
 .tarjeta-enlace:hover {
-  background: #eff6ff;
-  border-color: #2563eb;
+  background: var(--color-brand-50);
+  border-color: var(--color-brand-700);
 }
 </style>

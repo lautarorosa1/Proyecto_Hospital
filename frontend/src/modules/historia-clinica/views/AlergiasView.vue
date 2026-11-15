@@ -1,118 +1,94 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
+import { obtenerPacientePorId } from '../services/historiaClinicaService'
 import {
-  obtenerPacientePorId,
-  obtenerAlergiasPorPaciente,
-  crearAlergia,
-  actualizarAlergia,
-  eliminarAlergiaPorId
-} from '../services/historiaClinicaService'
+  listarAlergiasPorPaciente,
+  registrarAlergia,
+  actualizarAlergia
+} from '../services/alergiaService'
+import { mensajeError } from '@/shared/utils/formato'
 import AlergiaForm from '../components/AlergiaForm.vue'
 import AlergiasLista from '../components/AlergiasLista.vue'
 
 const route = useRoute()
-const pacienteId = Number(route.params.id)
+const pacienteId = route.params.id
 
 const paciente = ref(null)
 const alergias = ref([])
 const cargando = ref(true)
 const error = ref('')
-const errorFormulario = ref('')
-const guardando = ref(false)
+const mensaje = ref('')
+
 const mostrarFormulario = ref(false)
 const alergiaSeleccionada = ref(null)
 
-function mensajeDeError(err, porDefecto) {
-  return (
-    err.response?.data?.error ||
-    err.response?.data?.message ||
-    porDefecto
-  )
+function editarAlergia(alergia) {
+  alergiaSeleccionada.value = { ...alergia }
+  mostrarFormulario.value = true
+}
+
+// El backend conserva las alergias como parte de la historia clínica: no hay baja.
+function eliminarAlergia() {
+  mensaje.value = ''
+  error.value =
+    'Las alergias no se eliminan de la historia clínica. Si hubo un error, editá el registro.'
 }
 
 async function cargarAlergias() {
-  const respuesta = await obtenerAlergiasPorPaciente(pacienteId)
-  alergias.value = respuesta.data
+  try {
+    alergias.value = await listarAlergiasPorPaciente(pacienteId)
+  } catch (err) {
+    console.error(err)
+    error.value = mensajeError(err, 'No se pudieron cargar las alergias.')
+  }
 }
 
-async function cargarDatos() {
+// Enfermería consulta estas alergias antes de aceptar una medicación
+async function guardarAlergia(datos) {
+  mensaje.value = ''
+  error.value = ''
+
+  try {
+    if (alergiaSeleccionada.value) {
+      await actualizarAlergia(alergiaSeleccionada.value.id, datos)
+      mensaje.value = 'Alergia actualizada correctamente.'
+    } else {
+      await registrarAlergia({ ...datos, pacienteId: Number(pacienteId) })
+      mensaje.value =
+        'Alergia registrada. Enfermería no podrá indicar medicación que la contenga.'
+    }
+
+    mostrarFormulario.value = false
+    alergiaSeleccionada.value = null
+    await cargarAlergias()
+  } catch (err) {
+    console.error(err)
+    error.value = mensajeError(err, 'No se pudo guardar la alergia.')
+  }
+}
+
+async function cargarPaciente() {
   try {
     const respuesta = await obtenerPacientePorId(pacienteId)
     paciente.value = respuesta.data
     await cargarAlergias()
   } catch (err) {
     console.error(err)
-    error.value = mensajeDeError(err, 'No se pudo cargar la información.')
+    error.value = 'No se pudo cargar la información del paciente.'
   } finally {
     cargando.value = false
   }
 }
 
-function cerrarFormulario() {
-  mostrarFormulario.value = false
-  alergiaSeleccionada.value = null
-  errorFormulario.value = ''
-}
-
 function alternarFormulario() {
-  if (mostrarFormulario.value) {
-    cerrarFormulario()
-  } else {
-    alergiaSeleccionada.value = null
-    errorFormulario.value = ''
-    mostrarFormulario.value = true
-  }
+  mensaje.value = ''
+  error.value = ''
+  alergiaSeleccionada.value = null
+  mostrarFormulario.value = !mostrarFormulario.value
 }
 
-function editarAlergia(alergia) {
-  alergiaSeleccionada.value = { ...alergia }
-  errorFormulario.value = ''
-  mostrarFormulario.value = true
-}
-
-async function guardarAlergia(datos) {
-  guardando.value = true
-  errorFormulario.value = ''
-
-  try {
-    if (alergiaSeleccionada.value) {
-      await actualizarAlergia(alergiaSeleccionada.value.id, datos)
-    } else {
-      await crearAlergia({ ...datos, pacienteId })
-    }
-
-    await cargarAlergias()
-    cerrarFormulario()
-  } catch (err) {
-    console.error(err)
-    errorFormulario.value = mensajeDeError(err, 'No se pudo guardar la alergia.')
-  } finally {
-    guardando.value = false
-  }
-}
-
-async function eliminarAlergia(alergia) {
-  const confirmar = window.confirm(
-    `¿Estás seguro de eliminar la alergia a ${alergia.alergeno}?`
-  )
-
-  if (!confirmar) return
-
-  try {
-    await eliminarAlergiaPorId(alergia.id)
-    await cargarAlergias()
-
-    if (alergiaSeleccionada.value?.id === alergia.id) {
-      cerrarFormulario()
-    }
-  } catch (err) {
-    console.error(err)
-    error.value = mensajeDeError(err, 'No se pudo eliminar la alergia.')
-  }
-}
-
-onMounted(cargarDatos)
+onMounted(cargarPaciente)
 </script>
 
 <template>
@@ -122,61 +98,51 @@ onMounted(cargarDatos)
     </RouterLink>
 
     <h1>Alergias del Paciente</h1>
-    
 
-  
-<p v-if="cargando">Cargando paciente...</p>
+    <p v-if="cargando">Cargando paciente...</p>
 
-<p v-else-if="error" class="error">
-  {{ error }}
-</p>
+    <section v-else-if="paciente" class="datos-paciente">
+      <h2>Información del paciente</h2>
+      <p>
+        <strong>Nombre:</strong>
+        {{ paciente.nombre }} {{ paciente.apellido }}
+      </p>
+      <p>
+        <strong>DNI:</strong> {{ paciente.dni }}
+      </p>
+    </section>
 
-<section v-else-if="paciente" class="datos-paciente">
-  <h2>Información del paciente</h2>
+    <p v-if="error" class="error">
+      {{ error }}
+    </p>
 
-  <p>
-    <strong>Nombre:</strong>
-    {{ paciente.nombre }} {{ paciente.apellido }}
-  </p>
-
-  <p>
-    <strong>DNI:</strong> {{ paciente.dni }}
-  </p>
-</section>
-
+    <p v-if="mensaje" class="mensaje">
+      {{ mensaje }}
+    </p>
 
     <section class="contenido">
       <div class="encabezado">
         <h2>Registro de alergias</h2>
-
-       <button
-  type="button"
-  :disabled="!paciente || cargando || !!error"
-  @click="alternarFormulario"
->
- 
-{{ mostrarFormulario
-  ? 'Cancelar'
-  : '+ Nueva alergia'
-}}
-
-</button>
+        <button
+          type="button"
+          :disabled="!paciente || cargando"
+          @click="alternarFormulario"
+        >
+          {{ mostrarFormulario ? 'Cancelar' : '+ Nueva alergia' }}
+        </button>
       </div>
-      
-<AlergiaForm
-  v-if="mostrarFormulario"
-  :alergia="alergiaSeleccionada"
-  :guardando="guardando"
-  :error="errorFormulario"
-  @guardar="guardarAlergia"
-  @cancelar="cerrarFormulario"
-/>
-<AlergiasLista
-  v-if="paciente"
-  :alergias="alergias"
-  @editar="editarAlergia"
-  @eliminar="eliminarAlergia"
-/>
+
+      <AlergiaForm
+        v-if="mostrarFormulario"
+        :alergia="alergiaSeleccionada"
+        @guardar="guardarAlergia"
+      />
+
+      <AlergiasLista
+        :alergias="alergias"
+        @editar="editarAlergia"
+        @eliminar="eliminarAlergia"
+      />
     </section>
   </main>
 </template>
@@ -189,15 +155,15 @@ onMounted(cargarDatos)
 }
 
 h1 {
-  font-size: 28px;
-  font-weight: bold;
+  font-size: var(--font-heading-1);
+  font-weight: 600;
   margin: 25px 0;
 }
 
 .contenido {
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
   padding: 25px;
 }
 
@@ -209,40 +175,26 @@ h1 {
 }
 
 h2 {
-  font-size: 22px;
-  font-weight: bold;
-}
-
-button {
-  background: #2563eb;
-  color: white;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
+  font-size: var(--font-heading-2);
   font-weight: 600;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #1d4ed8;
 }
 
 .mensaje {
   margin-top: 30px;
-  color: #64748b;
+  color: var(--color-neutral-600);
   text-align: center;
 }
 
 .datos-paciente {
-  background: #f1f5f9;
+  background: var(--color-neutral-100);
   padding: 20px;
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
   margin-bottom: 25px;
 }
 
 .datos-paciente h2 {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: var(--font-heading-2);
+  font-weight: 600;
   margin-bottom: 12px;
 }
 
@@ -251,12 +203,18 @@ button:hover {
 }
 
 .error {
-  color: #dc2626;
+  color: var(--color-danger);
   margin-bottom: 20px;
 }
 
-button:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
+.aviso-prueba {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
+  padding: 12px 16px;
+  border-radius: var(--radius-control);
+  margin-bottom: 20px;
+  font-size: 14px;
 }
+
 </style>

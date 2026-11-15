@@ -1,36 +1,26 @@
-import type { EventEmitter } from 'node:events';
+import type { IEventBus } from '../../../../shared/domain/events/IEventBus';
+import {
+  DomainEvents,
+  type AlertaRiesgoVitalPayload,
+} from '../../../../shared/domain/events/DomainEvents';
 import type { IngresoGuardia } from '../domain/IngresoGuardia';
 import type { IGuardiaNotificador } from '../domain/IGuardiaNotificador';
 import type { Paciente } from '../../pacientes/domain/Paciente';
 import { etiquetaDe } from '../domain/NivelTriaje';
 
-export const EVENTO_ALERTA_RIESGO_VITAL = 'guardia.alerta_riesgo_vital';
+/** Alias histórico: el contrato vive ahora en el catálogo de eventos compartido. */
+export type AlertaRiesgoVitalEvento = AlertaRiesgoVitalPayload;
 
-export interface AlertaRiesgoVitalEvento {
-  tipo: 'ALERTA_RIESGO_VITAL';
-  /** El monitor la muestra destacada (pantalla completa / sonido). */
-  severidad: 'critica';
-  ingresoId: number;
-  pacienteId: number;
-  pacienteNombre: string;
-  nivelTriaje: string;
-  etiquetaNivel: string;
-  motivoConsulta: string;
-  ingresadoEn: string; // ISO
-  /** Médicos de guardia disponibles a los que va dirigida la alerta. */
-  medicosDestinatarios: number[];
-}
-
-/** Publica la alerta en el bus interno; los monitores se suscriben (ver AlertasGuardiaStream). */
+/** Publica la alerta en el bus de eventos; los monitores se suscriben (ver AlertasGuardiaStream). */
 export class GuardiaNotificador implements IGuardiaNotificador {
-  constructor(private readonly bus: EventEmitter) {}
+  constructor(private readonly bus: IEventBus) {}
 
   alertaRiesgoVital(
     ingreso: IngresoGuardia,
     paciente: Paciente,
     medicosIds: number[],
   ): void {
-    const evento: AlertaRiesgoVitalEvento = {
+    const evento: AlertaRiesgoVitalPayload = {
       tipo: 'ALERTA_RIESGO_VITAL',
       severidad: 'critica',
       ingresoId: ingreso.id,
@@ -42,6 +32,6 @@ export class GuardiaNotificador implements IGuardiaNotificador {
       ingresadoEn: ingreso.ingresadoEn.toISOString(),
       medicosDestinatarios: medicosIds,
     };
-    this.bus.emit(EVENTO_ALERTA_RIESGO_VITAL, evento);
+    this.bus.publish(DomainEvents.ALERTA_RIESGO_VITAL, evento);
   }
 }

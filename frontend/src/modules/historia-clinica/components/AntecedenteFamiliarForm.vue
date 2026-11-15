@@ -125,48 +125,29 @@ function cancelar() {
   flex-direction: column;
   gap: 12px;
   padding: 24px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
 }
 
 h2 {
   margin: 0 0 10px;
-  font-size: 22px;
-  color: #1e293b;
+  font-size: var(--font-heading-2);
+  color: var(--color-neutral-900);
 }
 
 label {
   font-weight: 600;
-  color: #334155;
+  color: var(--color-neutral-700);
 }
 
 input,
 select,
 textarea {
   padding: 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-control);
   font: inherit;
-}
-
-button {
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: #2563eb;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #1d4ed8;
-}
-
-button:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
 }
 
 .acciones-formulario {
@@ -175,15 +156,7 @@ button:disabled {
   flex-wrap: wrap;
 }
 
-.cancelar {
-  background: #64748b;
-}
-
-.cancelar:hover {
-  background: #475569;
-}
-
 .error-form {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 </style>

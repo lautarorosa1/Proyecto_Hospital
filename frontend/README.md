@@ -37,6 +37,18 @@ npm run dev
 npm run build
 ```
 
+### Pruebas unitarias
+
+```sh
+npm test
+```
+
+Las pruebas se encuentran en `tests/`, organizadas por módulo, y ejecutan con Vitest
+en un DOM simulado (`jsdom`). Las llamadas a servicios HTTP de los componentes se
+simulan; no hace falta iniciar el backend, conectar una base de datos ni usar datos
+reales de pacientes. La aplicación en ejecución sí necesita los servicios externos
+que consume, como la API y el canal de eventos de guardia.
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh

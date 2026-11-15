@@ -147,14 +147,14 @@ function enviar() {
 .formulario {
   margin-top: 20px;
   padding: 25px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-panel);
 }
 
 h2 {
   margin-bottom: 20px;
-  color: #1e293b;
+  color: var(--color-neutral-900);
 }
 
 .campo {
@@ -166,38 +166,24 @@ h2 {
 label {
   margin-bottom: 8px;
   font-weight: 600;
-  color: #334155;
+  color: var(--color-neutral-700);
 }
 
 input,
 textarea {
   padding: 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-control);
   font: inherit;
 }
 
-button {
-  padding: 12px 20px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-button:hover {
-  background: #1d4ed8;
-}
-
-button:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-}
-
 .error {
-  color: #b91c1c;
+  color: var(--color-danger-hover);
+  margin-bottom: 15px;
+}
+
+.exito {
+  color: var(--color-success);
   margin-bottom: 15px;
 }
 </style>

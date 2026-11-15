@@ -19,7 +19,7 @@ test('solicita turnos disponibles sin alterar el estado de otros filtros', async
   } as unknown as ITurnoRepository;
   const service = new TurnoService(
     turnos,
-    {} as IProfesionalRepository,
+    { findAll: async () => [] } as unknown as IProfesionalRepository,
     {} as IPacienteRepository,
     {} as IHorarioRepository,
     {} as ITurnoNotificador,

@@ -1,12 +1,16 @@
+
+
 <script setup>
 import { reactive, ref, watch } from 'vue'
 
+const emit = defineEmits(['guardar'])
+
 const props = defineProps({
-  alergia: { type: Object, default: null },
-  guardando: { type: Boolean, default: false },
-  error: { type: String, default: '' }
+  alergia: {
+    type: Object,
+    default: null
+  }
 })
-const emit = defineEmits(['guardar', 'cancelar'])
 
 const formulario = reactive({
   alergeno: '',
@@ -54,11 +58,8 @@ function validarFormulario() {
   }
 
   
-emit('guardar', {
-  alergeno,
-  reaccion,
-  severidad: formulario.severidad
-})
+emit('guardar', { alergeno, reaccion, severidad: formulario.severidad })
+
 }
 </script>
 
@@ -101,27 +102,24 @@ emit('guardar', {
       </select>
     </div>
 
-   <p v-if="mensaje" class="mensaje">{{ mensaje }}</p>
-<p v-if="error" class="mensaje">{{ error }}</p>
+    <p v-if="mensaje" class="mensaje">{{ mensaje }}</p>
 
-<button type="submit" :disabled="guardando">
-  {{ guardando ? 'Guardando...' : 'Guardar' }}
-</button>
+    <button type="submit">Validar formulario</button>
   </form>
 </template>
 
 <style scoped>
 .formulario {
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
   padding: 25px;
   margin-top: 25px;
 }
 
 h2 {
-  font-size: 22px;
-  font-weight: bold;
+  font-size: var(--font-heading-2);
+  font-weight: 600;
   margin-bottom: 20px;
 }
 
@@ -141,28 +139,13 @@ textarea,
 select {
   width: 100%;
   padding: 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-control);
   font: inherit;
 }
 
 .mensaje {
-  color: #475569;
+  color: var(--color-neutral-600);
   margin-bottom: 15px;
-}
-
-button {
-  background: #2563eb;
-  color: white;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-button:hover {
-  background: #1d4ed8;
 }
 </style>

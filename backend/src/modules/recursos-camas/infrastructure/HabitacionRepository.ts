@@ -11,6 +11,7 @@ export class HabitacionRepository implements IHabitacionRepository {
     numero: entity.numero,
     piso: entity.piso,
     sector: entity.sector,
+    tipo: entity.tipo ?? 'INTERNACION',
   });
 
   async findAll(): Promise<Habitacion[]> {

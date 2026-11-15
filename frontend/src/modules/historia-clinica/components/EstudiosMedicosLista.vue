@@ -105,9 +105,9 @@ function eliminarEstudio(estudio) {
 }
 
 h2 {
-  font-size: 22px;
+  font-size: var(--font-heading-2);
   margin-bottom: 20px;
-  color: #1e293b;
+  color: var(--color-neutral-900);
 }
 
 .tabla-contenedor {
@@ -123,28 +123,28 @@ table {
 
 th,
 td {
-  padding: 14px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
   text-align: left;
   vertical-align: top;
 }
 
 th {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--color-neutral-100);
+  color: var(--color-neutral-700);
   font-weight: 600;
 }
 
 td {
-  color: #475569;
+  color: var(--color-neutral-600);
 }
 
 tbody tr:hover {
-  background: #f8fafc;
+  background: var(--color-neutral-50);
 }
 
 .mensaje {
-  color: #64748b;
+  color: var(--color-neutral-600);
   padding: 15px 0;
 }
 
@@ -155,30 +155,6 @@ tbody tr:hover {
 }
 
 .acciones button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
   white-space: nowrap;
-}
-
-.ver {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.editar {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.eliminar {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.acciones button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

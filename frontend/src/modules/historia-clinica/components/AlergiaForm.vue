@@ -5,9 +5,18 @@ import { reactive, ref, watch } from 'vue'
 const emit = defineEmits(['guardar', 'cancelar'])
 
 const props = defineProps({
-  alergia: { type: Object, default: null },
-  guardando: { type: Boolean, default: false },
-  error: { type: String, default: '' }
+  alergia: {
+    type: Object,
+    default: null
+  },
+  error: {
+    type: String,
+    default: ''
+  },
+  guardando: {
+    type: Boolean,
+    default: false
+  }
 })
 
 const formulario = reactive({
@@ -77,6 +86,7 @@ function validarFormulario() {
         type="text"
         maxlength="150"
         placeholder="Ej.: Penicilina"
+        required
       />
     </div>
 
@@ -88,12 +98,13 @@ function validarFormulario() {
         maxlength="255"
         placeholder="Ej.: Erupción cutánea"
         rows="3"
+        required
       ></textarea>
     </div>
 
     <div class="campo">
       <label for="severidad">Severidad</label>
-      <select id="severidad" v-model="formulario.severidad">
+      <select id="severidad" v-model="formulario.severidad" required>
         <option value="">Seleccionar severidad</option>
         <option value="leve">Leve</option>
         <option value="moderada">Moderada</option>
@@ -150,4 +161,20 @@ select {
   color: var(--color-neutral-600);
   margin-bottom: 15px;
 }
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--color-primary, #2563eb);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 </style>
+

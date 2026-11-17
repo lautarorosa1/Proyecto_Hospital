@@ -26,8 +26,8 @@ watch(
   () => props.antecedenteEditar,
   (antecedente) => {
     if (antecedente) {
-      formulario.parentesco = antecedente.parentesco
-      formulario.enfermedad = antecedente.enfermedad
+      formulario.parentesco = antecedente.parentesco || ''
+      formulario.enfermedad = antecedente.enfermedad || ''
       formulario.observaciones = antecedente.observaciones || ''
     } else {
       limpiarFormulario()
@@ -185,6 +185,7 @@ button:disabled {
 }
 
 .error-form {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 </style>
+

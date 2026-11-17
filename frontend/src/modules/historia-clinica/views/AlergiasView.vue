@@ -11,12 +11,11 @@ import {
 } from '../services/alergiaService'
 
 import { mensajeError } from '@/shared/utils/formato'
-
 import AlergiaForm from '../components/AlergiaForm.vue'
 import AlergiasLista from '../components/AlergiasLista.vue'
 
 const route = useRoute()
-const pacienteId = Number(route.params.id)
+const pacienteId = route.params.id
 
 const paciente = ref(null)
 const alergias = ref([])
@@ -120,7 +119,7 @@ async function guardarAlergia(datos) {
   }
 }
 
-// Las alergias forman parte de la historia clínica y no se eliminan.
+// Las alergias no se eliminan de la historia clínica.
 function eliminarAlergia() {
   mensaje.value = ''
   error.value =
@@ -251,6 +250,16 @@ h2 {
 .error {
   color: var(--color-danger);
   margin-bottom: 20px;
+}
+
+.aviso-prueba {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
+  padding: 12px 16px;
+  border-radius: var(--radius-control);
+  margin-bottom: 20px;
+  font-size: 14px;
 }
 
 button:disabled {

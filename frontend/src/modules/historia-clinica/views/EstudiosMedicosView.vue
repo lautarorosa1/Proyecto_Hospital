@@ -320,4 +320,8 @@ h2 {
   margin-bottom: 12px;
   color: var(--color-neutral-700);
 }
+.detalle-estudio p {
+  margin-bottom: 12px;
+  color: var(--color-neutral-700);
+}
 </style>

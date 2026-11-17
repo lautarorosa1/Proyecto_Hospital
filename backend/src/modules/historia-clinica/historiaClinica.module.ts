@@ -10,7 +10,7 @@ import { AlergiaService } from './application/AlergiaService';
 import { AlergiaController } from './adapters/AlergiaController';
 import { createAlergiaRoutes } from './adapters/alergiaRoutes';
 
-// Antecedentes familiares
+
 import { AntecedenteFamiliarEntity } from './infrastructure/AntecedenteFamiliarEntity';
 import { AntecedenteFamiliarRepository } from './infrastructure/AntecedenteFamiliarRepository';
 import { AntecedenteFamiliarService } from './application/AntecedenteFamiliarService';
@@ -160,22 +160,30 @@ export function suscribirHistoriaClinica(bus: IEventBus): void {
   });
 }
 
-// Módulo de Historia Clínica
+ // Módulo de Historia Clínica
 export const historiaClinicaModule = {
+  // Alergias
   controller: alergiaController,
   routes: createAlergiaRoutes(alergiaController),
-
+  alergiaService,
+  eventoClinicoService,
+  // Antecedentes familiares
   antecedenteFamiliarRoutes: createAntecedenteFamiliarRoutes(
     antecedenteFamiliarController
   ),
 
+  // Evoluciones médicas
   evolucionMedicaRoutes: createEvolucionMedicaRoutes(
     evolucionMedicaController
   ),
 
-  estudioMedicoRoutes: createEstudioMedicoRoutes(estudioMedicoController),
+  // Estudios médicos
+  estudioMedicoRoutes: createEstudioMedicoRoutes(
+    estudioMedicoController
+  ),
 
-  alergiaService,
-  eventoClinicoService,
-  eventosRoutes: createEventoClinicoRoutes(eventoClinicoController),
+  // Eventos clínicos (línea de tiempo)
+  eventosRoutes: createEventoClinicoRoutes(
+    eventoClinicoController
+  ),
 };

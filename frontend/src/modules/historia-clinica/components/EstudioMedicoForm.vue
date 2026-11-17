@@ -178,6 +178,7 @@ textarea {
   font: inherit;
 }
 
+
 button {
   padding: 12px 20px;
   background: #2563eb;

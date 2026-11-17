@@ -10,19 +10,6 @@ import {
 export const obtenerPacientes = () => getPacientes()
 export const obtenerPacientePorId = (id) => getPacienteById(id)
 
-// Alergias
-export const obtenerAlergiasPorPaciente = (pacienteId) =>
-  api.get(`/alergias/paciente/${pacienteId}`)
-
-export const crearAlergia = (datos) =>
-  api.post('/alergias', datos)
-
-export const actualizarAlergia = (id, datos) =>
-  api.put(`/alergias/${id}`, datos)
-
-export const eliminarAlergiaPorId = (id) =>
-  api.delete(`/alergias/${id}`)
-
 // Antecedentes familiares
 export const obtenerAntecedentesPorPaciente = (pacienteId) =>
   api.get(`/antecedentes-familiares/paciente/${pacienteId}`)
@@ -62,8 +49,7 @@ export const actualizarEstudio = (id, datos) =>
 export const eliminarEstudioPorId = (id) =>
   api.delete(`/estudios-medicos/${id}`)
 
-// Línea de tiempo clínica: ingresos, signos vitales,
-// medicación administrada y altas.
+// Línea de tiempo clínica
 export const obtenerEventosClinicos = async (pacienteId) => {
   const respuesta = await api.get(
     `/historia-clinica/pacientes/${pacienteId}/eventos`
@@ -71,3 +57,4 @@ export const obtenerEventosClinicos = async (pacienteId) => {
 
   return respuesta.data
 }
+

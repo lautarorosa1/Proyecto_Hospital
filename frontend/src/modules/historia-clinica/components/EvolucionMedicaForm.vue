@@ -205,7 +205,6 @@ textarea:focus {
   background: #94a3b8;
   cursor: not-allowed;
 }
-
 .mensaje {
   margin-top: 15px;
   color: var(--color-danger-hover);
